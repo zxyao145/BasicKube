@@ -1,0 +1,100 @@
+﻿@namespace BasicKube.Web.Components
+@inherits BcdForm
+
+<div>
+    <div style="margin-bottom: 0.75rem;">
+        <Space>
+            <SpaceItem>
+                应用名
+            </SpaceItem>
+            <SpaceItem Style="width: 300px;">
+                <Input Placeholder="应用名"
+                       MaxLength="32"
+                       @bind-Value="@DaemonSetCreateCommand.AppName" 
+                       Disabled="@IsEdit" />
+            </SpaceItem>
+
+            <SpaceItem Style="margin-left: 1rem;">
+                环境
+            </SpaceItem>
+            <SpaceItem Style="width: 180px;">
+                <AppEnvSelect
+                    DefaultEnvName="@(DaemonSetCreateCommand.Env)"
+                    Disable="@IsEdit"
+                    @bind-EnvName="DaemonSetCreateCommand.Env" />
+      
+            </SpaceItem>
+        </Space>
+    </div>
+
+    <PodContainerEdit @ref="@_podContainerEdit"  Containers="@_createCommand.Containers" />
+
+    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
+        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
+    </div>
+</div>
+
+<style>
+    .bcd-form {
+        top: 50px;
+    }
+</style>
+
+@code {
+    public int IamId { get; set; }
+
+    public Func<Task>? OnOk { get; set; }
+
+    private DaemonSetCreateCommand _createCommand = new DaemonSetCreateCommand();
+    private PodContainerEdit? _podContainerEdit;
+
+    public DaemonSetCreateCommand DaemonSetCreateCommand
+    {
+        get => _createCommand;
+        set => _createCommand = value;
+    } 
+
+    public bool IsEdit { get; set; } = false;
+
+    protected override void InitComponent()
+    {
+        Width = 1000;
+        MinimizeBox = false;
+        BodyStyle = "max-height: 500px;";
+        Title = "DeamonSet";
+    }
+    
+
+    private async Task OnOkAsync()
+    {
+        DaemonSetCreateCommand.Containers = _podContainerEdit!.Containers;
+        DaemonSetCreateCommand.DeployUnitName = $"{DaemonSetCreateCommand.AppName}-{DaemonSetCreateCommand.Env}";
+        DaemonSetCreateCommand.IamId = IamId;
+
+        var http = ServiceProvider.GetRequiredService<DaemonSetHttp>();
+        bool res = false;
+        if (IsEdit)
+        {
+            res = await http.Update(IamId, DaemonSetCreateCommand);
+        }
+        else
+        {
+            res = await http.Create(IamId, DaemonSetCreateCommand);
+        }
+
+        var messageService = ServiceProvider.GetRequiredService<MessageService>();
+
+        await messageService.Success(res ? "创建成功" : "创建失败");
+
+ 
+
+        if (OnOk != null)
+        {
+            await OnOk();
+        }
+        if (res)
+        {
+            await this.CloseAsync();
+        }
+    }
+}

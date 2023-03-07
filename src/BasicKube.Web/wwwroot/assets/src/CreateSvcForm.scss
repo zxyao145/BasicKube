@@ -1,0 +1,55 @@
+﻿@import "./Common.scss";
+
+.svc-port-config {
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+
+    > div {
+        margin-bottom: 1rem;
+    }
+
+    .ant-space {
+        width: 100%;
+    }
+
+    > .ant-space {
+        font-weight: 700;
+        background-color: #efefef;
+
+        .ant-space-item {
+            text-align: center;
+            padding: 0.5rem 0;
+        }
+    }
+
+    > div:nth-child(2) > .ant-space {
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+
+    .svc-port,
+    .target-port,
+    .node-port {
+        width: 20%;
+
+        .ant-input-number {
+            width: 100%
+        }
+    }
+
+    .svc-port-protocol {
+        width: 25%;
+    }
+
+    .port-config-operate {
+        flex-grow: 1;
+        text-align: center;
+
+        span.anticon {
+            cursor: pointer;
+        }
+    }
+}

@@ -1,0 +1,37 @@
+﻿@namespace BasicKube.Web.Components
+
+<SimpleSelect DefaultValue="@(DefaultEnvName)"
+              OnSelectedItemChanged="@OnEnvChange"
+              Disabled="@Disable">
+
+    <SelectOptions>
+        <SimpleSelectOption Value="dev" Label="开发"></SimpleSelectOption>
+        <SimpleSelectOption Value="test" Label="测试"></SimpleSelectOption>
+        <SimpleSelectOption Value="staging" Label="预览"></SimpleSelectOption>
+        <SimpleSelectOption Value="prod" Label="线上"></SimpleSelectOption>
+    </SelectOptions>
+</SimpleSelect>
+@code {
+
+    [Parameter]
+    public bool Disable { get; set; }
+
+#pragma warning disable CS8618
+    [Parameter]
+    public string DefaultEnvName { get; set; } = "env";
+
+    [Parameter]
+        public string EnvName { get; set; }
+#pragma warning restore CS8618
+
+    [Parameter]
+    public EventCallback<string> EnvNameChanged { get; set; }
+
+    async Task OnEnvChange(string value)
+    {
+        if (EnvNameChanged.HasDelegate)
+        {
+            await EnvNameChanged.InvokeAsync(value);
+        }
+    }
+}

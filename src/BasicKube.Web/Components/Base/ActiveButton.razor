@@ -1,0 +1,21 @@
+﻿@namespace BasicKube
+
+@inherits Button
+
+
+@code {
+    [Parameter]
+    public bool IsActive { get; set; }
+
+    private string _activeCls = "";
+    [Parameter]
+    public string ActiveCls
+    {
+        get => _activeCls;
+        set
+        {
+            _activeCls = value;
+            ClassMapper.If(_activeCls, () => IsActive);
+        }
+    }
+}

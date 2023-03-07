@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Remove="C:\Users\zhang\.nuget\packages\bcdlib.bcdform\0.4.0\contentFiles\any\net6.0\logo.ico" />
+		<Content Remove="Pages\Deployment.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AntDesign" />
+		<PackageReference Include="BcdLib.BcdForm" />
+		<PackageReference Include="BlazorIcons.Full" />
+		<PackageReference Include="Common.Pure" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.Extensions.Http" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\BasicKube.Models\BasicKube.Models.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+	</ItemGroup>
+
+</Project>

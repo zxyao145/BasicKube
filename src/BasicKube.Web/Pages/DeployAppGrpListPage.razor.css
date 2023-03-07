@@ -1,0 +1,43 @@
+﻿.deploy-panel > .ant-collapse-content {
+    background-color: #efefef;
+}
+
+.pod-panel .ant-collapse-content-box {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    /*display: grid;
+        grid-template-rows: 180px;
+        grid-template-columns: 300px;
+        grid-row-gap: 10px;
+        grid-column-gap: 10px;*/
+}
+
+    .pod-panel .ant-collapse-content-box > div.ant-card {
+        margin: 0.75rem;
+    }
+
+.ant-list-item {
+    background-color: #fff;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    color: #1890ff;
+}
+
+.ant-breadcrumb {
+    background-color: #ffffff;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 10px;
+    border-left: 5px solid #8bb4e7;
+    background-color: #f5f8fd;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.app-list-btn {
+    cursor: pointer;
+}

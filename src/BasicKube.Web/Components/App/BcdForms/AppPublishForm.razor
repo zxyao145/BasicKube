@@ -1,0 +1,86 @@
+﻿@namespace BasicKube.Web.Components
+@inherits BcdForm
+
+<div>
+    <Row>
+        <Col Span="24">
+        <DivFormItem Label="镜像版本(Tag)" LabelSpan="5">
+            <AntDesign.Input @bind-Value="@Tag"
+                             Style="Width: 100%;">
+            </AntDesign.Input>
+        </DivFormItem>
+        <DivFormItem Label="发布描述" LabelSpan="5">
+            <AntDesign.Input @bind-Value="@Description"
+                             Style="Width: 100%;">
+            </AntDesign.Input>
+        </DivFormItem>
+        </Col>
+    </Row>
+
+
+
+    <div style="border-top: 1px solid #f0f0f0;
+                padding-top: 1rem;
+                margin-top: 1rem;
+                display: flex;
+                flex-direction: row-reverse;
+            ">
+        <Button Type="@ButtonType.Primary"
+                OnClick="@OnOkAsync">
+            确定
+        </Button>
+    </div>
+</div>
+
+
+@code {
+
+    public int IamId { get; set; }
+    public string AppName { get; set; }
+    public string DeployName { get; set; }
+    public AppPublishForm(int iamId, string appName, string deployName) : base()
+    {
+        this.IamId = iamId;
+        this.DeployName = deployName;
+        this.AppName = appName;
+    }
+    protected override void InitComponent()
+    {
+        Title = "发布";
+        MinimizeBox = false;
+        MaximizeBox = false;
+        ShowMask = true;
+        MaskClosable = false;
+    }
+
+
+    public string Tag { get; set; } = "";
+    public string? Description { get; set; }
+
+    public Func<Task>? OnOk { get; set; }
+
+    private async Task OnOkAsync()
+    {
+        var http = ServiceProvider.GetRequiredService<DeployHttp>();
+
+        var command = new AppPublishCommand()
+            {
+                Description = Description,
+                Tag = Tag,
+                DeployUnitName = DeployName
+            };
+        var res = await http.Publish(IamId, AppName, command);
+
+        var messageService = ServiceProvider.GetRequiredService<MessageService>();
+        await messageService.Success(res ? "发布成功" : "发布失败");
+
+        if (OnOk != null)
+        {
+            await OnOk();
+        }
+        if (res)
+        {
+            await this.CloseAsync();
+        }
+    }
+}

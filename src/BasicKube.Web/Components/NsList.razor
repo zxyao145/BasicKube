@@ -1,0 +1,46 @@
+﻿@namespace BasicKube.Web.Components
+@inject DeployHttp DeployHttp
+
+<Select TItem="string"
+        TItemValue="string"
+        DataSource="@_nsList"
+        @bind-Value="@_ns"
+        Placeholder="Select a cluster"
+        DefaultActiveFirstOption="true"
+        DefaultValue="@("default")"
+        EnableSearch
+        OnSelectedItemChanged="OnSelectedItemChangedHandler"
+        OnSearch="OnSearch">
+</Select>
+
+@code
+{
+    [Parameter]
+    public EventCallback<string?> NsChanged { get; set; }
+
+
+    private string? _ns;
+    private List<string> _nsList = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var data = await DeployHttp.Client.GetFromJsonAsync<ApiResultDto<List<string>>>
+            ($"/api/Ns/List");
+        _nsList = data?.Data ?? new List<string>();
+        await OnSelectedItemChangedHandler("default");
+    }
+
+    private async Task OnSelectedItemChangedHandler(string value)
+    {
+        _ns = value;
+        if (NsChanged.HasDelegate)
+        {
+            await NsChanged.InvokeAsync(_ns);
+        }
+    }
+
+    private void OnSearch(string value)
+    {
+        //Console.WriteLine($"search: {value}");
+    }
+}

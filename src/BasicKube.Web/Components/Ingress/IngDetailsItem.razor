@@ -1,0 +1,68 @@
+﻿@namespace BasicKube.Web.Components
+@using AntDesign.TableModels
+@inject DeployHttp DeployHttp
+
+
+<Table Class="svc"
+       DataSource="@FlatRules()"
+       TItem="IngRuleValue"
+       HidePagination
+       Size=@TableSize.Middle>
+    <RowTemplate>
+        <PropertyColumn Property="@(c=>c!.PathType)" Title="StartTime" />
+        <PropertyColumn Property="@(c=>c!.Path)" />
+        <ActionColumn Title="TargetService">
+            <a href="@($"/pages/svcGrpList/{IamId}/{GetGrpNameFromSvcName(@context.TargetService)}?svc={@context.TargetService}")
+                " target="_blank">
+                @context.TargetService
+            </a>
+        </ActionColumn>
+        <PropertyColumn Property="@(c=>c!.TargetService)" />
+        <PropertyColumn Property="@(c=>c!.Port)" />
+    </RowTemplate>
+</Table>
+
+@code {
+
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
+
+    [Parameter]
+    public IngDetails Details { get; set; } = new IngDetails();
+
+    private IEnumerable<IngRuleValue> FlatRules()
+    {
+        return Details.Rules.SelectMany(x =>
+        {
+            var host = x.Host;
+            return x.RuleValues.Select(v =>
+                {
+                    return new IngRuleValue()
+                        {
+                            PathType = v.PathType,
+                            Path = host + v.Path,
+                            TargetService = v.TargetService,
+                            Port = v.Port
+                        };
+                }
+            );
+        });
+
+    }
+
+    private async Task OnDelPodAsync(PodDetail podInfo)
+    {
+        using HttpResponseMessage response = await DeployHttp.Client
+            .DeleteAsync($"/api/Deploy/DelPod/{podInfo.Name}");
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var apiResult = JsonSerializer.Deserialize<ApiResultDto<List<DeployDetails>>>(jsonResponse);
+        }
+    }
+
+    private string GetGrpNameFromSvcName(string targetSvc)
+    {
+        return string.Join("-", targetSvc.Split("-")[0..^1]);
+    }
+}

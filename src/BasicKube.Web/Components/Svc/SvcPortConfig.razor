@@ -1,0 +1,106 @@
+﻿@namespace BasicKube.Web.Components
+<div class="svc-port-config">
+
+    <Space>
+        <SpaceItem Class="svc-port">服务端口</SpaceItem>
+        <SpaceItem Class="svc-port-protocol">服务端口协议</SpaceItem>
+        <SpaceItem Class="target-port">应用端口</SpaceItem>
+        @if (SvcEditInfo.Type == SvcType.NodePort)
+        {
+            <SpaceItem Class="node-port">节点端口</SpaceItem>
+        }
+        <SpaceItem Class="port-config-operate">操作</SpaceItem>
+    </Space>
+
+    @if (SvcEditInfo.Ports is { Count: > 0 })
+    {
+        <div>
+            @foreach (var portInfo in SvcEditInfo.Ports)
+            {
+                <Space @key="portInfo">
+
+                    <SpaceItem Class="svc-port">
+                        <AntDesign.InputNumber @bind-Value="portInfo.Port"
+                                       Min="1"
+                                       Max="65535">
+                        </AntDesign.InputNumber>
+                    </SpaceItem>
+
+                    <SpaceItem Class="svc-port-protocol">
+                        <SimpleSelect DefaultValue="tcp"
+                              OnSelectedItemChanged="@(val => portInfo.Protocol = val)">
+                            <SelectOptions>
+                                <SimpleSelectOption Value="TCP" Label="TCP"></SimpleSelectOption>
+                                <SimpleSelectOption Value="UDP" Label="UDP"></SimpleSelectOption>
+                            </SelectOptions>
+                        </SimpleSelect>
+                    </SpaceItem>
+
+                    <SpaceItem Class="target-port">
+                        <AntDesign.InputNumber @bind-Value="portInfo.TargetPort"
+                                       Min="1"
+                                       Max="65535">
+                        </AntDesign.InputNumber>
+                    </SpaceItem>
+
+                    @if (SvcEditInfo.Type == SvcType.NodePort)
+                    {
+                        <SpaceItem Class="node-port">
+                            <AntDesign.InputNumber @bind-Value="portInfo.NodePort"
+                                       Min="30000"
+                                       Max="32767"
+                                       DefaultValue="30000">
+                            </AntDesign.InputNumber>
+                        </SpaceItem>
+                    }
+
+                    <SpaceItem Class="port-config-operate">
+                        <Icon OnClick="@(() => DelPortInfo(portInfo))"
+                      Type="close-circle"
+                      Theme="outline"
+                      Width="20"
+                      Height="20" />
+                    </SpaceItem>
+                </Space>
+            }
+        </div>
+
+    }
+    else
+    {
+        <Empty Simple />
+    }
+
+    <Button Type="@ButtonType.Primary" OnClick="AddPortInfo">
+        <Icon Type="plus" Theme="outline" />
+    </Button>
+
+</div>
+
+
+
+@code {
+#pragma warning disable CS8618
+    [CascadingParameter]
+    public SvcEditCommand SvcEditInfo { get; set; }
+#pragma warning restore CS8618
+
+    private List<SvcPortInfo>? PortInfos => SvcEditInfo.Ports;
+
+    private void DelPortInfo(SvcPortInfo portInfo)
+    {
+        if (PortInfos != null)
+        {
+            PortInfos.Remove(portInfo);
+        }
+    }
+
+    private void AddPortInfo()
+    {
+        SvcEditInfo.Ports ??= new List<SvcPortInfo>();
+        SvcEditInfo.Ports.Add(new SvcPortInfo()
+            {
+                Index = SvcEditInfo.Ports.Count
+            });
+    }
+}

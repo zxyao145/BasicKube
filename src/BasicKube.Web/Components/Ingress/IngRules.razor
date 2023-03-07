@@ -1,0 +1,76 @@
+﻿@namespace BasicKube.Web.Components
+<div class="rule-config">
+    <IngRule />
+
+    <Space>
+        <SpaceItem Class="rule-protocol">协议</SpaceItem>
+        <SpaceItem Class="rule-host">域名</SpaceItem>
+        <SpaceItem Class="rule-type">类型</SpaceItem>
+        <SpaceItem Class="rule-path">路径</SpaceItem>
+        <SpaceItem Class="rule-svc">服务</SpaceItem>
+        <SpaceItem Class="rule-port">端口</SpaceItem>
+        <SpaceItem Class="rule-operate">操作</SpaceItem>
+    </Space>
+
+    @if (_rules is { Count: > 0 })
+    {
+        <div>
+            @foreach (var rule in _rules)
+            {
+                <IngRule />
+            }
+        </div>
+
+    }
+    else
+    {
+        <Empty Simple />
+    }
+
+    <Button Type="@ButtonType.Primary" OnClick="AddRule">
+        <Icon Type="plus" Theme="outline" />
+    </Button>
+
+</div>
+
+
+
+@code {
+
+    public record RuleItem
+    {
+        public int Index { get; set; } 
+
+        public string Protocol { get; set; } = "http";
+
+        public string Host { get; set; } = "";
+
+        public string PathType { get; set; } = "";
+
+        public string Path { get; set; } = "";
+
+        public string TargetService { get; set; } = "";
+
+        public int? Port { get; set; }
+    }
+
+#pragma warning disable CS8618
+    [CascadingParameter]
+    public IngDetails Details { get; set; }
+#pragma warning restore CS8618
+
+    private List<RuleItem> _rules = new List<RuleItem>();
+
+    private void DelRule(RuleItem rule)
+    {
+        _rules.Remove(rule);
+    }
+
+    private void AddRule()
+    {
+        _rules.Add(new RuleItem()
+        {
+            Index = _rules.Count
+        });
+    }
+}

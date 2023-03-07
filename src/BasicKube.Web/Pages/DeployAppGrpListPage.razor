@@ -1,0 +1,104 @@
+﻿@page "/{IamId:int?}/{AppName?}"
+@page "/pages/deployAppGrpList/{IamId:int?}/{AppName?}"
+@inject KubeHttpClient KubeHttpClient
+@inject NavigationManager NavigationManager
+
+<div class="page-content">
+    <Breadcrumb Style="margin-bottom: 1rem;">
+        @if (string.IsNullOrWhiteSpace(_activityAppName))
+        {
+            <BreadcrumbItem>
+                <b><Icon Type="appstore" Theme="outline" /> 应用列表</b>
+            </BreadcrumbItem>
+        }
+        else
+        {
+            <BreadcrumbItem OnClick="ReturnAppList">
+                <b class="cursor-pointer">
+                    <Icon Type="appstore" Theme="outline" /> 应用列表
+                </b>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+                <b><Icon Type="deployment-unit" Theme="outline" /> 部署单元</b>
+            </BreadcrumbItem>
+        }
+    </Breadcrumb>
+
+    <blockquote class="operate-wrapper">
+        <Button Type="@ButtonType.Primary" Size="small" OnClick="@OnCreateDeployClick">新建Deployment</Button>
+    </blockquote>
+
+    @if (string.IsNullOrWhiteSpace(_activityAppName))
+    {
+        <AntList DataSource="@_appList" TItem="AppInfo">
+            <ListItem Class="page-resource-list-item" OnClick="() => OnAppClick(context)">
+                <ListItemMeta Description="">
+                        <TitleTemplate>
+                            @context.Name
+                        </TitleTemplate>
+                </ListItemMeta>
+            </ListItem>
+        </AntList>
+    }
+    else
+    {
+        <CascadingValue Value="@(_iamId)" Name="@("IamId")">
+            <CascadingValue Value="@(this)" IsFixed="true">
+                <DeployList AppName="@_activityAppName" />
+            </CascadingValue>
+        </CascadingValue>
+    }
+</div>
+@code
+{
+
+    private int _iamId = 0;
+    [Parameter]
+    public int? IamId
+    {
+        set => _iamId = value ?? 0;
+        get => _iamId;
+    }
+    private string _activityAppName = "";
+
+    [Parameter]
+    public string? AppName
+    {
+        set => _activityAppName = value ?? "";
+        get => _activityAppName;
+    }
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "deploy")]
+    public string? DeployName{ get; set; }
+
+    private List<AppInfo> _appList = new List<AppInfo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAppList();
+    }
+
+    private async Task GetAppList()
+    {
+        var appList = await KubeHttpClient.AppManagerHttp.GetDeployAppList(_iamId);
+        _appList = appList;
+    }
+
+
+    private async Task OnCreateDeployClick()
+    {
+        var modal = new CreateDeployAppForm();
+        modal.IamId = _iamId;
+        await modal.ShowAsync();
+    }
+
+    public void OnAppClick(AppInfo context)
+    {
+        NavigationManager.NavigateTo($"/pages/deployAppGrpList/{_iamId}/{context.Name}");
+    }
+
+    internal void ReturnAppList()
+    {
+        NavigationManager.NavigateTo($"/pages/deployAppGrpList/{_iamId}");
+    }
+}

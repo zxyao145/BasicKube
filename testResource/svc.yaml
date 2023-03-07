@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-test-2
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+    nodePort: 30004
+  selector:
+    app: app-test-dev
+    env: dev
+    iamId: "0"
+  type: NodePort

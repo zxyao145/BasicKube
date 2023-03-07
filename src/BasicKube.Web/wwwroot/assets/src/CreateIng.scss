@@ -1,0 +1,40 @@
+﻿@import "./Common.scss";
+
+
+.rule-item {
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px dashed #000;
+
+    > .ant-col:first-child {
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .rule-values {
+        padding-left: 0.75rem;
+        display: flex;
+        width: 100%;
+
+        > div:first-child {
+            flex-grow: 1;
+        }
+
+        > div:nth-child(2) {
+            width: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            > div {
+                cursor: pointer;
+                width: 32px;
+                height: 32px;
+                background: #efefef;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+        }
+    }
+}

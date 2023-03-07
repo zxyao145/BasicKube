@@ -1,0 +1,72 @@
+﻿@namespace BasicKube.Web.Components
+<div class="env-var-config">
+
+    <Space>
+        <SpaceItem>Key</SpaceItem>
+        <SpaceItem>Value</SpaceItem>
+        <SpaceItem>操作</SpaceItem>
+    </Space>
+
+    @if (ContainerInfo.EnvVars is { Count: > 0 })
+    {
+        <div>
+            @foreach (var envVar in ContainerInfo.EnvVars)
+            {
+                <Space @key="envVar">
+
+                    <SpaceItem>
+                        <Input Placeholder="" @bind-Value="@envVar.Key" />
+                    </SpaceItem>
+
+                    <SpaceItem>
+                        <Input Placeholder="" @bind-Value="@envVar.Value" />
+                    </SpaceItem>
+
+                    <SpaceItem>
+                        <Icon OnClick="@(() => DelEnvVarInfo(envVar))"
+                      Type="close-circle"
+                      Theme="outline"
+                      Width="20"
+                      Height="20" />
+                    </SpaceItem>
+                </Space>
+
+            }
+        </div>
+
+    }
+    else
+    {
+        <Empty Simple />
+    }
+
+    <Button Type="@ButtonType.Primary" OnClick="AddEnvVar">
+        <Icon Type="plus"
+              Theme="outline" />
+    </Button>
+</div>
+
+
+
+@code {
+#pragma warning disable CS8618
+    [CascadingParameter]
+    public ContainerInfo ContainerInfo { get; set; }
+#pragma warning restore CS8618
+
+    private List<EnvVarInfo> EnvVarInfos => ContainerInfo.EnvVars;
+
+
+    private void AddEnvVar()
+    {
+        ContainerInfo.EnvVars.Add(new EnvVarInfo()
+            {
+                Index = ContainerInfo.EnvVars.Count
+            });
+    }
+
+    private void DelEnvVarInfo(EnvVarInfo envVar)
+    {
+        EnvVarInfos.Remove(envVar);
+    }
+}

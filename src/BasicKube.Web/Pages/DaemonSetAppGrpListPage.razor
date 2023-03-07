@@ -1,0 +1,111 @@
+﻿@page "/pages/daemonSetAppGrpList/{IamId:int?}/{DaempnAppName?}"
+@inject DaemonSetHttp DaemonSetHttp
+@inject AppManagerHttp AppManagerHttp
+@inject NavigationManager NavigationManager
+
+<div class="page-content">
+    <Breadcrumb Style="margin-bottom: 1rem;">
+        @if (string.IsNullOrWhiteSpace(_activityAppName))
+        {
+            <BreadcrumbItem>
+                <b><Icon Type="appstore" Theme="outline" /> 应用列表</b>
+            </BreadcrumbItem>
+        }
+        else
+        {
+            <BreadcrumbItem OnClick="ReturnAppList">
+                <b class="cursor-pointer">
+                    <Icon Type="appstore" Theme="outline" /> 应用列表
+                </b>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+                <b><Icon Type="deployment-unit" Theme="outline" /> 部署单元</b>
+            </BreadcrumbItem>
+        }
+    </Breadcrumb>
+
+    <blockquote class="operate-wrapper">
+        <Button Type="@ButtonType.Primary" Size="small" OnClick="@OnCreateDeployClick">新建DaemonSet</Button>
+    </blockquote>
+
+    @if (string.IsNullOrWhiteSpace(_activityAppName))
+    {
+        <AntList DataSource="@_appList" TItem="DaemonSetAppInfo">
+            <ListItem Class="page-resource-list-item" OnClick="() => OnAppClick(context)">
+                <ListItemMeta Description="">
+                        <TitleTemplate>
+                        @if (context.Ports.Count > 0)
+                        {
+                            @($"{context.Name} ({string.Join(";", context.Ports)})")
+                        }
+                        else
+                        {
+                            @($"{context.Name}")
+                        }
+                        </TitleTemplate>
+                </ListItemMeta>
+            </ListItem>
+        </AntList>
+    }
+    else
+    {
+        <CascadingValue Value="@(_iamId)" Name="@("IamId")">
+            <CascadingValue Value="@(this)" IsFixed="true">
+                <DaemonSetList AppName="@_activityAppName" />
+            </CascadingValue>
+        </CascadingValue>
+    }
+</div>
+@code
+{
+
+    private int _iamId = 0;
+    [Parameter]
+    public int? IamId
+    {
+        set => _iamId = value ?? 0;
+        get => _iamId;
+    }
+    private string _activityAppName = "";
+
+    [Parameter]
+    public string? DaempnAppName
+    {
+        set => _activityAppName = value ?? "";
+        get => _activityAppName;
+    }
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "deploy")]
+    public string? DeployName{ get; set; }
+
+    private List<DaemonSetAppInfo> _appList = new List<DaemonSetAppInfo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAppList();
+    }
+
+    private async Task GetAppList()
+    {
+        var appList = await AppManagerHttp.GetDaemonSetAppList(_iamId);
+        _appList = appList;
+    }
+
+
+    private async Task OnCreateDeployClick()
+    {
+        var modal = new CreateDaemonSetAppForm();
+        modal.IamId = _iamId;
+        await modal.ShowAsync();
+    }
+
+    public void OnAppClick(DaemonSetAppInfo context)
+    {
+        NavigationManager.NavigateTo($"/pages/daemonSetAppList/{_iamId}/{context.Name}");
+    }
+
+    internal void ReturnAppList()
+    {
+        NavigationManager.NavigateTo($"/pages/daemonSetAppList/{_iamId}");
+    }
+}

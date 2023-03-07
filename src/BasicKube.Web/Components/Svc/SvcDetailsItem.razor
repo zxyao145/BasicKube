@@ -1,0 +1,67 @@
+﻿@namespace BasicKube.Web.Components
+@using AntDesign.TableModels
+@inject DeployHttp DeployHttp
+
+
+<Table Class="svc"
+       DataSource="@SvcInfo.PodDetails"
+       TItem="PodDetail"
+       HidePagination
+       Size=@TableSize.Middle>
+    <RowTemplate>
+        <ActionColumn Title="PodName">
+            <a href="@($"/pages/appList/{SvcInfo.IamId}/{GetAppNameFromDeployName()}?deploy={deployName}")
+                " target="_blank">
+                @context.Name
+            </a>
+        </ActionColumn>
+        <PropertyColumn Property="@(c=>c!.GetStartTimeStr())" Title="StartTime" />
+        <PropertyColumn Property="@(c=>c!.PodIp)" />
+        <PropertyColumn Property="@(c=>c!.Status)" />
+        <ActionColumn Title="Action">
+            <Space>
+                <SpaceItem>
+                    <Button OnClick="@(async () => await OnDelPodAsync(context))" Type="@ButtonType.Link">
+                        删除
+                    </Button>
+                </SpaceItem>
+            </Space>
+        </ActionColumn>
+    </RowTemplate>
+</Table>
+
+<style>
+
+    /*.deploy-pods .ant-table-thead {
+            display: none;
+        }
+    */
+</style>
+
+@code {
+
+    [Parameter]
+    public SvcInfo SvcInfo { get; set; } = new SvcInfo();
+
+    private string? deployName;
+
+    private async Task OnDelPodAsync(PodDetail podInfo)
+    {
+        using HttpResponseMessage response = await DeployHttp.Client
+            .DeleteAsync($"/api/Deploy/DelPod/{podInfo.Name}");
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var apiResult = JsonSerializer.Deserialize<ApiResultDto<List<DeployDetails>>>(jsonResponse);
+        }
+    }
+
+    private string GetAppNameFromDeployName()
+    {
+        if (string.IsNullOrWhiteSpace(deployName))
+        {
+            deployName = SvcInfo.Selectors.First(x => x.Key == "app").Value;
+        }
+        return string.Join("-", deployName.Split("-")[0..^1]);
+    }
+}

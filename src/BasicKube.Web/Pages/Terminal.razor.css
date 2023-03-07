@@ -1,0 +1,21 @@
+.empty-layout {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal-page {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.terminal-meta {
+    padding: 0.5rem;
+    height: 38px;
+    font-weight: bold;
+}
+
+#terminal {
+    height: calc(100vh - 38px)
+}

@@ -1,0 +1,313 @@
+﻿@namespace BasicKube.Web.Components
+@using System.ComponentModel;
+@using AntDesign.Select
+@inherits BcdForm
+
+<div>
+    <GridRow>
+        <GridCol Span="24">
+            <FormControl Required="true">
+                <LabelContent>
+                    域名
+                </LabelContent>
+                <ChildContent>
+                    <Input Placeholder="域名"
+                           MaxLength="32"
+                           @bind-Value="@RuleOptions.Host"
+                           OnChange="@(new EventCallbackFactory().Create<string>(this, OnHostChanged))" />
+                </ChildContent>
+            </FormControl>
+        </GridCol>
+    </GridRow>
+
+    <GridRow Style="margin-top: 16px;">
+        <GridCol Span="24">
+            <FormControl Required="true">
+                <LabelContent>
+                    协议
+                </LabelContent>
+                <ChildContent>
+                    <SimpleSelect DefaultValue="http"
+                                  @bind-Value="@RuleOptions.HostType"
+                                            Disabled>
+                        <SelectOptions>
+                            <SimpleSelectOption Value="http" Label="Http"></SimpleSelectOption>
+                            <SimpleSelectOption Value="https" Label="Https"></SimpleSelectOption>
+                        </SelectOptions>
+                    </SimpleSelect>
+                </ChildContent>
+            </FormControl>
+        </GridCol>
+    </GridRow>
+
+    <Divider Orientation="center">
+        <b>规则列表</b>
+    </Divider>
+
+    <GridRow>
+        <GridCol Span="9" Style="text-align:center;">
+            路径
+        </GridCol>
+        <GridCol Span="5" Style="text-align:center;">
+            匹配路径
+        </GridCol>
+        <GridCol Span="6" Style="text-align:center;">
+            服务
+        </GridCol>
+        <GridCol Span="3" Style="text-align:center;">
+            端口
+        </GridCol>
+        <GridCol Span="1" Style="text-align:center;">
+            操作
+        </GridCol>
+    </GridRow>
+
+    @foreach (var item in RuleOptions.RuleValues)
+    {
+        <GridRow Class="padding-row" @key="@item.Index">
+            <GridCol Span="9">
+                <Input Placeholder="路径"
+                   MaxLength="32"
+                   @bind-Value="@item.Path"
+                   OnChange="@(new EventCallbackFactory().Create<string>(this, OnHostChanged))" />
+            </GridCol>
+            <GridCol Span="5">
+                <SimpleSelect DefaultValue="Prefix"
+                          Value="@item.PathType"
+                          OnSelectedItemChanged="@(val => item.PathType=val)">
+                    <SelectOptions>
+                        <SimpleSelectOption Value="Prefix" Label="Prefix"></SimpleSelectOption>
+                        <SimpleSelectOption Value="Exact" Label="Exact "></SimpleSelectOption>
+                        <SimpleSelectOption Value="ImplementationSpecific" Label="ImplementationSpecific "></SimpleSelectOption>
+                    </SelectOptions>
+                </SimpleSelect>
+            </GridCol>
+            <GridCol Span="6">
+                <Select TItem="SvcInfo"
+                    TItemValue="string"
+                    DataSource="@_svcInfo"
+                    @bind-Value="@item.TargetService"
+                        DefaultActiveFirstOption
+                    ValueName="@nameof(SvcInfo.Name)"
+                    LabelName="@nameof(SvcInfo.Name)" />
+                </GridCol>
+                <GridCol Span="3">
+                <Select TItem="PortInfo"
+                    TItemValue="int?"
+                    DataSource="@(_ports.ContainsKey(item.TargetService) ? _ports[item.TargetService] : new List<PortInfo>())"
+                    @bind-Value="@item.Port"
+                        DefaultActiveFirstOption
+                    ValueName="@nameof(PortInfo.Port)"
+                    LabelName="@nameof(PortInfo.Label)">
+                </Select>
+                </GridCol>
+                <GridCol Span="1" Style="display: flex; align-items: center; justify-content: center;">
+                @if (RuleOptions.RuleValues.Count > 1)
+                {
+                    <Icon OnClick="@(() => OnDelRule(item))" Class="cursor-pointer"
+                  Type="close-circle"
+                  Theme="outline"
+                  Width="20"
+                  Height="20" />
+                }
+            </GridCol>
+            <div class="desc-container">
+                @($"完整路径：{RuleOptions.HostType}://{RuleOptions.Host}{item.Path}")
+            </div>
+        </GridRow>
+    }
+
+    <GridRow Style="margin-top: 24px;">
+        <GridCol Span="24">
+            <Button Type="@ButtonType.Primary"
+                    OnClick="@OnAddRuleAsync"
+                    Style="width:100%;">
+                添加规则
+            </Button>
+        </GridCol>
+    </GridRow>
+
+    <GridRow Style="margin-top: 24px;">
+        <GridCol Span="2" Offset="20">
+            <Button OnClick="@OnCancelAsync">取消</Button>
+        </GridCol>
+        <GridCol Span="2">
+            <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
+        </GridCol>
+    </GridRow>
+</div>
+
+@code {
+
+    public class PortInfo
+    {
+        public string Label { get; set; } = "";
+        public int Port { get; set; }
+    }
+
+    private KubeHttpClient _kubeHttpClient;
+
+    public bool IsEdit { get; set; } = false;
+    private IngRuleOptions RuleOptions { get; set; } = default!;
+
+    private List<SvcInfo> _svcInfo = new List<SvcInfo>();
+    private Task<List<SvcInfo>> _querySvcInfoTask;
+    private Dictionary<string, List<PortInfo>> _ports
+        = new Dictionary<string, List<PortInfo>>();
+
+
+    private int _iamId;
+    private IngEditCommand _editCmd;
+    private bool isCancel = true;
+
+    public EditIngRuleForm(int iamId, IngEditCommand command, IngRuleOptions? oldOptions = null)
+    {
+        _iamId = iamId;
+        _editCmd = command;
+        _kubeHttpClient = ServiceProvider.GetRequiredService<KubeHttpClient>();
+        _querySvcInfoTask = _kubeHttpClient.SvcHttp.List(_iamId, "");
+
+        if (oldOptions != null)
+        {
+            IsEdit = true;
+            RuleOptions = new IngRuleOptions()
+                {
+                    Host = oldOptions.Host,
+                    HostType = oldOptions.HostType,
+                    Index = oldOptions.Index,
+                    RuleValues = oldOptions.RuleValues
+                            .Select(x => new IngRuleValue
+                            {
+                                Index = x.Index,
+                                Path = x.Path,
+                                PathType = x.PathType,
+                                TargetService = x.TargetService,
+                                Port = x.Port,
+                            }).ToList()
+                };
+            Console.WriteLine(RuleOptions.RuleValues[0]);
+            Console.WriteLine(RuleOptions.RuleValues[1]);
+        }
+        else
+        {
+            RuleOptions = new IngRuleOptions
+                {
+                    Index = _editCmd.Rules.Count + 1
+                };
+        }
+    }
+
+    protected override void InitComponent()
+    {
+        ShowMask = true;
+        MaskClosable = false;
+        Centered = true;
+        ShowMask = true;
+        MinimizeBox = false;
+        MaximizeBox = false;
+        Width = 1000;
+        BodyStyle = "height: calc(100vh - 150px)";
+    }
+
+    protected override async Task OnShowingAsync(CancelEventArgs e)
+    {
+        _svcInfo = await _querySvcInfoTask;
+
+        _ports = _svcInfo.ToDictionary(
+            x => x.Name,
+            x => x.Ports.Select(p => new PortInfo
+                {
+                    Label = p.Port + "",
+                    Port = p.Port
+                }).ToList()
+        );
+    }
+
+    private void OnAddRuleAsync()
+    {
+        var options = new IngRuleValue();
+        options.Index = RuleOptions.RuleValues.Count + 1;
+        RuleOptions.RuleValues.Add(options);
+        StateHasChanged();
+    }
+
+    private void OnDelRule(IngRuleValue rule)
+    {
+        RuleOptions.RuleValues.Remove(rule);
+        StateHasChanged();
+    }
+
+
+    private async Task OnCancelAsync()
+    {
+        isCancel = true;
+        await base.CloseAsync();
+    }
+
+
+    private async Task OnOkAsync()
+    {
+        isCancel = false;
+        await base.CloseAsync();
+    }
+
+
+    protected override async Task OnClosingAsync(CancelEventArgs e)
+    {
+        if (isCancel)
+        {
+            return;
+        }
+        //using var scope = base.ServiceProvider.CreateScope();
+        var notify = base.ServiceProvider.GetRequiredService<INotificationService>();
+        var (res, msg) = CanClose();
+        if (res)
+        {
+            if (IsEdit)
+            {
+                var oldCmd = _editCmd.Rules.First(x => x.Index == RuleOptions.Index);
+                Console.WriteLine(oldCmd);
+                oldCmd.Host = RuleOptions.Host;
+                oldCmd.HostType = RuleOptions.HostType;
+                oldCmd.RuleValues = RuleOptions.RuleValues;
+            }
+            else
+            {
+                _editCmd.Rules.Add(RuleOptions);
+            }
+        }
+        else
+        {
+            await notify.Error(new NotificationConfig
+                {
+                    Message = "Error",
+                    Description = msg
+                });
+            e.Cancel = true;
+        }
+    }
+
+
+    private (bool, string) CanClose()
+    {
+        if (string.IsNullOrWhiteSpace(RuleOptions.Host))
+        {
+            return (false, "域名不能为空");
+        }
+
+        var distinctCount = RuleOptions.RuleValues
+            .DistinctBy(x => x.Path).ToList().Count;
+
+        if (distinctCount < RuleOptions.RuleValues.Count)
+        {
+            return (false, "路由规则中的路径不能重复");
+        }
+
+        return (true, "");
+    }
+
+    private async Task OnHostChanged(string val)
+    {
+        await StateHasChangedAsync();
+    }
+}
