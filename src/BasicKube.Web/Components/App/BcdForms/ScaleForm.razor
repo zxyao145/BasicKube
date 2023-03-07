@@ -1,0 +1,65 @@
+﻿@namespace BasicKube.Web.Components
+@inherits BcdForm
+
+<div>
+    <Row>
+        <Col Span="24">
+            <Space Style="width: 100%;">
+                <SpaceItem>
+                    实例数量
+                </SpaceItem>
+                <SpaceItem Style="flex-grow: 1;">
+                    <AntDesign.InputNumber @bind-Value="Num"
+                                           Min="0"
+                                           Style="Width: 100%;"
+                                           >
+                    </AntDesign.InputNumber>
+                </SpaceItem>
+            </Space>
+        </Col>
+    </Row>
+    
+    
+
+    <div style="border-top: 1px solid #f0f0f0;
+                padding-top: 1rem;
+                margin-top: 1rem;
+                display: flex; 
+                flex-direction: row-reverse;
+            ">
+        <Button Type="@ButtonType.Primary"
+                OnClick="@OnOkAsync">
+            确定
+        </Button>
+    </div>
+</div>
+
+
+@code {
+    public int Num { get; set; }
+
+    public Func<int, Task>? OnOk { get; set; }
+
+    protected override void InitComponent()
+    {
+        Title = "伸缩";
+        MinimizeBox = false;
+        MaximizeBox = false;
+        ShowMask = true;
+        MaskClosable = false;
+    }
+
+    private async Task OnOkAsync()
+    {
+        //if(OnOk.HasDelegate)
+        //{
+        //    await OnOk.InvokeAsync(Num);
+        //}
+        if (OnOk != null)
+        {
+            await OnOk(Num);
+        }
+
+        await this.CloseAsync();
+    }
+}

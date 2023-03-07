@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Jil" />
+		<PackageReference Include="JsonPatch.Net" />
+		<PackageReference Include="KubeClient" />
+		<PackageReference Include="KubeClient.Extensions.DependencyInjection" />
+		<PackageReference Include="KubeClient.Extensions.WebSockets" />
+		<PackageReference Include="KubernetesClient" />
+		<PackageReference Include="Swashbuckle.AspNetCore" />
+		<PackageReference Include="ZxyBase.ActionResultExtensions" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\BasicKube.Models\BasicKube.Models.csproj" />
+	</ItemGroup>
+
+</Project>

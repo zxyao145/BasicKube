@@ -1,0 +1,185 @@
+﻿@namespace BasicKube.Web.Components
+@inherits BcdForm
+
+<div>
+    <div style="margin-bottom: 0.75rem;">
+        <Space>
+            <SpaceItem>
+                应用名
+            </SpaceItem>
+            <SpaceItem Style="width: 300px;">
+                <Input Placeholder="应用名"
+                       MaxLength="32"
+                       @bind-Value="@DeployCreateCommand.AppName" 
+                       Disabled="@IsEdit" />
+            </SpaceItem>
+
+            <SpaceItem Style="margin-left: 1rem;">
+                环境
+            </SpaceItem>
+            <SpaceItem Style="width: 180px;">
+                <AppEnvSelect
+                    DefaultEnvName="@(DeployCreateCommand.Env)"
+                    Disable="@IsEdit"
+                    @bind-EnvName="DeployCreateCommand.Env" />
+      
+            </SpaceItem>
+            
+            
+            <SpaceItem Style="margin-left: 1rem;">
+                副本数
+            </SpaceItem>
+            <SpaceItem>
+                <AntDesign.InputNumber @bind-Value="@DeployCreateCommand.Replicas"
+                                       Min="0"
+                                       PlaceHolder="">
+                </AntDesign.InputNumber>
+            </SpaceItem>
+        </Space>
+    </div>
+
+    <div>
+        <Tabs @ref="@_tabs" Style="border-bottom: 1px solid #f0f0f0; padding: 1rem;"
+              DefaultActiveKey="main"
+              Type="@TabType.EditableCard"
+              OnAddClick="OnAddClick"
+              OnClose="OnTabClose"
+              @bind-ActiveKey="_activeKey">
+            @foreach (var containerInfo in _panes)
+            {
+                var title = containerInfo.Name;
+                Console.WriteLine("title:" + title);
+
+                <TabPane Key="@(containerInfo.Index + "")"
+                         Tab="@title"
+                         Closable="@(title != "main")">
+
+                    <CreateContainer @key="containerInfo.Index"
+                                     ContainerInfo="@containerInfo"
+                                     OnNameChange="@OnNameChange"
+                                     />
+
+                </TabPane>
+
+             }
+        </Tabs>
+    </div>
+
+
+    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
+        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
+    </div>
+</div>
+
+<style>
+    .bcd-form {
+        top: 50px;
+    }
+</style>
+
+@code {
+    public int IamId { get; set; }
+
+    public Func<Task>? OnOk { get; set; }
+
+    private DeployCreateCommand _createCommand = new DeployCreateCommand();
+
+    public DeployCreateCommand DeployCreateCommand
+    {
+        get => _createCommand;
+        set
+        {
+            _createCommand = value;
+            _panes.Clear();
+            _panes.AddRange(_createCommand.Containers);
+            StateHasChanged();
+        }
+    } 
+
+    public bool IsEdit { get; set; } = false;
+
+    protected override void InitComponent()
+    {
+        Width = 1000;
+        MinimizeBox = false;
+        BodyStyle = "max-height: 500px;";
+        Title = "Deployment";
+    }
+
+
+    private Tabs? _tabs;
+    readonly List<ContainerInfo> _panes = new List<ContainerInfo>()
+    {
+        new ContainerInfo()
+        {
+            Name = "main"
+        }
+    };
+    private string _activeKey = "";
+    private void OnAddClick()
+    {
+        var c = new ContainerInfo()
+            {
+                Index = _panes.Count,
+                Name = "container" + _panes.Count
+            };
+        _activeKey = c.Index + "";
+        _panes.Add(c);
+        StateHasChanged();
+    }
+
+    void OnTabClose(string key)
+    {
+        var c = _panes.Find(x => x.Index == int.Parse(key));
+        if (c != null)
+        {
+            _panes.Remove(c);
+        }
+    }
+
+    private async Task OnOkAsync()
+    {
+        DeployCreateCommand.Containers = _panes;
+        DeployCreateCommand.DeployName = $"{DeployCreateCommand.AppName}-{DeployCreateCommand.Env}";
+        DeployCreateCommand.IamId = IamId;
+
+        var http = ServiceProvider.GetRequiredService<DeployHttp>();
+        bool res = false;
+        if (IsEdit)
+        {
+            res = await http.Update(IamId, DeployCreateCommand);
+        }
+        else
+        {
+            res = await http.Create(IamId, DeployCreateCommand);
+        }
+
+        var messageService = ServiceProvider.GetRequiredService<MessageService>();
+
+        await messageService.Success(res ? "创建成功" : "创建失败");
+
+ 
+
+        if (OnOk != null)
+        {
+            await OnOk();
+        }
+        if (res)
+        {
+            await this.CloseAsync();
+        }
+    }
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Console.WriteLine(string.Join(",", _panes.Select(x => x.Name)));
+        base.OnAfterRender(firstRender);
+    }
+
+    private void OnNameChange()
+    {
+        StateHasChanged();
+    }
+
+}

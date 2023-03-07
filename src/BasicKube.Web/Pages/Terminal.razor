@@ -1,0 +1,36 @@
+﻿@page "/pages/terminal/{IamId:int}/{PodName}/{ContainerName}"
+@inject IJSRuntime JsRuntime
+@layout EmptyLayout
+
+<div class="terminal-page">
+    <div class="terminal-meta">
+        Pod: @PodName
+    </div>
+    <div @ref="_terminalRef" id="terminal"></div>
+</div>
+
+@code
+{
+    private ElementReference _terminalRef;
+
+    [Parameter]
+    public string? ContainerName { get; set; }
+
+    [Parameter]
+    public string? PodName { get; set; }
+
+    [Parameter]
+    public int IamId { get; set; } = 0;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeVoidAsync("initTerminal", 
+            _terminalRef,
+            IamId,
+            PodName,
+            ContainerName
+            );
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

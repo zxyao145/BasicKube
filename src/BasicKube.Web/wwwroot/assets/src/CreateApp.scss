@@ -1,0 +1,68 @@
+﻿@import "./Common.scss";
+
+.env-var-config,
+.port-config {
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+
+    > div {
+        margin-bottom: 1rem;
+    }
+
+    .ant-space {
+        width: 100%;
+
+        .ant-space-item:nth-child(1),
+        .ant-space-item:nth-child(2) {
+            width: 40%
+        }
+
+        .ant-space-item:nth-child(3) {
+            width: 20%;
+            text-align: center
+        }
+    }
+
+    > .ant-space {
+        font-weight: 700;
+        background-color: #efefef;
+
+        .ant-space-item {
+            text-align: center;
+            padding: 0.5rem 0;
+        }
+    }
+
+    > div:nth-child(2) > .ant-space {
+        width: 100%;
+
+        .ant-space-item:nth-child(1),
+        .ant-space-item:nth-child(2) {
+            width: 40%
+        }
+
+        .ant-space-item:nth-child(3) {
+            width: 20%;
+            text-align: center
+        }
+
+        .ant-space-item {
+            margin-bottom: 1rem;
+
+            .ant-input-number {
+                width: 100%
+            }
+
+            .ant-select {
+                text-align: center;
+            }
+
+            span.anticon {
+                cursor: pointer;
+            }
+        }
+    }
+}

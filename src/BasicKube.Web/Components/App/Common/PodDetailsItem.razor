@@ -1,0 +1,138 @@
+﻿@namespace BasicKube.Web.Components
+@using AntDesign.TableModels
+@inject KubeHttpClient KubeHttpClient
+
+<Table Class="deploy-pods"
+       DataSource="@PodDetails"
+       TItem="PodDetail"
+       OnExpand="OnRowExpand"
+       HidePagination
+       Size=@TableSize.Middle>
+    <RowTemplate>
+        <PropertyColumn Property="@(c=>c!.Name)" />
+        <PropertyColumn Property="@(c=>c!.GetStartTimeStr())" Title="StartTime" />
+        <PropertyColumn Property="@(c=>c!.HostIp)" />
+        <PropertyColumn Property="@(c=>c!.PodIp)" />
+        <PropertyColumn Property="@(c=>c!.Status)" />
+        <ActionColumn Title="Action">
+            <Space>
+                <SpaceItem>
+                    <Button Size="small" OnClick="@(async () => await OnDelPodAsync(context))" Type="@ButtonType.Link">
+                        删除
+                    </Button>
+                </SpaceItem>
+                <SpaceItem>
+                    <Dropdown Placement="@Placement.TopRight"
+                        Trigger="@(new Trigger[] { Trigger.Click })">
+                        <Overlay>
+                            <Menu>
+                                <MenuItem>
+                                    <Button Size="small" OnClick="@(async () => await ShowEventsAsync(context))" Type="@ButtonType.Link">
+                                        查看事件
+                                    </Button>
+                                </MenuItem>
+                            </Menu>
+                        </Overlay>
+                        <ChildContent>
+                            <a class="ant-dropdown-link" @onclick:preventDefault>
+                                更多 <Icon Type="down" />
+                            </a>
+                        </ChildContent>
+                    </Dropdown>
+                </SpaceItem>
+            </Space>
+        </ActionColumn>
+    </RowTemplate>
+    <ExpandTemplate Context="rowData">
+        <Table DataSource="rowData.Data.ContainerDetails.Values.ToList()"
+               Loading="@(rowData.Data.ContainerDetails==null)"
+               HidePagination>
+
+            <PropertyColumn Property="c=>c.Name" />
+            <PropertyColumn Property="c=>c.Image" />
+            <PropertyColumn Property="c=>c.Tag" />
+            <PropertyColumn Property="c=>c.State" />
+            <PropertyColumn Property="c=>c.IsReady" />
+            <PropertyColumn Property="c=>c.RestartCount" />
+            <PropertyColumn Property="c=>c.ExitCode" />
+
+            <ActionColumn Title="Action">
+                <Space Size="@("small")">
+                    <SpaceItem>
+                        <a target="_blank"
+                           href="@($"/pages/terminal/{IamId}/{rowData.Data.Name}/{context.Name}")">
+                            终端
+                        </a>
+                    </SpaceItem>
+                </Space>
+            </ActionColumn>
+        </Table>
+    </ExpandTemplate>
+</Table>
+
+<Drawer Width="800" Closable="true" Visible="visible" Placement="right" Title='("Basic Drawer")' OnClose="_=>close()">
+    <Table Class="pods-events"
+           DataSource="@_events"
+           TItem="EventInfo"
+           HidePagination
+           Size=@TableSize.Middle
+           Loading=@(_events.Count == 0)>
+        <RowTemplate>
+            <PropertyColumn Property="@(c=>c!.GetDateTimeStr())" Title="EventTime"/>
+            <PropertyColumn Property="@(c=>c!.Type)" />
+            <PropertyColumn Property="@(c=>c!.Reason)" />
+            <PropertyColumn Property="@(c=>c!.Source)" />
+            <PropertyColumn Property="@(c=>c!.Message)" />
+        </RowTemplate>
+    </Table>
+</Drawer>
+
+
+@code {
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
+
+
+    [Parameter]
+    public List<PodDetail> PodDetails { get; set; } = new List<PodDetail>();
+
+    [Parameter]
+    public string DeployUnitName { get; set; } = "";
+
+    private async Task OnDelPodAsync(PodDetail podInfo)
+    {
+        await KubeHttpClient.PodHttp.Del(IamId, podInfo.Name);
+    }
+
+
+    private async Task OnRowExpand(RowData<PodDetail> rowData)
+    {
+        if (rowData.Data.ContainerDetails != null)
+        {
+            return;
+        }
+
+        await Task.Delay(1000);
+        // rowData.Data.ContainerDetails =
+        StateHasChanged();
+    }
+
+
+    // events
+    private List<EventInfo> _events = new List<EventInfo>();
+
+    bool visible = false;
+
+    async Task ShowEventsAsync(PodDetail podDetail)
+    {
+        this.visible = true;
+        _events = await KubeHttpClient.EventsHttp.GetEvents(IamId, podDetail.Name);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void close()
+    {
+        this.visible = false;
+    }
+
+}

@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32929.385
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0CF0E2CB-6CBF-454C-A9C6-16F4BFC8562C}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Directory.Packages.props = Directory.Packages.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1D960FF6-1A86-4E23-B192-86FB1DDCD68B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicKube.Api", "src\BasicKube\BasicKube.Api.csproj", "{CAE90513-8ABF-4B15-8B0B-C82071492B5E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicKube.Web", "src\BasicKube.Web\BasicKube.Web.csproj", "{35FF92F0-3729-4364-9BB9-7A6EB83F5244}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicKube.Models", "src\BasicKube.Models\BasicKube.Models.csproj", "{7F062D4F-ADEA-4407-B81D-0934CD1B4892}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicKubeTest", "BasicKubeConsoleTest\BasicKubeTest.csproj", "{2CBC1501-2E01-405C-A347-49A970DC8FF9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CAE90513-8ABF-4B15-8B0B-C82071492B5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAE90513-8ABF-4B15-8B0B-C82071492B5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAE90513-8ABF-4B15-8B0B-C82071492B5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAE90513-8ABF-4B15-8B0B-C82071492B5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35FF92F0-3729-4364-9BB9-7A6EB83F5244}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35FF92F0-3729-4364-9BB9-7A6EB83F5244}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35FF92F0-3729-4364-9BB9-7A6EB83F5244}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35FF92F0-3729-4364-9BB9-7A6EB83F5244}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F062D4F-ADEA-4407-B81D-0934CD1B4892}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F062D4F-ADEA-4407-B81D-0934CD1B4892}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F062D4F-ADEA-4407-B81D-0934CD1B4892}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F062D4F-ADEA-4407-B81D-0934CD1B4892}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CBC1501-2E01-405C-A347-49A970DC8FF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CBC1501-2E01-405C-A347-49A970DC8FF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CBC1501-2E01-405C-A347-49A970DC8FF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CBC1501-2E01-405C-A347-49A970DC8FF9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CAE90513-8ABF-4B15-8B0B-C82071492B5E} = {1D960FF6-1A86-4E23-B192-86FB1DDCD68B}
+		{35FF92F0-3729-4364-9BB9-7A6EB83F5244} = {1D960FF6-1A86-4E23-B192-86FB1DDCD68B}
+		{7F062D4F-ADEA-4407-B81D-0934CD1B4892} = {1D960FF6-1A86-4E23-B192-86FB1DDCD68B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8091D888-6A58-43F2-BBE1-B01CE4108287}
+	EndGlobalSection
+EndGlobal

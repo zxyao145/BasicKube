@@ -1,0 +1,84 @@
+﻿@page "/pages/ingressGrpList/{IamId:int?}/{IngressName?}"
+
+@inject KubeHttpClient KubeHttpClient
+@inject NavigationManager NavigationManager
+<div class="page-content">
+    <Breadcrumb Style="margin-bottom: 1rem;">
+        @if (string.IsNullOrWhiteSpace(IngressName))
+        {
+            <BreadcrumbItem>
+                <b>
+                    <Icon Type="link" Theme="outline" />
+                    路由组列表
+                </b>
+            </BreadcrumbItem>
+        }
+        else
+        {
+            <BreadcrumbItem OnClick="ReturnSvcList">
+                <b class="cursor-pointer">
+                    <Icon Type="link" Theme="outline" /> 路由组列表
+                </b>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+                <b><IconLinkSelect /> 路由</b>
+            </BreadcrumbItem>
+        }
+    </Breadcrumb>
+
+     <blockquote class="operate-wrapper">
+        <Button Type="@ButtonType.Primary" Size="small" OnClick="@OnCreateIngClick">新建路由</Button>
+    </blockquote>
+
+    @if (string.IsNullOrWhiteSpace(IngressName))
+    {
+        <AntList DataSource="@_grpInfos" TItem="IngGrpInfo">
+            <ListItem Class="page-resource-list-item" OnClick="() => OnGrpClick(context)">
+                <ListItemMeta Description="">
+                    <TitleTemplate>
+                        @context.Name
+                    </TitleTemplate>
+                </ListItemMeta>
+            </ListItem>
+        </AntList>
+    }
+    else
+    {
+        <CascadingValue Value="@(IamId)" Name="@("IamId")">
+            <CascadingValue Value="@(this)" IsFixed="true">
+                <IngList GrpName="@IngressName" />
+            </CascadingValue>
+        </CascadingValue>
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public int IamId { get; set; }
+    [Parameter]
+    public string? IngressName { get; set; }
+
+    private List<IngGrpInfo> _grpInfos = new List<IngGrpInfo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _grpInfos = await KubeHttpClient.IngHttp.ListGrp(IamId);
+    }
+
+    private void OnGrpClick(IngGrpInfo context)
+    {
+        NavigationManager.NavigateTo($"/pages/ingressGrpList/{IamId}/{context.Name}");
+    }
+
+    internal void ReturnSvcList()
+    {
+        NavigationManager.NavigateTo($"/pages/ingressGrpList/{IamId}");
+    }
+
+    private async Task OnCreateIngClick()
+    {
+        var form = new CreateIngForm(IamId);
+        await form.ShowAsync();
+    }
+}

@@ -1,0 +1,84 @@
+﻿@page "/pages/svcGrpList/{IamId:int?}/{SvcName?}"
+
+@inject SvcHttp SvcHttp
+@inject NavigationManager NavigationManager
+<div class="page-content">
+    <Breadcrumb Style="margin-bottom: 1rem;">
+        @if (string.IsNullOrWhiteSpace(SvcName))
+        {
+            <BreadcrumbItem>
+                <b>
+                    <Icon Type="link" Theme="outline" />
+                    服务列表
+                </b>
+            </BreadcrumbItem>
+        }
+        else
+        {
+            <BreadcrumbItem OnClick="ReturnSvcList">
+                <b class="cursor-pointer">
+                    <Icon Type="link" Theme="outline" /> 服务组列表
+                </b>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+                <b><IconLinkSelect /> 服务</b>
+            </BreadcrumbItem>
+        }
+    </Breadcrumb>
+
+     <blockquote class="operate-wrapper">
+        <Button Type="@ButtonType.Primary" Size="small" OnClick="@OnCreateSvcClick">新建服务</Button>
+    </blockquote>
+
+    @if (string.IsNullOrWhiteSpace(SvcName))
+    {
+        <AntList DataSource="@_svcInfos" TItem="SvcGrpInfo">
+            <ListItem Class="page-resource-list-item" OnClick="() => OnSvcClick(context)">
+                <ListItemMeta Description="">
+                    <TitleTemplate>
+                        @context.Name
+                    </TitleTemplate>
+                </ListItemMeta>
+            </ListItem>
+        </AntList>
+    }
+    else
+    {
+        <CascadingValue Value="@(IamId)" Name="@("IamId")">
+            <CascadingValue Value="@(this)" IsFixed="true">
+                <SvcList SvcGrpName="@SvcName" />
+            </CascadingValue>
+        </CascadingValue>
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public int IamId { get; set; }
+    [Parameter]
+    public string? SvcName { get; set; }
+
+    private List<SvcGrpInfo> _svcInfos = new List<SvcGrpInfo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svcInfos = await SvcHttp.ListGrp(IamId);
+    }
+
+    private void OnSvcClick(SvcGrpInfo context)
+    {
+        NavigationManager.NavigateTo($"/pages/svcGrpList/{IamId}/{context.Name}");
+    }
+
+    internal void ReturnSvcList()
+    {
+        NavigationManager.NavigateTo($"/pages/svcGrpList/{IamId}");
+    }
+
+    private async Task OnCreateSvcClick()
+    {
+        var form = new CreateSvcForm(IamId);
+        await form.ShowAsync();
+    }
+}

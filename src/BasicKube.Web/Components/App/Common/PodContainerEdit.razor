@@ -1,0 +1,80 @@
+﻿@namespace BasicKube.Web.Components
+
+<div>
+    <Tabs @ref="@_tabs" Style="border-bottom: 1px solid #f0f0f0; padding: 1rem;"
+          DefaultActiveKey="main"
+          Type="@TabType.EditableCard"
+          OnAddClick="OnAddClick"
+          OnClose="OnTabClose"
+          @bind-ActiveKey="_activeKey">
+        @foreach (var containerInfo in _panes)
+        {
+            var title = containerInfo.Name;
+            Console.WriteLine("title:" + title);
+
+            <TabPane Key="@(containerInfo.Index + "")"
+                 Tab="@title"
+                 Closable="@(title != "main")">
+
+                <CreateContainer @key="containerInfo.Index"
+                             ContainerInfo="@containerInfo"
+                             OnNameChange="@OnNameChange" />
+            </TabPane>
+        }
+    </Tabs>
+</div>
+
+
+@code{
+
+    private Tabs? _tabs;
+    readonly List<ContainerInfo> _panes = new List<ContainerInfo>()
+    {
+        new ContainerInfo()
+        {
+            Name = "main"
+        }
+    };
+
+    [Parameter]
+    public List<ContainerInfo> Containers
+    {
+        get => _panes;
+        set
+        {
+            if (value is { Count: > 0 })
+            {
+                _panes.Clear();
+                _panes.AddRange(value);
+            }
+        }
+    }
+
+    
+    private string _activeKey = "";
+    private void OnAddClick()
+    {
+        var c = new ContainerInfo()
+            {
+                Index = _panes.Count,
+                Name = "container" + _panes.Count
+            };
+        _activeKey = c.Index + "";
+        _panes.Add(c);
+        StateHasChanged();
+    }
+
+    void OnTabClose(string key)
+    {
+        var c = _panes.Find(x => x.Index == int.Parse(key));
+        if (c != null)
+        {
+            _panes.Remove(c);
+        }
+    }
+
+    private void OnNameChange()
+    {
+        StateHasChanged();
+    }
+}

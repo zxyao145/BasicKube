@@ -1,0 +1,151 @@
+﻿@namespace BasicKube.Web.Components
+@inherits BcdForm
+
+<div>
+    <GridRow>
+        <GridCol Span="12">
+            <DivFormItem Label="服务组名" LabelSpan="4">
+                <Input Placeholder="服务组名"
+                       MaxLength="32"
+                       @bind-Value="@SvcEditCommand.SvcGrpName"
+                       Disabled="@IsEdit" />
+            </DivFormItem>
+        </GridCol>
+        <GridCol Span="12">
+            <DivFormItem Label="环境" LabelSpan="4">
+                <AppEnvSelect DefaultEnvName="@(SvcEditCommand.Env)"
+                              Disable="@IsEdit"
+                              @bind-EnvName="SvcEditCommand.Env" />
+            </DivFormItem>
+        </GridCol>
+    </GridRow>
+
+
+    <div>
+        <CascadingValue Value="@SvcEditCommand">
+            <GridRow>
+                <GridCol Span="12">
+                    <DivFormItem Label="服务类型" LabelSpan="4">
+                        <Select TItem="string"
+                                TItemValue="string"
+                                DataSource="@SvcType.SvcTypeList"
+                                @bind-Value="@SvcEditCommand.Type"
+                                Placeholder="选择服务类型"
+                                DefaultActiveFirstOption="true"
+                                DefaultValue="@SvcType.ClusterIP"
+                                OnSelectedItemChanged="OnSelectedSvcTypeChanged">
+                        </Select>
+                    </DivFormItem>
+                </GridCol>
+                <GridCol Span="12">
+                    <DivFormItem Label="关联应用" LabelSpan="4">
+                        <Select TItem="string"
+                                TItemValue="string"
+                                DataSource="@_appNames"
+                                @bind-Value="@SvcEditCommand.RelationAppName"
+                                Placeholder="选择关联的应用"
+                                DefaultActiveFirstOption="true"
+                                EnableSearch>
+                        </Select>
+                    </DivFormItem>
+                </GridCol>
+            </GridRow>
+
+            <SvcPortConfig />
+        </CascadingValue>
+    </div>
+
+
+    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
+        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
+    </div>
+</div>
+
+<style>
+    .bcd-form {
+        top: 50px;
+    }
+</style>
+
+@code {
+    public Func<Task>? OnOk { get; set; }
+    public bool IsEdit { get; set; } = false;
+
+    private SvcEditCommand _createCommand = new SvcEditCommand();
+    private string _msgPrefix => IsEdit? "创建" : "编辑";
+
+    public SvcEditCommand SvcEditCommand
+    {
+        get => _createCommand;
+        set
+        {
+            _createCommand = value;
+            StateHasChanged();
+        }
+    }
+
+    private int IamId { get; set; }
+
+
+    private List<string> _appNames = new List<string>();
+
+    public CreateSvcForm(int iamId) : base()
+    {
+        IamId = iamId;
+    }
+
+    protected override void InitComponent()
+    {
+        Title = _msgPrefix + "服务";
+        ShowMask = true;
+        MinimizeBox = false;
+        MaximizeBox = false;
+        Width = 800;
+    }
+
+
+    protected override async Task OnShowingAsync(System.ComponentModel.CancelEventArgs e)
+    {
+        var http = ServiceProvider.GetRequiredService<AppManagerHttp>();
+        var appList = await http.GetDeployAppList(IamId);
+
+        _appNames = appList.Select(x => x.Name).ToList();
+        StateHasChanged();
+
+        await base.OnShowingAsync(e);
+    }
+
+    private async Task OnSelectedSvcTypeChanged(string value)
+    {
+        await StateHasChangedAsync();
+    }
+
+    private async Task OnOkAsync()
+    {
+        SvcEditCommand.IamId = IamId;
+
+        var http = ServiceProvider.GetRequiredService<SvcHttp>();
+        bool res = false;
+        if (IsEdit)
+        {
+            res = await http.Update(SvcEditCommand);
+        }
+        else
+        {
+            res = await http.Add(SvcEditCommand);
+        }
+
+        var messageService = ServiceProvider.GetRequiredService<MessageService>();
+        _ = messageService.Success(res ? _msgPrefix + "成功" : _msgPrefix + "失败");
+
+        if (OnOk != null)
+        {
+            await OnOk();
+        }
+       
+        if (res)
+        {
+            await this.CloseAsync();
+        }
+    }
+}

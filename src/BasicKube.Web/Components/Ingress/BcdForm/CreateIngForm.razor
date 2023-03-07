@@ -1,0 +1,188 @@
+﻿@namespace BasicKube.Web.Components
+@inherits BcdForm
+
+<div>
+    <GridRow Style="margin-bottom: 16px;">
+        <GridCol Span="12">
+            <FormControl Required>
+                <LabelContent>
+                    路由组
+                </LabelContent>
+                <ChildContent>
+                    <Input Placeholder="路由组"
+                           MaxLength="32"
+                           @bind-Value="@IngEditCommand.IngGrpName"
+                           Disabled="@IsEdit" />
+                </ChildContent>
+            </FormControl>
+        </GridCol>
+        <GridCol Span="8">
+            <FormControl>
+                <LabelContent>
+                    IngressClass
+                </LabelContent>
+                <ChildContent>
+                    <Input Placeholder="IngressClass"
+                           MaxLength="32"
+                           @bind-Value="@IngEditCommand.IngClassName"
+                           Disabled="@IsEdit" />
+                </ChildContent>
+            </FormControl>
+        </GridCol>
+        <GridCol Span="4">
+            <FormControl>
+                <LabelContent>
+                    环境
+                </LabelContent>
+                <ChildContent>
+                    <AppEnvSelect DefaultEnvName="@(IngEditCommand.Env)"
+                                  Disable="@IsEdit"
+                                  @bind-EnvName="IngEditCommand.Env" />
+                </ChildContent>
+            </FormControl>
+        </GridCol>
+    </GridRow>
+
+    @foreach (var item in IngEditCommand.Rules)
+    {
+        <GridRow @key="@item.Index" Class="rule-item">
+            <GridCol Span="24">
+                @item.Host
+            </GridCol>
+            <div class="rule-values">
+                <div>
+                    <Table TItem="IngRuleValue"
+                       DataSource="@item.RuleValues"
+                                  HidePagination>
+                    <PropertyColumn Property="c=>c.Path" Sortable />
+                        <PropertyColumn Property="c=>c.PathType" Sortable />
+                        <PropertyColumn Property="c=>c.TargetService" Sortable />
+                        <PropertyColumn Property="c=>c.Port" Sortable />
+                    </Table>
+                </div>
+                <div>
+                    <div>
+                        <Icon Type="edit" Theme="outline" OnClick="@(async ()=> { await OnEditRulesAsync(item); })" />
+                    </div>
+                </div>
+            </div>
+        </GridRow>
+     }
+
+    <GridRow Style="margin-bottom: 24px; margin-top: 0.75rem;">
+        <GridCol Span="24">
+            <Button Type="@ButtonType.Primary"
+                OnClick="@OnAddRulesAsync"
+                Style="width:100%;"
+            >
+                添加路由规则
+            </Button>
+        </GridCol>
+    </GridRow>
+
+    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
+        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
+    </div>
+</div>
+
+<style>
+    .bcd-form {
+        top: 50px;
+    }
+</style>
+
+@code {
+    public Func<Task>? OnOk { get; set; }
+    public bool IsEdit { get; set; } = false;
+
+    private IngEditCommand _createCommand = new IngEditCommand();
+    private string _msgPrefix => IsEdit? "创建" : "编辑";
+
+    public IngEditCommand IngEditCommand
+    {
+        get => _createCommand;
+        set
+        {
+            _createCommand = value;
+            StateHasChanged();
+        }
+    }
+
+    private int IamId { get; set; }
+
+
+    private List<string> _appNames = new List<string>();
+
+    public CreateIngForm(int iamId) : base()
+    {
+        IamId = iamId;
+    }
+
+    protected override void InitComponent()
+    {
+        Title = _msgPrefix + "路由";
+        ShowMask = true;
+        MinimizeBox = false;
+        MaximizeBox = false;
+        Width = 1000;
+        BodyStyle = "height: calc(100vh - 150px)";
+    }
+
+
+    protected override async Task OnShowingAsync(System.ComponentModel.CancelEventArgs e)
+    {
+        var http = ServiceProvider.GetRequiredService<AppManagerHttp>();
+        var appList = await http.GetDeployAppList(IamId);
+
+        _appNames = appList.Select(x => x.Name).ToList();
+        StateHasChanged();
+
+        await base.OnShowingAsync(e);
+    }
+
+    private async Task OnSelectedSvcTypeChanged(string value)
+    {
+        await StateHasChangedAsync();
+    }
+
+    private async Task OnOkAsync()
+    {
+        IngEditCommand.IamId = IamId;
+
+        var http = ServiceProvider.GetRequiredService<IngHttp>();
+        bool res = false;
+        if (IsEdit)
+        {
+            res = await http.Update(IngEditCommand);
+        }
+        else
+        {
+            res = await http.Add(IngEditCommand);
+        }
+
+        var messageService = ServiceProvider.GetRequiredService<MessageService>();
+        _ = messageService.Success(res ? _msgPrefix + "成功" : _msgPrefix + "失败");
+
+        if (OnOk != null)
+        {
+            await OnOk();
+        }
+
+        if (res)
+        {
+            await this.CloseAsync();
+        }
+    }
+
+    private async Task OnAddRulesAsync()
+    {
+        var form = new EditIngRuleForm(IamId, IngEditCommand);
+        await form.ShowAsync();
+    }
+
+    private async Task OnEditRulesAsync(IngRuleOptions options)
+    {
+        var form = new EditIngRuleForm(IamId, IngEditCommand, options);
+        await form.ShowAsync();
+    }
+}

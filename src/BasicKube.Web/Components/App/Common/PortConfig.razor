@@ -1,0 +1,83 @@
+﻿@namespace BasicKube.Web.Components
+<div class="port-config">
+
+    <Space>
+        <SpaceItem>端口</SpaceItem>
+        <SpaceItem>协议</SpaceItem>
+        <SpaceItem>操作</SpaceItem>
+    </Space>
+
+    @if (ContainerInfo.Ports is { Count: > 0 })
+    {
+        <div>
+            @foreach (var portInfo in ContainerInfo.Ports)
+            {
+                <Space @key="portInfo">
+
+                    <SpaceItem>
+                        <AntDesign.InputNumber @bind-Value="portInfo.Port"
+                                       Min="1"
+                                       Max="65535">
+                        </AntDesign.InputNumber>
+                    </SpaceItem>
+
+                    <SpaceItem>
+                        <SimpleSelect DefaultValue="tcp"
+                              OnSelectedItemChanged="@(val => portInfo.Protocol = val)">
+                            <SelectOptions>
+                                <SimpleSelectOption Value="TCP" Label="TCP"></SimpleSelectOption>
+                                <SimpleSelectOption Value="UDP" Label="UDP"></SimpleSelectOption>
+                            </SelectOptions>
+                        </SimpleSelect>
+                    </SpaceItem>
+
+                    <SpaceItem>
+                        <Icon OnClick="@(() => DelPortInfo(portInfo))"
+                      Type="close-circle"
+                      Theme="outline"
+                      Width="20"
+                      Height="20" />
+                    </SpaceItem>
+                </Space>
+            }
+        </div>
+
+    }
+    else
+    {
+        <Empty Simple />
+    }
+
+    <Button Type="@ButtonType.Primary" OnClick="AddPortInfo">
+        <Icon Type="plus" Theme="outline" />
+    </Button>
+
+</div>
+
+
+
+@code {
+#pragma warning disable CS8618
+    [CascadingParameter]
+    public ContainerInfo ContainerInfo { get; set; }
+#pragma warning restore CS8618
+
+    private List<PortInfo>? PortInfos => ContainerInfo.Ports;
+
+    private void DelPortInfo(PortInfo portInfo)
+    {
+        if (PortInfos != null)
+        {
+            PortInfos.Remove(portInfo);
+        }
+    }
+
+    private void AddPortInfo()
+    {
+        ContainerInfo.Ports ??= new List<PortInfo>();
+        ContainerInfo.Ports.Add(new PortInfo()
+            {
+                Index = ContainerInfo.Ports.Count
+            });
+    }
+}

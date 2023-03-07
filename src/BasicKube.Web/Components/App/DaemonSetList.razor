@@ -1,0 +1,181 @@
+﻿@namespace BasicKube.Web.Components
+@using BasicKube.Web.Pages
+
+@inject KubeHttpClient KubeHttpClient
+@inject ConfirmService ConfirmService
+@inject MessageService MessageService
+@implements IDisposable
+
+<div>
+    <Collapse DefaultActiveKey="@(new[] { _defaultActiveKey })">
+        @{
+            foreach (var daemonSetDetails in _daemonSetDetailss)
+            {
+                var header = $"{daemonSetDetails.Name}";
+
+                <Panel @key="@daemonSetDetails.Name" Header="@header" Key="@(@daemonSetDetails.Name)" Class="deploy-panel">
+                    <ExtraTemplate>
+                        <Button Class="mr-6" OnClickStopPropagation="true" Size="small"
+                            OnClick="@(async () => await ShowHistoryVersionAsync(daemonSetDetails))">
+                            版本控制
+                        </Button>
+
+                        <ButtonGroup>
+                            <Button OnClick="@(async () => await OnDelClickAsync(daemonSetDetails))"
+                            OnClickStopPropagation="true"
+                            Type="@ButtonType.Primary"
+                            Danger="true"
+                            Size="small">
+                                删除
+                            </Button>
+
+                            <Button OnClick="@(async () => await OnEditClickAsync(daemonSetDetails))"
+                            OnClickStopPropagation="true"
+                            Type="@ButtonType.Primary"
+                            Size="small">
+                                编辑
+                            </Button>
+
+                            <Button OnClick="@(async () => await OnPublishClickAsync(daemonSetDetails))"
+                            OnClickStopPropagation="true"
+                            Type="navy"
+                            Size="small">
+                                发布
+                            </Button>
+                        </ButtonGroup>
+                    </ExtraTemplate>
+                    <ChildContent>
+                        <Collapse DefaultActiveKey="@(new[] { daemonSetDetails.Name + "0" })">
+
+                            <PodDetailsItem DeployUnitName="@(daemonSetDetails.Name)"
+                                    PodDetails="@(daemonSetDetails.PodDetails)">
+                            </PodDetailsItem>
+
+                        </Collapse>
+                    </ChildContent>
+                </Panel>
+            }
+        }
+    </Collapse>
+</div>
+
+
+@code
+{
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
+
+    [CascadingParameter]
+    public DaemonSetAppGrpListPage? Parent { get; set; }
+
+#nullable disable
+    [Parameter]
+    public string AppName { get; set; }
+
+    [Parameter]
+    public string DeployName { get; set; }
+#nullable enable
+
+    private string _defaultActiveKey = "";
+
+
+    private Timer? _timer = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshDeployInfo();
+        _timer ??= new Timer(TimerIntervalTask, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+    }
+
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        await base.SetParametersAsync(parameters);
+        if (!string.IsNullOrWhiteSpace(DeployName))
+        {
+            _defaultActiveKey = DeployName;
+        }
+    }
+
+    private async void TimerIntervalTask(object? state)
+    {
+        await RefreshDeployInfo();
+    }
+
+    private List<DaemonSetDetails> _daemonSetDetailss = new List<DaemonSetDetails>();
+
+    private async Task RefreshDeployInfo()
+    {
+        var data = await KubeHttpClient.DaemonSetHttp
+            .GetDeployUnitList(IamId, AppName!);
+        if (data is { Count: > 0 })
+        {
+            _daemonSetDetailss = data;
+
+            if (string.IsNullOrWhiteSpace(DeployName))
+            {
+                _defaultActiveKey = _daemonSetDetailss[0].Name;
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnEditClickAsync(DaemonSetDetails daemonSetDetails)
+    {
+        var appName = string.Join(
+            "-",
+            daemonSetDetails.Name.Split("-")[0..^1]
+            );
+        var cmd = await
+            KubeHttpClient.DaemonSetHttp.Details(IamId, appName, daemonSetDetails.Name);
+        if (cmd != null)
+        {
+            var modal = new CreateDaemonSetAppForm();
+            modal.IamId = IamId;
+            modal.IsEdit = true;
+            modal.DaemonSetCreateCommand = cmd;
+
+
+            async Task OnOk()
+            {
+                await Task.CompletedTask;
+            }
+
+            modal.OnOk = (Func<Task>)OnOk;
+            await modal.ShowAsync();
+        }
+    }
+
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+    private async Task OnDelClickAsync(DaemonSetDetails daemonSetDetails)
+    {
+        var confirmResult = await ConfirmService.Show("确定要删除这个 DaemonSet 吗？", "删除");
+        if (confirmResult == ConfirmResult.OK)
+        {
+            var delRes = await KubeHttpClient.DaemonSetHttp.Del(IamId, AppName, daemonSetDetails.Name);
+
+            await MessageService.Success(delRes ? "删除成功" : "删除失败，请稍候重试");
+            if (delRes)
+            {
+                Parent?.ReturnAppList();
+            }
+        }
+    }
+
+    private async Task OnPublishClickAsync(DaemonSetDetails daemonSetDetails)
+    {
+        var publishForm = new AppPublishForm(IamId, AppName, daemonSetDetails.Name);
+        await publishForm.ShowAsync();
+    }
+
+    private async Task ShowHistoryVersionAsync(DaemonSetDetails daemonSetDetails)
+    {
+        //await publishForm.ShowAsync();
+    }
+}

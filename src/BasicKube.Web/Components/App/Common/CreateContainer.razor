@@ -1,0 +1,94 @@
+﻿@namespace BasicKube.Web.Components
+
+<CascadingValue Value="@ContainerInfo">
+    <div>
+        <Divider Orientation="left">
+            <b>基本信息</b>
+        </Divider>
+
+        <DivFormItem Label="容器名称">
+            <AntDesign.Input OnChange="@CreateChangeClick()"
+                             DefaultValue="@ContainerInfo.Name"
+                             Disabled="@(ContainerInfo.Name == "main")"/>
+        </DivFormItem>
+        <DivFormItem Label="镜像选择">
+            <AntDesign.Input @bind-Value="@ContainerInfo.Image"
+                             DefaultValue="@ContainerInfo.Image"/>
+        </DivFormItem>
+        <DivFormItem Label="Tag选择">
+            <AntDesign.Input @bind-Value="@ContainerInfo.Tag" DefaultValue="@ContainerInfo.Tag"/>
+        </DivFormItem>
+
+        @* <Divider Orientation="left">
+        <b>容器规格</b>
+        </Divider>*@
+
+        <Divider Orientation="left">
+            <b>端口配置</b>
+        </Divider>
+        <PortConfig/>
+
+
+
+        <Divider Orientation="left">
+            <b>生命周期</b>
+        </Divider>
+        <DivFormItem Label="启动命令">
+            <TextArea Rows="2" @bind-Value="@ContainerInfo.StartCmd"></TextArea>
+        </DivFormItem>
+        <DivFormItem Label="启动后处理">
+            <TextArea Rows="2" @bind-Value="@ContainerInfo.AfterStart"></TextArea>
+        </DivFormItem>
+        <DivFormItem Label="停止前处理">
+            <TextArea Rows="2" @bind-Value="@ContainerInfo.BeforeStop"></TextArea>
+        </DivFormItem>
+
+
+        @*<Divider Orientation="left">
+        <b>健康检查</b>
+        </Divider>*@
+
+        <Divider Orientation="left">
+            <b>环境变量配置</b>
+        </Divider>
+        <EnvVarConfig/>
+
+    </div>
+
+</CascadingValue>
+@code
+{
+#pragma warning disable CS8618
+    [Parameter]
+    public ContainerInfo ContainerInfo { get; set; }
+
+    private string _oldName;
+
+    protected override void OnParametersSet()
+    {
+        this._oldName = ContainerInfo.Name;
+        base.OnParametersSet();
+
+    }
+
+#pragma warning restore CS8618
+
+    [Parameter]
+    public EventCallback OnNameChange { get; set; }
+
+
+    EventCallback<string> CreateChangeClick()
+    {
+        return EventCallback.Factory.Create<string>(this, OnChange);
+    }
+
+    private async Task OnChange(string val)
+    {
+        Console.WriteLine("OnChange:{val}");
+        ContainerInfo.Name = val;
+        if (OnNameChange.HasDelegate)
+        {
+            await OnNameChange.InvokeAsync();
+        }
+    }
+}

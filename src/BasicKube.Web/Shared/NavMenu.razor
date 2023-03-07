@@ -1,0 +1,89 @@
+﻿@inject IconService iconService
+
+<Menu DefaultSelectedKeys=@(new[]{ _activeKey })
+      DefaultOpenKeys="@_openKeys"
+      Mode="MenuMode.Inline">
+    <MenuItem Key="pages/deployappgrplist" Icon="appstore">
+        <NavLink class="nav-link" href="pages/deployAppGrpList" Match="NavLinkMatch.All">
+            应用组
+        </NavLink>
+    </MenuItem>
+    <MenuItem Key="pages/svcgrplist" Icon="link">
+        <NavLink class="nav-link" href="pages/svcGrpList">
+            服务组
+        </NavLink>
+    </MenuItem>
+    <MenuItem Key="pages/ingressgrplist" Icon="link">
+        <NavLink class="nav-link" href="pages/ingressGrpList">
+            路由组
+        </NavLink>
+    </MenuItem>
+    <SubMenu Key="advanced" TitleTemplate=@advancedTitle>
+        <MenuItem Key="pages/daemonsetappgrplist">
+            <NavLink class="nav-link" href="pages/daemonSetAppGrpList">
+                <BlazorIcons.BiShield /> 守护应用组
+            </NavLink>
+        </MenuItem>
+        <MenuItem Key="">
+            <NavLink class="nav-link" href="">
+                <BlazorIcons.BiShield /> 定时任务组
+            </NavLink>
+        </MenuItem>
+    </SubMenu>
+</Menu>
+
+
+@code {
+    const string _defaultActiveKey = "pages/deployappgrplist";
+
+    RenderFragment advancedTitle =
+    @<span>
+        <Icon Type="control" Theme="outline" />
+        高级操作
+    </span>
+    ;
+
+    private static Dictionary<string, string> _openKeysDict = new Dictionary<string, string>()
+        {
+            ["pages/daemonapplist"] = "advanced",
+            ["pages/joblist"] = "advanced",
+            ["pages/cronjoblist"] = "advanced",
+        };
+    private string[] _openKeys = new string[0];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await iconService.CreateFromIconfontCN("//at.alicdn.com/t/font_2735473_hi62ezq5579.js");
+        }
+    }
+
+    [Inject]
+    public NavigationManager? NavigationManager { get; set; }
+
+    protected override void OnInitialized() => NavigationManager!.LocationChanged += (s, e) => StateHasChanged();
+
+    string _activeKey = _defaultActiveKey;
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        var relativePath = NavigationManager!.ToBaseRelativePath(NavigationManager.Uri).ToLower();
+        var arr = relativePath.Split("/");
+        if (arr.Length < 2)
+        {
+            _activeKey = _defaultActiveKey;
+        }
+        else
+        {
+            _activeKey = string.Join("/", arr[0..2]);
+        }
+
+        _openKeys = _openKeysDict.ContainsKey(_activeKey)
+                    ? new string[] { _openKeysDict[_activeKey] }
+                    : new string[0];
+
+        await base.SetParametersAsync(parameters);
+    }
+}
+

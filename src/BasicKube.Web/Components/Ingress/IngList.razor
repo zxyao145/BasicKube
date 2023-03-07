@@ -1,0 +1,148 @@
+﻿@namespace BasicKube.Web.Components
+@using BasicKube.Web.Pages
+
+@inject KubeHttpClient KubeHttpClient
+@inject ConfirmService ConfirmService
+@inject MessageService MessageService
+@implements IDisposable
+
+<Collapse DefaultActiveKey="@(new[] { "0" })">
+    @{
+        <Table Class="svc"
+           DataSource="@_ingDetails"
+           TItem="IngDetails"
+           OnExpand="OnRowExpand"
+           HidePagination
+           Size="@TableSize.Middle">
+            <RowTemplate>
+                <PropertyColumn Property="@(c=>c!.Name)" />
+                <PropertyColumn Property="@(c=>c!.GetCreateTimeStr())" Title="CreateTime" />
+                <PropertyColumn Property="@(c=>c!.IngClassName)" />
+                <PropertyColumn Property="@(c=> string.Join(",", c!.LbIps))" Title="LB" />
+                <ActionColumn Title="Action">
+                    <Space>
+                        <SpaceItem>
+                            <Button 
+                                Type="@ButtonType.Link"
+                                OnClick="@(async () => await OnEditClickAsync(context))" 
+                                >
+                                编辑
+                            </Button>
+                        </SpaceItem>
+
+                        <SpaceItem>
+                            <Button Type="@ButtonType.Link"
+                                Danger="true"
+                                OnClick="@(async () => await OnDelClickAsync(context))" 
+                            >
+                                删除
+                            </Button>
+                        </SpaceItem>
+                    </Space>
+                </ActionColumn>
+            </RowTemplate>
+            <ExpandTemplate Context="rowData">
+                <IngDetailsItem @key="@rowData.Data.Name" Details="@rowData.Data" />
+            </ExpandTemplate>
+        </Table>
+    }
+</Collapse>
+
+@code
+{
+    #pragma warning disable CS8618
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
+
+    [CascadingParameter]
+    public IngressGrpListPage? Parent { get; set; }
+
+    [Parameter]
+    public string GrpName { get; set; }
+#pragma warning restore CS8618
+
+
+    private Timer? _timer = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await RefreshSvcInfo();
+        _timer ??= new Timer(TimerIntervalTask, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+    }
+
+    private async void TimerIntervalTask(object? state)
+    {
+        await RefreshSvcInfo();
+    }
+
+    private List<IngDetails> _ingDetails = new List<IngDetails>();
+
+    private async Task RefreshSvcInfo()
+    {
+        var data = await KubeHttpClient.IngHttp
+            .List(IamId, GrpName);
+        if (data is { Count: > 0 })
+        {
+            _ingDetails = data;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnDelClickAsync(IngDetails details)
+    {
+        var confirmResult = await ConfirmService.Show("确定要删除这个 代理 吗？", "删除");
+        if (confirmResult == ConfirmResult.OK)
+        {
+            var delRes = await KubeHttpClient.IngHttp.Del(IamId, details.Name);
+
+            await MessageService.Success(delRes ? "删除成功" : "删除失败，请稍候重试");
+            if (delRes)
+            {
+                Parent?.ReturnSvcList();
+            }
+        }
+    }
+
+
+    private async Task OnEditClickAsync(IngDetails ingDetails)
+    {
+        var cmd = await KubeHttpClient.IngHttp.Details(IamId, ingDetails.Name);
+        var form = new CreateIngForm(IamId);
+        form.IngEditCommand = cmd!;
+        form.IsEdit = true;
+        await form.ShowAsync();
+    }
+
+    private IEnumerable<string> ParsePort(SvcInfo svcInfo)
+    {
+        switch (svcInfo.Type)
+        {
+            case SvcType.NodePort:
+                return svcInfo.Ports.Select(info => $"{info.NodePort}:{info.Port}:{info.TargetPort}");
+            default:
+                return svcInfo.Ports.Select(info => $"{info.Port}:{info.TargetPort}");
+        }
+    }
+
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+
+
+
+    private async Task OnRowExpand(RowData<IngDetails> rowData)
+    {
+        if (rowData.Data.Rules != null)
+        {
+            return;
+        }
+
+        await Task.Delay(1000);
+        StateHasChanged();
+    }
+
+}

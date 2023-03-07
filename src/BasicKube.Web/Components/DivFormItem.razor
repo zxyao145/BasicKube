@@ -1,0 +1,84 @@
+﻿@namespace BasicKube.Web.Components
+@inherits AntDomComponentBase
+@using AntDesign.Internal;
+@using System.Reflection.Emit
+
+<Row Class="@ClassMapper.Class" 
+     Style="margin: 0.75rem 0;" 
+     Id="@Id">
+    <AntDesign.Col Span="@(LabelSpan)"
+                   Style="display: flex; align-items: center; justify-content: flex-end;
+               padding-left: 0.5rem;
+               padding-right: 0.5rem;
+           ">
+        @if (LabelTemplate != null)
+        {
+            @LabelTemplate
+        }
+        else
+        {
+            <label>
+                @Label
+            </label>
+        }
+    </AntDesign.Col>
+
+    <AntDesign.Col Span="@(24-LabelSpan)" Class=@($"{_prefixCls}-control")>
+        <div class=@($"{_prefixCls}-control-input")>
+            <div class=@($"{_prefixCls}-control-input-content")>
+                <CascadingValue Value="this" Name="FormItem" TValue="DivFormItem" IsFixed="@true">
+                    @ChildContent
+                </CascadingValue>
+            </div>
+        </div>
+
+        @foreach (var message in _validationMessages)
+        {
+            if (_isValid)
+            {
+                <div class=@($"{_prefixCls}-explain {_prefixCls}-explain-default")>
+                    <div role="alert">
+                        @message
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class=@($"{_prefixCls}-explain-error")>
+                    <div role="alert">
+                        @message
+                    </div>
+                </div>
+            }
+
+        }
+    </AntDesign.Col>
+</Row>
+
+@code
+{
+    private readonly string _prefixCls = "ant-form-item";
+
+    [Parameter]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public RenderFragment? LabelTemplate { get; set; }
+
+    
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+
+    [Parameter]
+    public bool HasFeedback { get; set; }
+
+    [Parameter]
+    public int LabelSpan { get; set; } = 2;
+
+
+    private string[] _validationMessages = Array.Empty<string>();
+
+    private bool _isValid = true;
+
+}

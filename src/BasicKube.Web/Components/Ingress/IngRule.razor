@@ -1,0 +1,156 @@
+﻿@namespace BasicKube.Web.Components
+<div class="rule-config">
+    <GridRow>
+        <GridCol Span="12">
+            <FormControl Required="true">
+                <LabelContent>
+                    域名
+                </LabelContent>
+                <ChildContent>
+                    <Input Placeholder="域名"
+                           MaxLength="32"
+                           @bind-Value="@RuleOptions.Host" />
+                </ChildContent>
+            </FormControl>
+        </GridCol>
+
+        <GridCol Span="12">
+            <FormControl>
+                <LabelContent>
+                    协议
+                </LabelContent>
+                <ChildContent>
+                    <SimpleSelect DefaultValue="http"
+                                  OnSelectedItemChanged="@(val => {})"
+                                            Disabled>
+                        <SelectOptions>
+                            <SimpleSelectOption Value="http" Label="Http"></SimpleSelectOption>
+                            <SimpleSelectOption Value="https" Label="Https"></SimpleSelectOption>
+                        </SelectOptions>
+                    </SimpleSelect>
+                </ChildContent>
+            </FormControl>
+        </GridCol>
+    </GridRow>
+
+   
+    <GridRow>
+        <GridCol Span="10">
+            <DivFormItem Label="路径" LabelSpan="6">
+                <Input Placeholder="路径"
+                       MaxLength="32"
+                       @bind-Value="@RuleOptions.Host" />
+            </DivFormItem>
+        </GridCol>
+        <GridCol Span="8">
+            <DivFormItem Label="服务" LabelSpan="6">
+                <Input Placeholder="服务"
+                       MaxLength="32"
+                       @bind-Value="@RuleOptions.Host" />
+            </DivFormItem>
+        </GridCol>
+        <GridCol Span="6">
+            <DivFormItem Label="端口" LabelSpan="6">
+                <AntDesign.InputNumber 
+                                       Min="1"
+                                       Max="65535"
+                                       DefaultValue="30000">
+                </AntDesign.InputNumber>
+            </DivFormItem>
+        </GridCol>
+    </GridRow>
+
+
+    @if (_rules is { Count: > 0 })
+    {
+        <div>
+            @foreach (var rule in _rules)
+            {
+                <Space @key="rule">
+                    <SpaceItem Class="rule-protocol">
+                        <SimpleSelect DefaultValue="http"
+                              OnSelectedItemChanged="@(val => rule.Protocol = val)"
+                              Disabled
+                        >
+                            <SelectOptions>
+                                <SimpleSelectOption Value="http" Label="Http"></SimpleSelectOption>
+                                <SimpleSelectOption Value="https" Label="Https"></SimpleSelectOption>
+                            </SelectOptions>
+                        </SimpleSelect>
+
+                    </SpaceItem>
+
+                    <SpaceItem Class="svc-port-protocol">
+
+                        <AntDesign.InputNumber @bind-Value="rule.Port"
+                                       Min="1"
+                                       Max="65535">
+                        </AntDesign.InputNumber>
+                    </SpaceItem>
+
+                    <SpaceItem Class="port-config-operate">
+                        <Icon OnClick="@(() => DelRule(rule))"
+                      Type="close-circle"
+                      Theme="outline"
+                      Width="20"
+                      Height="20" />
+                    </SpaceItem>
+                </Space>
+            }
+        </div>
+
+    }
+    else
+    {
+        <Empty Simple />
+    }
+
+    <Button Type="@ButtonType.Primary" OnClick="AddRule">
+        <Icon Type="plus" Theme="outline" />
+    </Button>
+
+</div>
+
+
+
+@code {
+    [Parameter]
+    public IngRuleOptions RuleOptions { get; set; } = new IngRuleOptions();
+
+    public record RuleItem
+    {
+        public int Index { get; set; } 
+
+        public string Protocol { get; set; } = "http";
+
+        public string Host { get; set; } = "";
+
+        public string PathType { get; set; } = "";
+
+        public string Path { get; set; } = "";
+
+        public string TargetService { get; set; } = "";
+
+        public int? Port { get; set; }
+    }
+
+#pragma warning disable CS8618
+    [CascadingParameter]
+    public IngDetails Details { get; set; }
+#pragma warning restore CS8618
+
+    private List<RuleItem> _rules = new List<RuleItem>();
+
+    private void DelRule(RuleItem rule)
+    {
+        _rules.Remove(rule);
+    }
+
+    private void AddRule()
+    {
+        _rules.Add(new RuleItem()
+        {
+            Index = _rules.Count
+        });
+    }
+}

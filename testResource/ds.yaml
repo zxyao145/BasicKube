@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  annotations:
+    daemonApp: app-test
+    region: Asia-Pacific
+    room: CN-1
+  labels:
+    daemonApp: daemon-app-dev
+    env: dev
+    iamId: "0"
+  name: daemon-app-dev
+  namespace: default
+
+spec:
+  selector:
+    matchLabels:
+      app: daemon-app-dev
+  template:
+    metadata:
+      labels:
+        app: daemon-app-dev
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+        operator: Exists
+      containers:
+      - image: app-test-img:v1
+        name: main
+        imagePullPolicy: Never
+        ports: 
+        - containerPort: 80

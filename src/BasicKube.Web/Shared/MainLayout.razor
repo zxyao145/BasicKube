@@ -1,0 +1,48 @@
+﻿@inherits LayoutComponentBase
+
+<Layout Style="min-height: 100vh; ">
+    <Sider Theme="SiderTheme.Light" Collapsible Collapsed=@collapsed OnCollapse=@onCollapse>
+        <div class="logo" />
+        
+        <NavMenu />
+    </Sider>
+    <Layout Class="site-layout">
+        @*<Header Class="site-layout-background" Style=" padding: 0 ;"></Header>*@
+        <Content Style="margin:0 16px;">
+           @* <Breadcrumb Style="margin:16px 0;">
+                <BreadcrumbItem>User</BreadcrumbItem>
+                <BreadcrumbItem>Bill</BreadcrumbItem>
+            </Breadcrumb>*@
+           @Body
+        </Content>
+        <Footer Style="text-align:center ">BasiKube ©2023</Footer>
+    </Layout>
+</Layout>
+
+
+@code {
+    bool collapsed;
+
+    void onCollapse(bool collapsed)
+    {
+        Console.WriteLine(collapsed);
+        this.collapsed = collapsed;
+    }
+}
+
+
+<style>
+    #components-layout-demo-side .logo {
+        height: 32px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 16px;
+    }
+
+    .site-layout .site-layout-background {
+        background: #fff;
+    }
+
+    .ant-layout-sider-light .ant-layout-sider-trigger {
+        background-color: #f0f2f5;
+    }
+</style>

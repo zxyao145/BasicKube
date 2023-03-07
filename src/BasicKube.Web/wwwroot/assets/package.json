@@ -1,0 +1,27 @@
+{
+  "name": "assets",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "dev": "vite build --config vite.config.js --mode development",
+    "build": "vite build --config vite.config.js --mode production"
+  },
+  "dependencies": {
+    "sass": "^1.57.1",
+    "reconnecting-websocket": "^4.4.0",
+    "xterm": "^5.1.0",
+    "xterm-addon-attach": "^0.8.0",
+    "xterm-addon-fit": "^0.7.0"
+  },
+  "devDependencies": {
+    "@types/file-saver": "^2.0.5",
+    "@types/react": "^18.0.26",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react": "^3.0.0",
+    "typescript": "^4.9.4",
+    "vite": "^4.0.3"
+  }
+}

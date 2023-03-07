@@ -1,0 +1,150 @@
+﻿@namespace BasicKube.Web.Components
+@using BasicKube.Web.Pages
+
+@inject SvcHttp SvcHttp
+@inject ConfirmService ConfirmService
+@inject MessageService MessageService
+@implements IDisposable
+
+<Collapse DefaultActiveKey="@(new[] { "0" })">
+    @{
+        <Table Class="svc"
+           DataSource="@_svcDetails"
+           TItem="SvcInfo"
+           OnExpand="OnRowExpand"
+           HidePagination
+           Size="@TableSize.Middle">
+            <RowTemplate>
+                <PropertyColumn Property="@(c=>c!.Name)" />
+                <PropertyColumn Property="@(c=>c!.Type)" />
+                <PropertyColumn Property="@(c=>c!.ClusterIp)" />
+                <PropertyColumn Property="@(c=> string.Join(",", ParsePort(c!)))" Title="Ports" />
+                <PropertyColumn Property="@(c=>c!.GetCreateTimeStr())" Title="CreateTime" />
+                <ActionColumn Title="Action">
+                    <Space>
+                        <SpaceItem>
+                            <Button 
+                                Type="@ButtonType.Link"
+                                OnClick="@(async () => await OnEditClickAsync(context))" 
+                                >
+                                编辑
+                            </Button>
+                        </SpaceItem>
+
+                        <SpaceItem>
+                            <Button Type="@ButtonType.Link"
+                                Danger="true"
+                                OnClick="@(async () => await OnDelClickAsync(context))" 
+                            >
+                                删除
+                            </Button>
+                        </SpaceItem>
+                    </Space>
+                </ActionColumn>
+            </RowTemplate>
+            <ExpandTemplate Context="rowData">
+                <SvcDetailsItem @key="@rowData.Data.Name" SvcInfo="@rowData.Data" />
+            </ExpandTemplate>
+        </Table>
+    }
+</Collapse>
+
+@code
+{
+    #pragma warning disable CS8618
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
+
+    [CascadingParameter]
+    public SvcGrpListPage? Parent { get; set; }
+
+    [Parameter]
+    public string SvcGrpName { get; set; }
+#pragma warning restore CS8618
+
+
+    private Timer? _timer = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await RefreshSvcInfo();
+        _timer ??= new Timer(TimerIntervalTask, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+    }
+
+    private async void TimerIntervalTask(object? state)
+    {
+        await RefreshSvcInfo();
+    }
+
+    private List<SvcInfo> _svcDetails = new List<SvcInfo>();
+
+    private async Task RefreshSvcInfo()
+    {
+        var data = await SvcHttp
+            .List(IamId, SvcGrpName);
+        if (data is { Count: > 0 })
+        {
+            _svcDetails = data;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnDelClickAsync(SvcInfo svcInfo)
+    {
+        var confirmResult = await ConfirmService.Show("确定要删除这个 Service 吗？", "删除");
+        if (confirmResult == ConfirmResult.OK)
+        {
+            var delRes = await SvcHttp.Del(IamId, svcInfo.Name);
+
+            await MessageService.Success(delRes ? "删除成功" : "删除失败，请稍候重试");
+            if (delRes)
+            {
+                Parent?.ReturnSvcList();
+            }
+        }
+    }
+
+
+    private async Task OnEditClickAsync(SvcInfo svcInfo)
+    {
+        var cmd = await SvcHttp.Details(IamId, svcInfo.Name);
+        Console.WriteLine(cmd == null);
+        var form = new CreateSvcForm(IamId);
+        form.SvcEditCommand = cmd!;
+        form.IsEdit = true;
+        await form.ShowAsync();
+    }
+
+    private IEnumerable<string> ParsePort(SvcInfo svcInfo)
+    {
+        switch (svcInfo.Type)
+        {
+            case SvcType.NodePort:
+                return svcInfo.Ports.Select(info => $"{info.NodePort}:{info.Port}:{info.TargetPort}");
+            default:
+                return svcInfo.Ports.Select(info => $"{info.Port}:{info.TargetPort}");
+        }
+    }
+
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+
+
+
+    private async Task OnRowExpand(RowData<SvcInfo> rowData)
+    {
+        if (rowData.Data.PodDetails != null)
+        {
+            return;
+        }
+
+        await Task.Delay(1000);
+        StateHasChanged();
+    }
+
+}
