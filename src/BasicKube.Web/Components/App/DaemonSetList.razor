@@ -47,7 +47,7 @@
                     <ChildContent>
                         <Collapse DefaultActiveKey="@(new[] { daemonSetDetails.Name + "0" })">
 
-                            <PodDetailsItem DeployUnitName="@(daemonSetDetails.Name)"
+                            <PodDetailsItem AppName="@(daemonSetDetails.Name)"
                                     PodDetails="@(daemonSetDetails.PodDetails)">
                             </PodDetailsItem>
 
@@ -107,7 +107,7 @@
     private async Task RefreshDeployInfo()
     {
         var data = await KubeHttpClient.DaemonSetHttp
-            .GetDeployUnitList(IamId, AppName!);
+            .ListApp(IamId, AppName!);
         if (data is { Count: > 0 })
         {
             _daemonSetDetailss = data;

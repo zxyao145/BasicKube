@@ -12,7 +12,7 @@
         <PropertyColumn Property="@(c=>c!.PathType)" Title="StartTime" />
         <PropertyColumn Property="@(c=>c!.Path)" />
         <ActionColumn Title="TargetService">
-            <a href="@($"/pages/svcGrpList/{IamId}/{GetGrpNameFromSvcName(@context.TargetService)}?svc={@context.TargetService}")
+            <a href="@($"/{Routes.SvcGrpPage}/{IamId}/{GetGrpNameFromSvcName(@context.TargetService)}?svc={@context.TargetService}")
                 " target="_blank">
                 @context.TargetService
             </a>

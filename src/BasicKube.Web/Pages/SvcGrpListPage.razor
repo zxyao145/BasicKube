@@ -68,12 +68,12 @@
 
     private void OnSvcClick(SvcGrpInfo context)
     {
-        NavigationManager.NavigateTo($"/pages/svcGrpList/{IamId}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.SvcGrpPage}/{IamId}/{context.Name}");
     }
 
     internal void ReturnSvcList()
     {
-        NavigationManager.NavigateTo($"/pages/svcGrpList/{IamId}");
+        NavigationManager.NavigateTo($"/{Routes.SvcGrpPage}/{IamId}");
     }
 
     private async Task OnCreateSvcClick()

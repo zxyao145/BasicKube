@@ -39,8 +39,8 @@ public class CronJobCreateCommand : AppCreateCommand
     /// </summary>
     public string DeployName
     {
-        get => DeployUnitName;
-        set => DeployUnitName = value;
+        get => AppName;
+        set => AppName = value;
     }
 
     /// <summary>

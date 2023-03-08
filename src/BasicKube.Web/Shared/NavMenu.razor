@@ -4,28 +4,28 @@
       DefaultOpenKeys="@_openKeys"
       Mode="MenuMode.Inline">
     <MenuItem Key="pages/deployappgrplist" Icon="appstore">
-        <NavLink class="nav-link" href="pages/deployAppGrpList" Match="NavLinkMatch.All">
+        <NavLink class="nav-link" href="@(Routes.DeployGrpPage)" Match="NavLinkMatch.All">
             应用组
         </NavLink>
     </MenuItem>
     <MenuItem Key="pages/svcgrplist" Icon="link">
-        <NavLink class="nav-link" href="pages/svcGrpList">
+        <NavLink class="nav-link" href="@(Routes.SvcGrpPage)">
             服务组
         </NavLink>
     </MenuItem>
     <MenuItem Key="pages/ingressgrplist" Icon="link">
-        <NavLink class="nav-link" href="pages/ingressGrpList">
+        <NavLink class="nav-link" href="@(Routes.IngGrpPage)">
             路由组
         </NavLink>
     </MenuItem>
     <SubMenu Key="advanced" TitleTemplate=@advancedTitle>
         <MenuItem Key="pages/daemonsetappgrplist">
-            <NavLink class="nav-link" href="pages/daemonSetAppGrpList">
+            <NavLink class="nav-link" href="@(Routes.DaemonSetAppGrpPage)">
                 <BlazorIcons.BiShield /> 守护应用组
             </NavLink>
         </MenuItem>
         <MenuItem Key="">
-            <NavLink class="nav-link" href="">
+            <NavLink class="nav-link" href="@(Routes.JobGrpPage)">
                 <BlazorIcons.BiShield /> 定时任务组
             </NavLink>
         </MenuItem>
@@ -45,9 +45,9 @@
 
     private static Dictionary<string, string> _openKeysDict = new Dictionary<string, string>()
         {
-            ["pages/daemonapplist"] = "advanced",
-            ["pages/joblist"] = "advanced",
-            ["pages/cronjoblist"] = "advanced",
+            ["pages/deployappgrplist"] = "advanced",
+            ["pages/jobgrplist"] = "advanced",
+            ["pages/cronjobgrplist"] = "advanced",
         };
     private string[] _openKeys = new string[0];
 

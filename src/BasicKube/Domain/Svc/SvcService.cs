@@ -135,9 +135,9 @@ public class SvcService : ISvcService
         svc.Spec.Selector = new Dictionary<string, string>();
         var appName = command.RelationAppName;
         svc.Spec.Selector.Add(Constants.LableEnv, command.Env);
-        svc.Spec.Selector.Add(Constants.LableDeployUnit, $"{appName}-{command.Env}");
+        svc.Spec.Selector.Add(Constants.LableApp, $"{appName}-{command.Env}");
         svc.Spec.Selector.Add(Constants.LableIamId, iamId + "");
-        svc.Spec.Selector.Add(Constants.LableDeployUnitType, DeployCreateCommand.Type);
+        svc.Spec.Selector.Add(Constants.LableAppType, DeployCreateCommand.Type);
         return svc;
     }
 
@@ -170,7 +170,7 @@ public class SvcService : ISvcService
         cmd.SvcGrpName = svc.Metadata.Labels[Constants.LabelSvcGrpName];
         cmd.Env = svc.Metadata.Labels[Constants.LableEnv];
         cmd.Type = svc.Spec.Type;
-        cmd.RelationAppName = string.Join("-", svc.Spec.Selector[Constants.LableDeployUnit].Split("-")[0..^1]);
+        cmd.RelationAppName = string.Join("-", svc.Spec.Selector[Constants.LableApp].Split("-")[0..^1]);
         cmd.Ports = svc.Spec.Ports.Select((x, i) =>
         {
             var p = new SvcPortInfo();

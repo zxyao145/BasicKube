@@ -101,11 +101,11 @@
 
     public void OnAppClick(DaemonSetAppInfo context)
     {
-        NavigationManager.NavigateTo($"/pages/daemonSetAppList/{_iamId}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.DaemonSetAppGrpPage}/{_iamId}/{context.Name}");
     }
 
     internal void ReturnAppList()
     {
-        NavigationManager.NavigateTo($"/pages/daemonSetAppList/{_iamId}");
+        NavigationManager.NavigateTo($"/{Routes.DaemonSetAppGrpPage}/{_iamId}");
     }
 }

@@ -11,22 +11,22 @@ public abstract class AppCreateCommand
     /// <summary>
     /// 所属应用名/微服务服务名
     /// </summary>
-    public string AppName { get; set; } = "";
+    public string GrpName { get; set; } = "";
 
     /// <summary>
     /// 环境
     /// </summary>
     public string Env { get; set; } = "dev";
 
-    private string _deployUnitName = "";
+    private string _appName = "";
 
     /// <summary>
-    /// DeployUnitName
+    /// AppName
     /// </summary>
-    public string DeployUnitName
+    public string AppName
     {
-        get => string.IsNullOrWhiteSpace(_deployUnitName) ? $"{AppName}-{Env}" : _deployUnitName;
-        set => _deployUnitName = value;
+        get => string.IsNullOrWhiteSpace(_appName) ? $"{GrpName}-{Env}" : _appName;
+        set => _appName = value;
     }
 
 

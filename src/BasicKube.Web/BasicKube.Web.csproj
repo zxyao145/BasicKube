@@ -7,10 +7,6 @@
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<Content Remove="C:\Users\zhang\.nuget\packages\bcdlib.bcdform\0.4.0\contentFiles\any\net6.0\logo.ico" />
-		<Content Remove="Pages\Deployment.razor" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AntDesign" />

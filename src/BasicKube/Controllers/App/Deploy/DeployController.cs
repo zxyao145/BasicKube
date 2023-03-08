@@ -12,7 +12,6 @@ namespace BasicKube.Api.Controllers.Deploy
 {
     public partial class DeployController : AppControllerBase
     {
-        private readonly IKubernetes _kubernetes;
         private readonly ILogger<DeployController> _logger;
         private readonly DeployAppService _deployAppService;
 
@@ -23,7 +22,6 @@ namespace BasicKube.Api.Controllers.Deploy
         {
             _logger = logger;
             _deployAppService = deployAppService;
-            _kubernetes = kubernetes;
         }
 
         /// <summary>
@@ -35,7 +33,7 @@ namespace BasicKube.Api.Controllers.Deploy
         /// <param name="ns"></param>
         /// <returns></returns>
         [HttpGet]
-        public async Task<ActionResult> GetDeployUnitList(
+        public async Task<ActionResult> List(
             [FromQuery] string? env
             )
         {

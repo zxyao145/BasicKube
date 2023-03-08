@@ -28,7 +28,7 @@ namespace BasicKube.Api.Controllers.App.DaemonSet
         /// <param name="ns"></param>
         /// <returns></returns>
         [HttpGet]
-        public async Task<ActionResult> GetDeployUnitList(
+        public async Task<ActionResult> List(
             [FromQuery] string? env
             )
         {

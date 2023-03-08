@@ -28,7 +28,7 @@ public class AppManagerController : KubeControllerBase
     /// <param name="ns"></param>
     /// <returns></returns>
     [HttpGet]
-    public async Task<ActionResult> DeployAppList()
+    public async Task<ActionResult> DeployGrpList()
     {
         var deploymentListV1 = await _kubeClient.DeploymentsV1()
             .List($"{Constants.LableIamId}={IamId}", kubeNamespace: NsName);
@@ -36,9 +36,9 @@ public class AppManagerController : KubeControllerBase
         var appNames = deploymentListV1.Items
             .Select(x =>
             {
-                if (x.Metadata.Labels.ContainsKey(Constants.LableAppName))
+                if (x.Metadata.Labels.ContainsKey(Constants.LableAppGrpName))
                 {
-                    return x.Metadata.Labels[Constants.LableAppName];
+                    return x.Metadata.Labels[Constants.LableAppGrpName];
                 }
 
                 return "";
@@ -61,7 +61,7 @@ public class AppManagerController : KubeControllerBase
     /// <param name="ns"></param>
     /// <returns></returns>
     [HttpGet]
-    public async Task<ActionResult> DaemonSetAppList()
+    public async Task<ActionResult> DaemonSetGrpList()
     {
         var deploymentListV1 = await _kubernetes.AppsV1
             .ListNamespacedDaemonSetAsync(NsName, labelSelector: $"{Constants.LableIamId}={IamId}");
@@ -69,13 +69,13 @@ public class AppManagerController : KubeControllerBase
         var appNames = deploymentListV1.Items
             .Select(x =>
             {
-                if (!x.Metadata.Labels.ContainsKey(Constants.LableAppName))
+                if (!x.Metadata.Labels.ContainsKey(Constants.LableAppGrpName))
                 {
                     return null;
                 }
                 var info = new DaemonSetAppInfo()
                 {
-                    Name = x.Metadata.Labels[Constants.LableAppName]
+                    Name = x.Metadata.Labels[Constants.LableAppGrpName]
                 };
 
                 var containers = x.Spec.Template.Spec.Containers;

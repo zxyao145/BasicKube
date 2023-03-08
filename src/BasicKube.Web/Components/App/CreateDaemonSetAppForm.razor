@@ -10,7 +10,7 @@
             <SpaceItem Style="width: 300px;">
                 <Input Placeholder="应用名"
                        MaxLength="32"
-                       @bind-Value="@DaemonSetCreateCommand.AppName" 
+                       @bind-Value="@DaemonSetCreateCommand.GrpName" 
                        Disabled="@IsEdit" />
             </SpaceItem>
 
@@ -68,7 +68,7 @@
     private async Task OnOkAsync()
     {
         DaemonSetCreateCommand.Containers = _podContainerEdit!.Containers;
-        DaemonSetCreateCommand.DeployUnitName = $"{DaemonSetCreateCommand.AppName}-{DaemonSetCreateCommand.Env}";
+        DaemonSetCreateCommand.AppName = $"{DaemonSetCreateCommand.GrpName}-{DaemonSetCreateCommand.Env}";
         DaemonSetCreateCommand.IamId = IamId;
 
         var http = ServiceProvider.GetRequiredService<DaemonSetHttp>();

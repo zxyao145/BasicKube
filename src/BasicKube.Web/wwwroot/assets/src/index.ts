@@ -4,11 +4,14 @@ import "./CreateIng.scss";
 
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
+// @ts-ignore
 import { AttachAddon } from "xterm-addon-attach";  // "./AttachAddon"
 import ReconnectingWebSocket from "reconnecting-websocket";
 
 var term: Terminal, socket: ReconnectingWebSocket;
 var _initialized = false;
+
+// @ts-ignore
 function runRealTerminal() {
     console.log("runRealTerminal");
     // @ts-ignore
@@ -50,7 +53,9 @@ function runCommand(term: Terminal, text: string) {
     promptTerm();
 }
 
+// @ts-ignore
 const onKey = (keyInfo: { key: string, domEvent: KeyboardEvent }) => {
+    // @ts-ignore
     const { key, domEvent } = keyInfo;
     console.log(keyInfo);
     switch (key) {
@@ -108,6 +113,7 @@ function initTerminal(
     fitAddon.fit();
 
     // 当浏览器窗口变化时, 重新适配终端
+    // @ts-ignore
     term.onResize((info, dv) => {
         console.log("resize info, dv", info)
         const { cols, rows } = info;

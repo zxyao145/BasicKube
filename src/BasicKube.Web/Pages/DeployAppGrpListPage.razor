@@ -94,11 +94,11 @@
 
     public void OnAppClick(AppInfo context)
     {
-        NavigationManager.NavigateTo($"/pages/deployAppGrpList/{_iamId}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.DeployGrpPage}/{_iamId}/{context.Name}");
     }
 
     internal void ReturnAppList()
     {
-        NavigationManager.NavigateTo($"/pages/deployAppGrpList/{_iamId}");
+        NavigationManager.NavigateTo($"/{Routes.DeployGrpPage}/{_iamId}");
     }
 }

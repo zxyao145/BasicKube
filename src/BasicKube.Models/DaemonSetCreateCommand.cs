@@ -12,7 +12,7 @@ public class DaemonSetCreateCommand : AppCreateCommand
     /// </summary>
     public string DaemonSetName
     {
-        get => DeployUnitName;
-        set => DeployUnitName = value;
+        get => AppName;
+        set => AppName = value;
     }
 }

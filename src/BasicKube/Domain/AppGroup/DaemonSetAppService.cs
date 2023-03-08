@@ -70,8 +70,8 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
     {
         var nsName = IamService.GetNsName(iamId);
         var labelSelector = $"{Constants.LableIamId}={iamId}," +
-            $"{Constants.LableAppName}={appName}," +
-            $"{Constants.LableDeployUnitType}={DaemonSetCreateCommand.Type}";
+            $"{Constants.LableAppGrpName}={appName}," +
+            $"{Constants.LableAppType}={DaemonSetCreateCommand.Type}";
         if (!string.IsNullOrWhiteSpace(env))
         {
             labelSelector += $",{Constants.LableEnv}={env}";
@@ -93,7 +93,7 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
         var allPods = (
                 await _kubernetes.CoreV1
                     .ListNamespacedPodAsync(nsName, 
-                    labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableDeployUnitType}={DaemonSetCreateCommand.Type}")
+                    labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableAppType}={DaemonSetCreateCommand.Type}")
             ).Items
             .OrderBy(x => x.Status.StartTime)
             .ThenBy(x => x.Metadata.Name)
@@ -134,7 +134,7 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
         AppPublishCommand command
         )
     {
-        string daemonSetName = command.DeployUnitName;
+        string daemonSetName = command.AppName;
         var nsName = IamService.GetNsName(iamId);
         var daemonSet = await _kubernetes
                 .AppsV1

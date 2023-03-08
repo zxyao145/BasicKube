@@ -16,7 +16,7 @@ namespace BasicKube.Web.Services
             _logger = logger;
         }
 
-        public async Task<bool> DeployUnitScale(
+        public async Task<bool> AppScale(
             int iamId,
             string deployUnitName,
             int replicas

@@ -26,13 +26,13 @@ public class DaemonSetHttp
         return $"{actionName}/{iamId}/{appName}";
     }
 
-    public async Task<List<DaemonSetDetails>> GetDeployUnitList(
+    public async Task<List<DaemonSetDetails>> ListApp(
         int iamId,
         string appName,
         string? env = null
         )
     {
-        var url = BuildUrlPrefix(iamId, appName, nameof(GetDeployUnitList));
+        var url = BuildUrlPrefix(iamId, appName, "List");
         if (!string.IsNullOrWhiteSpace(env))
         {
             url += "?env=" + env;
@@ -58,7 +58,7 @@ public class DaemonSetHttp
 
         var jsonContent = new StringContent(json, Encoding.UTF8, "application/json");
 
-        string url = BuildUrlPrefix(iamId, cmd.AppName, "Create");
+        string url = BuildUrlPrefix(iamId, cmd.GrpName, "Create");
         try
         {
             using HttpResponseMessage response = await Client
@@ -89,7 +89,7 @@ public class DaemonSetHttp
 
         var jsonContent = new StringContent(json, Encoding.UTF8, "application/json");
 
-        string url = BuildUrlPrefix(iamId, cmd.AppName, "Update");
+        string url = BuildUrlPrefix(iamId, cmd.GrpName, "Update");
         try
         {
             using HttpResponseMessage response = await Client

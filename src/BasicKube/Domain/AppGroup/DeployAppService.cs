@@ -73,8 +73,8 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
     {
         var nsName = IamService.GetNsName(iamId);
         var labelSelector = $"{Constants.LableIamId}={iamId}," +
-            $"{Constants.LableAppName}={appName}," +
-            $"{Constants.LableDeployUnitType}={DeployCreateCommand.Type}";
+            $"{Constants.LableAppGrpName}={appName}," +
+            $"{Constants.LableAppType}={DeployCreateCommand.Type}";
         if (!string.IsNullOrWhiteSpace(env))
         {
             labelSelector += $",{Constants.LableEnv}={env}";
@@ -95,7 +95,7 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
         var result = new List<DeployDetails>();
         var allPods = (
                 await _kubernetes.CoreV1
-                    .ListNamespacedPodAsync(nsName, labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableDeployUnitType}={DeployCreateCommand.Type}")
+                    .ListNamespacedPodAsync(nsName, labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableAppType}={DeployCreateCommand.Type}")
             ).Items
             .OrderBy(x => x.Status.StartTime)
             .ThenBy(x => x.Metadata.Name)
@@ -138,7 +138,7 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
         AppPublishCommand command
         )
     {
-        string dnName = command.DeployUnitName;
+        string dnName = command.AppName;
         var nsName = IamService.GetNsName(iamId);
         // https://github.com/kubernetes-client/csharp/blob/f615b5b4595a35aa6ddc5fed3c396cabdc3f3efa
         // /examples/restart/Program.cs#L25

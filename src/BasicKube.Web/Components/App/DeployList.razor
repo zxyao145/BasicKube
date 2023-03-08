@@ -54,7 +54,7 @@
                     <ChildContent>
                         <Collapse DefaultActiveKey="@(new[] { deployDetail.Name + "0" })">
 
-                            <PodDetailsItem DeployUnitName="@(deployDetail.Name)"
+                            <PodDetailsItem AppName="@(deployDetail.Name)"
                                     PodDetails="@(deployDetail.PodDetails)">
                             </PodDetailsItem>
 
@@ -114,7 +114,7 @@
     private async Task RefreshDeployInfo()
     {
         var data = await KubeHttpClient.DeployHttp
-            .GetDeployUnitList(IamId, AppName!);
+            .ListApp(IamId, AppName!);
         if (data is { Count: > 0 })
         {
             _deployDetails = data;
@@ -136,7 +136,7 @@
 
         async Task OnOk(int num)
         {
-            await KubeHttpClient.ScalerHttp.DeployUnitScale(
+            await KubeHttpClient.ScalerHttp.AppScale(
                 IamId,
                 deployDetail.Name,
                 num

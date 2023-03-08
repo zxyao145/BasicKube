@@ -68,12 +68,12 @@
 
     private void OnGrpClick(IngGrpInfo context)
     {
-        NavigationManager.NavigateTo($"/pages/ingressGrpList/{IamId}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.IngGrpPage}/{IamId}/{context.Name}");
     }
 
     internal void ReturnSvcList()
     {
-        NavigationManager.NavigateTo($"/pages/ingressGrpList/{IamId}");
+        NavigationManager.NavigateTo($"/{Routes.IngGrpPage}/{IamId}");
     }
 
     private async Task OnCreateIngClick()

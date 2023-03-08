@@ -60,7 +60,7 @@
                 <Space Size="@("small")">
                     <SpaceItem>
                         <a target="_blank"
-                           href="@($"/pages/terminal/{IamId}/{rowData.Data.Name}/{context.Name}")">
+                           href="@($"/{Routes.TerminalPage}/{IamId}/{rowData.Data.Name}/{context.Name}")">
                             终端
                         </a>
                     </SpaceItem>
@@ -97,7 +97,7 @@
     public List<PodDetail> PodDetails { get; set; } = new List<PodDetail>();
 
     [Parameter]
-    public string DeployUnitName { get; set; } = "";
+    public string AppName { get; set; } = "";
 
     private async Task OnDelPodAsync(PodDetail podInfo)
     {

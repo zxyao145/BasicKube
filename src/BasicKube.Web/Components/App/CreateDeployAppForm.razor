@@ -10,7 +10,7 @@
             <SpaceItem Style="width: 300px;">
                 <Input Placeholder="应用名"
                        MaxLength="32"
-                       @bind-Value="@DeployCreateCommand.AppName" 
+                       @bind-Value="@DeployCreateCommand.GrpName" 
                        Disabled="@IsEdit" />
             </SpaceItem>
 
@@ -140,7 +140,7 @@
     private async Task OnOkAsync()
     {
         DeployCreateCommand.Containers = _panes;
-        DeployCreateCommand.DeployName = $"{DeployCreateCommand.AppName}-{DeployCreateCommand.Env}";
+        DeployCreateCommand.DeployName = $"{DeployCreateCommand.GrpName}-{DeployCreateCommand.Env}";
         DeployCreateCommand.IamId = IamId;
 
         var http = ServiceProvider.GetRequiredService<DeployHttp>();

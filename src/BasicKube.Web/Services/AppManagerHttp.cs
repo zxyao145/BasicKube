@@ -19,7 +19,7 @@ namespace BasicKube.Web.Services
             try
             {
                 var data = await Client.GetFromJsonAsync<ApiResultDto<List<AppInfo>>>
-                    ($"DeployAppList/{iamId}");
+                    ($"DeployGrpList/{iamId}");
                 return data?.Data ?? new List<AppInfo>();
             }
             catch (Exception e)
@@ -34,7 +34,7 @@ namespace BasicKube.Web.Services
             try
             {
                 var data = await Client.GetFromJsonAsync<ApiResultDto<List<DaemonSetAppInfo>>>
-                    ($"DaemonSetAppList/{iamId}");
+                    ($"DaemonSetGrpList/{iamId}");
                 return data?.Data ?? new List<DaemonSetAppInfo>();
             }
             catch (Exception e)

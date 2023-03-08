@@ -5,7 +5,7 @@ public class AppDetailsQuery
     /// <summary>
     /// DaemonSetName
     /// </summary>
-    public string DeployUnitName { get; set; } = "";
+    public string AppName { get; set; } = "";
 
 
     /// <summary>
@@ -13,8 +13,8 @@ public class AppDetailsQuery
     /// </summary>
     public string Name
     {
-        get => DeployUnitName;
-        set => DeployUnitName = value;
+        get => AppName;
+        set => AppName = value;
     }
 
     public List<PodDetail> PodDetails { get; set; } = new List<PodDetail>();

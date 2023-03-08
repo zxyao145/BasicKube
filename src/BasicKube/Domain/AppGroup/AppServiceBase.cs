@@ -70,17 +70,17 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
     {
         var metadata = new V1ObjectMeta
         {
-            Name = command.DeployUnitName,
+            Name = command.AppName,
             NamespaceProperty = nsName,
             Annotations = new Dictionary<string, string>
             {
                 [Constants.LableRegion] = command.Region,
                 [Constants.LableRoom] = command.Room,
-                [Constants.LableAppName] = command.AppName
+                [Constants.LableAppGrpName] = command.GrpName
             },
             Labels = new Dictionary<string, string>
             {
-                [Constants.LableAppName] = command.AppName,
+                [Constants.LableAppGrpName] = command.GrpName,
                 [Constants.LableIamId] = command.IamId + "",
                 [Constants.LableEnv] = command.Env
             }
@@ -88,7 +88,7 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
 
         if (!string.IsNullOrWhiteSpace(command.TypeName))
         {
-            metadata.Labels.Add(Constants.LableDeployUnitType, command.TypeName);
+            metadata.Labels.Add(Constants.LableAppType, command.TypeName);
         }
 
 
@@ -102,8 +102,8 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
         {
             MatchLabels = new Dictionary<string, string>
             {
-                [Constants.LableDeployUnit] = command.DeployUnitName,
-                [Constants.LableDeployUnitType] = command.TypeName,
+                [Constants.LableApp] = command.AppName,
+                [Constants.LableAppType] = command.TypeName,
             }
         };
     }
@@ -123,7 +123,7 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
         {
             Metadata = new V1ObjectMeta
             {
-                Name = command.DeployUnitName,
+                Name = command.AppName,
                 NamespaceProperty = nsName,
                 Annotations = new Dictionary<string, string>
                 {
@@ -136,7 +136,7 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
                     [Constants.LableEnv] = command.Env,
 
                     // pod 独有的
-                    [Constants.LableDeployUnit] = command.DeployUnitName,
+                    [Constants.LableApp] = command.AppName,
                 }
             },
             Spec = new V1PodSpec()
@@ -144,7 +144,7 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
 
         if (!string.IsNullOrWhiteSpace(type))
         {
-            podTemp.Metadata.Labels.Add(Constants.LableDeployUnitType, type);
+            podTemp.Metadata.Labels.Add(Constants.LableAppType, type);
         }
 
         podTemp.Spec.RestartPolicy = command.RestartPolicy;
@@ -409,8 +409,8 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
         var obj = Activator.CreateInstance<TCmd>();
         Debug.Assert(obj != null);
 
-        obj.AppName = kubeApp.Metadata.Labels[Constants.LableAppName];
-        obj.DeployUnitName = deployUnitName;
+        obj.GrpName = kubeApp.Metadata.Labels[Constants.LableAppGrpName];
+        obj.AppName = deployUnitName;
         obj.Env = kubeApp.Metadata.Labels[Constants.LableEnv];
         obj.IamId = int.Parse(kubeApp.Metadata.Labels[Constants.LableIamId] ?? "0");
         obj.Region = kubeApp.Metadata.Annotations[Constants.LableRegion];

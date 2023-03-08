@@ -93,8 +93,8 @@ public class JobAppService : AppServiceBase<JobDetails, JobCreateCommand>
     {
         var nsName = IamService.GetNsName(iamId);
         var labelSelector = $"{Constants.LableIamId}={iamId}," +
-            $"{Constants.LableAppName}={appName}," +
-            $"{Constants.LableDeployUnitType}={JobCreateCommand.Type}";
+            $"{Constants.LableAppGrpName}={appName}," +
+            $"{Constants.LableAppType}={JobCreateCommand.Type}";
         if (!string.IsNullOrWhiteSpace(env))
         {
             labelSelector += $",{Constants.LableEnv}={env}";
@@ -116,7 +116,7 @@ public class JobAppService : AppServiceBase<JobDetails, JobCreateCommand>
         var allPods = (
                 await _kubernetes.CoreV1
                     .ListNamespacedPodAsync(nsName, 
-                    labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableDeployUnitType}={JobCreateCommand.Type}")
+                    labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableAppType}={JobCreateCommand.Type}")
             ).Items
             .OrderBy(x => x.Status.StartTime)
             .ThenBy(x => x.Metadata.Name)
@@ -162,7 +162,7 @@ public class JobAppService : AppServiceBase<JobDetails, JobCreateCommand>
         AppPublishCommand command
         )
     {
-        string dnName = command.DeployUnitName;
+        string dnName = command.AppName;
         var nsName = IamService.GetNsName(iamId);
         // https://github.com/kubernetes-client/csharp/blob/f615b5b4595a35aa6ddc5fed3c396cabdc3f3efa
         // /examples/restart/Program.cs#L25

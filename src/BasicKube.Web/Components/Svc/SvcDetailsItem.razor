@@ -10,7 +10,7 @@
        Size=@TableSize.Middle>
     <RowTemplate>
         <ActionColumn Title="PodName">
-            <a href="@($"/pages/appList/{SvcInfo.IamId}/{GetAppNameFromDeployName()}?deploy={deployName}")
+            <a href="@($"/{Routes.DeployGrpPage}/{SvcInfo.IamId}/{GetAppNameFromDeployName()}?deploy={deployName}")
                 " target="_blank">
                 @context.Name
             </a>

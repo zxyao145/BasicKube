@@ -43,7 +43,7 @@ public class IngEditCommand
     private string _ingName = "";
 
     /// <summary>
-    /// DeployUnitName
+    /// IngName
     /// </summary>
     public string IngName
     {
