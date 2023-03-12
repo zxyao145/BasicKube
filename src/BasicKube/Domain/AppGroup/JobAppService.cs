@@ -1,83 +1,190 @@
 ﻿using BasicKube.Api.Common;
+using BasicKube.Api.Domain.App;
 using BasicKube.Api.Domain.Pod;
 using Json.Patch;
-using Org.BouncyCastle.Security;
+using k8s;
+using k8s.Autorest;
 using System.Text.Json;
 using System.Xml.Linq;
 
-namespace BasicKube.Api.Domain.App;
+namespace BasicKube.Api.Domain.AppGroup;
 
-public class JobAppService : AppServiceBase<JobDetails, JobCreateCommand>
+public interface IResService<TGrpInfo, TResDetails, TEditCmd>
+{
+    /// <summary>
+    /// 列出服务组简介列表
+    /// </summary>
+    /// <param name="iamId"></param>
+    /// <param name="appName"></param>
+    /// <param name="env"></param>
+    /// <returns></returns>
+    public Task<IEnumerable<TGrpInfo>> ListGrpAsync(int iamId);
+
+
+    /// <summary>
+    /// 列出服务组详情列表
+    /// </summary>
+    /// <param name="iamId"></param>
+    /// <param name="svcGrpName"></param>
+    /// <param name="env"></param>
+    /// <returns></returns>
+    public Task<IEnumerable<TResDetails>> ListAsync(int iamId, string? grpName, string? env = null);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="iamId"></param>
+    /// <param name="cmd"></param>
+    /// <returns></returns>
+    public Task CreateAsync(int iamId, TEditCmd cmd);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="iamId"></param>
+    /// <param name="cmd"></param>
+    /// <returns></returns>
+    public Task UpdateAsync(int iamId, TEditCmd cmd);
+
+    /// <summary>
+    /// 删除
+    /// </summary>
+    /// <param name="iamId"></param>
+    /// <param name="svcName"></param>
+    /// <returns></returns>
+    public Task DelAsync(int iamId, string resName);
+
+    /// <summary>
+    /// 资源详情
+    /// </summary>
+    /// <param name="iamId"></param>
+    /// <param name="svcName"></param>
+    /// <returns></returns>
+    public Task<TEditCmd?> DetailsAsync(int iamId, string svcName);
+
+    /// <summary>
+    /// 更新应用
+    /// </summary>
+    /// <param name="iamId"></param>
+    /// <param name="cmd"></param>
+    /// <returns></returns>
+    public Task PublishAsync(int iamId, AppPublishCommand cmd);
+}
+
+public interface IJobAppService : IResService<JobGrpInfo, JobDetails, JobEditCommand>
+{
+
+}
+
+public class JobAppService : IJobAppService
 {
     private readonly IKubernetes _kubernetes;
+    private readonly ILogger<JobAppService> _logger;
+    private readonly IamService _iamService;
 
-    private readonly ILogger<DeployAppService> _logger;
-
-    public JobAppService(IamService iamService, IKubernetes kubernetes, ILogger<DeployAppService> logger) : base(iamService)
+    public JobAppService(
+        IKubernetes kubernetes,
+        ILogger<JobAppService> logger,
+        IamService iamService)
     {
         _kubernetes = kubernetes;
         _logger = logger;
+        _iamService = iamService;
     }
+
 
     #region edit
 
-    public override async Task CreateAsync(int iamId, JobCreateCommand command)
+    public async Task CreateAsync(int iamId, JobEditCommand command)
     {
-        var nsName = IamService.GetNsName(iamId);
-        V1Job job = CreateJob(nsName, command);
+        var nsName = _iamService.GetNsName(iamId);
+        V1Job job = CmdToJob(nsName, command);
         await _kubernetes.BatchV1.CreateNamespacedJobAsync(job, nsName);
     }
 
-    private static V1Job CreateJob(string nsName, JobCreateCommand command)
+    public async Task UpdateAsync(int iamId, JobEditCommand command)
     {
-        var job =  new V1Job
+        var nsName = _iamService.GetNsName(iamId);
+        V1Job job = CmdToJob(nsName, command);
+        //var oldJob = await _kubernetes.BatchV1
+        //    .ReadNamespacedJobAsync(job.Metadata.Name, job.Metadata.NamespaceProperty);
+        //job.Spec.Selector = oldJob.Spec.Selector;
+        //job.Metadata.Uid = oldJob.Metadata.Uid;
+        //job.Spec.Template.Metadata.Labels["controller-uid"] =
+        //    oldJob.Spec.Selector.MatchLabels["controller-uid"];
+        //job.Spec.Template.Metadata.Labels["job-name"] = command.AppName;
+        //await _kubernetes.BatchV1
+        //    .ReplaceNamespacedJobAsync(
+        //        job,
+        //        job.Metadata.Name,
+        //        job.Metadata.NamespaceProperty
+        //    );
+        try
         {
-            Metadata = CreateObjectMeta(nsName, command),
+            await _kubernetes.BatchV1.DeleteNamespacedJobAsync(
+                job.Metadata.Name,
+                job.Metadata.NamespaceProperty
+            );
+        }
+        catch (HttpOperationException e)
+        {
+            if(((int)e.Response.StatusCode) > 499) throw;
+        }
+        
+        await _kubernetes.BatchV1.CreateNamespacedJobAsync(job, nsName);
+    }
+
+    private static V1Job CmdToJob(string nsName, JobEditCommand command)
+    {
+        command.RestartPolicy = "OnFailure"; // or Never
+        var job = new V1Job
+        {
+            Metadata = PodService.CreateObjectMeta(nsName, command),
             Spec = new V1JobSpec
             {
+                // 不设置：不会删除；0: job 删除后立即删除；>0: 等待n秒后删除
+                TtlSecondsAfterFinished = 3600, 
                 ActiveDeadlineSeconds = command.ActiveDeadlineSeconds,
                 BackoffLimit = command.BackoffLimit,
                 Completions = command.Completions,
                 Parallelism = command.Parallelism,
-                Selector = GetV1LabelSelector(nsName, command),
-                Template = GetPodTemplateSpec(nsName, command)
+                //Selector = PodService.GetV1LabelSelector(nsName, command),
+                Template = PodService.GetPodTemplateSpec(nsName, command)
             }
         };
+#if DEBUG
+        var yaml = KubernetesYaml.Serialize(job);
+#endif
         job.Validate();
         return job;
     }
 
-    public override async Task UpdateAsync(int iamId, JobCreateCommand command)
-    {
-        var nsName = IamService.GetNsName(iamId);
-        V1Job job = CreateJob(nsName, command);
-        await _kubernetes.BatchV1
-            .ReplaceNamespacedJobAsync(
-                job, job.Metadata.Name,
-                job.Metadata.NamespaceProperty
-            );
-    }
-
-
-
     #endregion
 
-    public override async Task DelAsync(int iamId, string deployUnitName)
+
+    public async Task DelAsync(int iamId, string resName)
     {
-        var nsName = IamService.GetNsName(iamId);
-        await _kubernetes.BatchV1.DeleteNamespacedJobAsync(deployUnitName, nsName);
+        var nsName = _iamService.GetNsName(iamId);
+        await _kubernetes.BatchV1.DeleteNamespacedJobAsync(resName, nsName);
+        _logger.LogInformation("Del end:{0}", resName);
     }
 
-    #region Details
-
-    public override async Task<JobCreateCommand?> DetailsAsync(int iamId, string deployUnitName)
+    public async Task<JobEditCommand?> DetailsAsync(int iamId, string resName)
     {
-        var nsName = IamService.GetNsName(iamId);
+        var nsName = _iamService.GetNsName(iamId);
         var job = await _kubernetes.BatchV1
-            .ReadNamespacedJobAsync(deployUnitName, nsName);
+            .ReadNamespacedJobAsync(resName, nsName);
 
-        var cmd = new JobCreateCommand();
-        cmd.Containers = GetContainerInfos(job.Spec.Template.Spec.Containers);
+        var cmd = new JobEditCommand();
+        cmd.GrpName = job.Metadata.Labels[Constants.LableAppGrpName];
+        cmd.Env = job.Metadata.Labels[Constants.LableEnv];
+        cmd.AppName = resName;
+        cmd.IamId = int.Parse(job.Metadata.Labels[Constants.LableIamId] ?? "0");
+        cmd.Region = job.Metadata.Annotations[Constants.LableRegion];
+        cmd.Room = job.Metadata.Annotations[Constants.LableRoom];
+
+
+        cmd.Containers = PodService.GetContainerInfos(job.Spec.Template.Spec.Containers);
         cmd.ActiveDeadlineSeconds = job.Spec.ActiveDeadlineSeconds;
         cmd.BackoffLimit = job.Spec.BackoffLimit;
         cmd.Completions = job.Spec.Completions;
@@ -86,15 +193,12 @@ public class JobAppService : AppServiceBase<JobDetails, JobCreateCommand>
         return cmd;
     }
 
-    #endregion
-
-    public override async Task<IEnumerable<JobDetails>> ListAsync
-        (int iamId, string appName, string? env = null)
+    public async Task<IEnumerable<JobDetails>> ListAsync(int iamId, string? grpName, string? env = null)
     {
-        var nsName = IamService.GetNsName(iamId);
+        var nsName = _iamService.GetNsName(iamId);
         var labelSelector = $"{Constants.LableIamId}={iamId}," +
-            $"{Constants.LableAppGrpName}={appName}," +
-            $"{Constants.LableAppType}={JobCreateCommand.Type}";
+            $"{Constants.LableAppGrpName}={grpName}," +
+            $"{Constants.LableAppType}={JobEditCommand.Type}";
         if (!string.IsNullOrWhiteSpace(env))
         {
             labelSelector += $",{Constants.LableEnv}={env}";
@@ -115,8 +219,8 @@ public class JobAppService : AppServiceBase<JobDetails, JobCreateCommand>
         var result = new List<JobDetails>();
         var allPods = (
                 await _kubernetes.CoreV1
-                    .ListNamespacedPodAsync(nsName, 
-                    labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableAppType}={JobCreateCommand.Type}")
+                    .ListNamespacedPodAsync(nsName,
+                    labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableAppType}={JobEditCommand.Type}")
             ).Items
             .OrderBy(x => x.Status.StartTime)
             .ThenBy(x => x.Metadata.Name)
@@ -149,7 +253,8 @@ public class JobAppService : AppServiceBase<JobDetails, JobCreateCommand>
             }
 
             details.PodDetails = details.PodDetails
-                .OrderBy(x => x.Name)
+                .OrderByDescending(x => x.StartTime)
+                .ThenBy(x => x.Name)
                 .ToList();
             result.Add(details);
         }
@@ -157,15 +262,33 @@ public class JobAppService : AppServiceBase<JobDetails, JobCreateCommand>
         return result.OrderBy(x => x.Name);
     }
 
-    public override async Task PublishAsync(
-        int iamId, 
+    public async Task<IEnumerable<JobGrpInfo>> ListGrpAsync(int iamId)
+    {
+        var label = $"{Constants.LableIamId}={iamId}";
+
+        var jobs = await _kubernetes.BatchV1
+            .ListNamespacedJobAsync(
+            _iamService.GetNsName(iamId),
+            labelSelector: label
+            );
+
+        return jobs.Items
+            .Select(x => x.Metadata.Labels[Constants.LableAppGrpName])
+            .ToHashSet()
+            .Select(x => new JobGrpInfo()
+            {
+                Name = x
+            });
+    }
+
+
+    public async Task PublishAsync(
+        int iamId,
         AppPublishCommand command
         )
     {
         string dnName = command.AppName;
-        var nsName = IamService.GetNsName(iamId);
-        // https://github.com/kubernetes-client/csharp/blob/f615b5b4595a35aa6ddc5fed3c396cabdc3f3efa
-        // /examples/restart/Program.cs#L25
+        var nsName = _iamService.GetNsName(iamId);
         var app = await _kubernetes.BatchV1
             .ReadNamespacedJobAsync(dnName, nsName);
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
@@ -186,5 +309,4 @@ public class JobAppService : AppServiceBase<JobDetails, JobCreateCommand>
             nsName
             );
     }
-
 }

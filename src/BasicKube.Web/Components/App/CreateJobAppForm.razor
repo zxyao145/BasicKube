@@ -1,0 +1,231 @@
+﻿@namespace BasicKube.Web.Components
+@inherits BcdForm
+
+<div class="job-edit-form">
+    <div class="mb-4">
+        <GridRow>
+            <GridCol Span="16">
+                <FormControl Required>
+                    <LabelContent>
+                        Job组
+                    </LabelContent>
+                    <ChildContent>
+                        <Input Placeholder="Job组"
+                               MaxLength="32"
+                               @bind-Value="@JobEditCommand.GrpName"
+                               Disabled="@IsEdit" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="8">
+                <FormControl Required>
+                    <LabelContent>
+                        环境
+                    </LabelContent>
+                    <ChildContent>
+                        <AppEnvSelect DefaultEnvName="@(JobEditCommand.Env)"
+                                      Disable="@IsEdit"
+                                      @bind-EnvName="JobEditCommand.Env" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+        </GridRow>
+    </div>
+
+    <div class="mb-4">
+        <GridRow Class="mb-3">
+            <GridCol Span="12">
+                <FormControl LabelCls="job-form-control-label">
+                    <LabelContent>
+                        超时时间（秒）
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber @bind-Value="@JobEditCommand.ActiveDeadlineSeconds"
+                                               Min="0" PlaceHolder="" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="12">
+                <FormControl LabelCls="job-form-control-label">
+                    <LabelContent>
+                        失败重试次数
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber @bind-Value="@JobEditCommand.BackoffLimit"
+                                               Min="0" PlaceHolder="" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+        </GridRow>
+
+        <GridRow>
+            <GridCol Span="12">
+                <FormControl LabelCls="job-form-control-label">
+                    <LabelContent>
+                        Pod 个数
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber @bind-Value="@JobEditCommand.Completions"
+                                               Min="0" PlaceHolder="" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="12">
+                <FormControl LabelCls="job-form-control-label">
+                    <LabelContent>
+                        并行个数
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber @bind-Value="@JobEditCommand.Parallelism"
+                                               Min="0" PlaceHolder="" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+        </GridRow>
+    </div>
+
+    <div>
+
+        <Tabs @ref="@_tabs" Style="border-bottom: 1px solid #f0f0f0; padding: 1rem;"
+              DefaultActiveKey="main"
+              Type="@TabType.EditableCard"
+              OnAddClick="OnAddClick"
+              OnClose="OnTabClose"
+              @bind-ActiveKey="_activeKey">
+            @foreach (var containerInfo in _panes)
+            {
+                var title = containerInfo.Name;
+                Console.WriteLine("title:" + title);
+
+                <TabPane Key="@(containerInfo.Index + "")"
+                         Tab="@title"
+                         Closable="@(title != "main")">
+
+                    <CreateContainer @key="containerInfo.Index"
+                                     ContainerInfo="@containerInfo"
+                                     OnNameChange="@OnNameChange"
+                                     />
+
+                </TabPane>
+
+             }
+        </Tabs>
+    </div>
+
+
+    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
+        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
+    </div>
+</div>
+
+<style>
+    .bcd-form {
+        top: 50px;
+    }
+</style>
+
+@code {
+    public int IamId { get; set; }
+
+    public Func<Task>? OnOk { get; set; }
+
+    private JobEditCommand _createCommand = new JobEditCommand();
+
+    public JobEditCommand JobEditCommand
+    {
+        get => _createCommand;
+        set
+        {
+            _createCommand = value;
+            _panes.Clear();
+            _panes.AddRange(_createCommand.Containers);
+            StateHasChanged();
+        }
+    } 
+
+    public bool IsEdit { get; set; } = false;
+
+    protected override void InitComponent()
+    {
+        Width = 1000;
+        MinimizeBox = false;
+        Title = "Job";
+    }
+
+
+    private Tabs? _tabs;
+    readonly List<ContainerInfo> _panes = new List<ContainerInfo>()
+    {
+        new ContainerInfo()
+        {
+            Name = "main"
+        }
+    };
+    private string _activeKey = "";
+    private void OnAddClick()
+    {
+        var c = new ContainerInfo()
+            {
+                Index = _panes.Count,
+                Name = "container" + _panes.Count
+            };
+        _activeKey = c.Index + "";
+        _panes.Add(c);
+        StateHasChanged();
+    }
+
+    void OnTabClose(string key)
+    {
+        var c = _panes.Find(x => x.Index == int.Parse(key));
+        if (c != null)
+        {
+            _panes.Remove(c);
+        }
+    }
+
+    private async Task OnOkAsync()
+    {
+        JobEditCommand.Containers = _panes;
+        JobEditCommand.GrpName = $"{JobEditCommand.GrpName}";
+        JobEditCommand.Env = $"{JobEditCommand.Env}";
+        JobEditCommand.AppName = $"{JobEditCommand.GrpName}-{JobEditCommand.Env}";
+        JobEditCommand.IamId = IamId;
+
+        var http = ServiceProvider.GetRequiredService<JobHttp>();
+        bool res = false;
+        if (IsEdit)
+        {
+            res = await http.Update(JobEditCommand);
+        }
+        else
+        {
+            res = await http.Add(JobEditCommand);
+        }
+
+        var messageService = ServiceProvider.GetRequiredService<MessageService>();
+
+        _ = messageService.Success(res ? "创建成功" : "创建失败");
+
+        if (OnOk != null)
+        {
+            await OnOk();
+        }
+        if (res)
+        {
+            await this.CloseAsync();
+        }
+    }
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Console.WriteLine(string.Join(",", _panes.Select(x => x.Name)));
+        base.OnAfterRender(firstRender);
+    }
+
+    private void OnNameChange()
+    {
+        StateHasChanged();
+    }
+
+}

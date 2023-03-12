@@ -18,13 +18,13 @@ namespace BasicKube.Web.Services
 
         public async Task<bool> AppScale(
             int iamId,
-            string deployUnitName,
+            string resName,
             int replicas
         )
         {
             var scaleCmd = new DeployScaleCommand
             {
-                DeployName = deployUnitName,
+                DeployName = resName,
                 Replicas = replicas,
                 IamId = replicas,
             };

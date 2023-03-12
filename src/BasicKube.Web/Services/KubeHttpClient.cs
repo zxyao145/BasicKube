@@ -10,7 +10,8 @@ public class KubeHttpClient
         ScalerHttp scalerHttp,
         EventsHttp eventsHttp,
         PodHttp podHttp,
-        IngHttp ingHttp
+        IngHttp ingHttp,
+        JobHttp jobHttp
         )
     {
         AppManagerHttp = appManagerHttp;
@@ -21,6 +22,7 @@ public class KubeHttpClient
         EventsHttp = eventsHttp;
         PodHttp = podHttp;
         IngHttp = ingHttp;
+        JobHttp = jobHttp;
     }
 
     public AppManagerHttp AppManagerHttp { get; }
@@ -31,4 +33,5 @@ public class KubeHttpClient
     public EventsHttp EventsHttp { get; }
     public PodHttp PodHttp { get; }
     public IngHttp IngHttp { get; }
+    public JobHttp JobHttp { get; }
 }

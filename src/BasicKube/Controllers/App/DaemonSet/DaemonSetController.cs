@@ -63,22 +63,22 @@ namespace BasicKube.Api.Controllers.App.DaemonSet
             return ApiResult.Success;
         }
 
-        [HttpDelete("{deployUnitName}")]
+        [HttpDelete("{resName}")]
         public async Task<ActionResult> Del(
-            [FromRoute] string deployUnitName
+            [FromRoute] string resName
         )
         {
-            await _daemonSetAppService.DelAsync(IamId, deployUnitName);
+            await _daemonSetAppService.DelAsync(IamId, resName);
             return ApiResult.Success;
         }
 
 
-        [HttpGet("{deployUnitName}")]
+        [HttpGet("{resName}")]
         public async Task<ActionResult> Details(
-            [FromRoute] string deployUnitName
+            [FromRoute] string resName
             )
         {
-            var cmd = await _daemonSetAppService.DetailsAsync(IamId, deployUnitName);
+            var cmd = await _daemonSetAppService.DetailsAsync(IamId, resName);
             return ApiResult.BuildSuccess(cmd);
         }
     }

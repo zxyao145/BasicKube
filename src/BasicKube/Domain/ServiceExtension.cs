@@ -1,4 +1,5 @@
 ﻿using BasicKube.Api.Domain.App;
+using BasicKube.Api.Domain.AppGroup;
 using BasicKube.Api.Domain.Ing;
 using BasicKube.Api.Domain.Pod;
 using BasicKube.Api.Domain.Svc;
@@ -31,7 +32,8 @@ public static class ServiceExtension
         services.AddScoped<IamService>();
         services.AddScoped<ISvcService, SvcService>();
         services.AddScoped<IIngService, IngService>();
-
+        services.AddScoped<IJobAppService, JobAppService>();
+        
         return services;
     }
 }

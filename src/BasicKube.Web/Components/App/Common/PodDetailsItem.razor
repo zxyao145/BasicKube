@@ -16,11 +16,15 @@
         <PropertyColumn Property="@(c=>c!.Status)" />
         <ActionColumn Title="Action">
             <Space>
-                <SpaceItem>
-                    <Button Size="small" OnClick="@(async () => await OnDelPodAsync(context))" Type="@ButtonType.Link">
-                        删除
-                    </Button>
-                </SpaceItem>
+                @if (ShowDelBtn)
+                {
+                    <SpaceItem>
+                        <Button Size="small" OnClick="@(async () => await OnDelPodAsync(context))" Type="@ButtonType.Link">
+                            删除
+                        </Button>
+                    </SpaceItem>
+                }
+                
                 <SpaceItem>
                     <Dropdown Placement="@Placement.TopRight"
                         Trigger="@(new Trigger[] { Trigger.Click })">
@@ -98,6 +102,9 @@
 
     [Parameter]
     public string AppName { get; set; } = "";
+
+    [Parameter]
+    public bool ShowDelBtn { get; set; } = true;
 
     private async Task OnDelPodAsync(PodDetail podInfo)
     {

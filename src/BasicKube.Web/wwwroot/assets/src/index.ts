@@ -1,6 +1,7 @@
 ﻿import "./CreateApp.scss";
 import "./CreateSvcForm.scss";
 import "./CreateIng.scss";
+import "./JobEditForm.scss";
 
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";

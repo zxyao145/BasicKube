@@ -1,0 +1,190 @@
+﻿@namespace BasicKube.Web.Components
+@using BasicKube.Web.Pages
+
+@inject KubeHttpClient KubeHttpClient
+@inject ConfirmService ConfirmService
+@inject MessageService MessageService
+@implements IDisposable
+
+<div>
+    <Collapse DefaultActiveKey="@(new[] { _defaultActiveKey })">
+        @{
+            foreach (var jobDetail in _jobDetailsList)
+            {
+                var header = $"{jobDetail.Name}";
+
+                <Panel @key="@jobDetail.Name" Header="@header" Key="@(jobDetail.Name)" Class="deploy-panel">
+                    <ExtraTemplate>
+                        <ButtonGroup>
+                            <Button OnClick="@(async () => await OnDelClickAsync(jobDetail))"
+                                OnClickStopPropagation="true"
+                                Type="@ButtonType.Primary"
+                                Danger="true"
+                                Size="small">
+                                删除
+                            </Button>
+
+                            <Button OnClick="@(async () => await OnEditClickAsync(jobDetail))"
+                                OnClickStopPropagation="true"
+                                Type="@ButtonType.Primary"
+                                Size="small">
+                                    编辑
+                            </Button>
+
+                            <Button OnClick="@(async () => await OnPublishClickAsync(jobDetail))"
+                                OnClickStopPropagation="true"
+                                Type="navy"
+                                Size="small">
+                                    发布
+                            </Button>
+                        </ButtonGroup>
+                    </ExtraTemplate>
+                    <ChildContent>
+                        <Collapse DefaultActiveKey="@(new[] { jobDetail.Name + "0" })">
+
+                            <PodDetailsItem AppName="@(jobDetail.Name)"
+                                    PodDetails="@(jobDetail.PodDetails)"
+                                    ShowDelBtn="@false"
+                                    >
+                            </PodDetailsItem>
+
+                        </Collapse>
+                    </ChildContent>
+                </Panel>
+            }
+        }
+    </Collapse>
+</div>
+
+
+@code
+{
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
+
+    [CascadingParameter]
+    public JobGrpListPage? Parent { get; set; }
+
+#nullable disable
+    [Parameter]
+    public string GrpName { get; set; }
+
+    [Parameter]
+    public string AppName { get; set; }
+#nullable enable
+
+    private string _defaultActiveKey = "";
+
+
+    private Timer? _timer = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAppInfo();
+        _timer ??= new Timer(TimerIntervalTask, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+    }
+
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        await base.SetParametersAsync(parameters);
+        if (!string.IsNullOrWhiteSpace(AppName))
+        {
+            _defaultActiveKey = AppName;
+        }
+    }
+
+    private async void TimerIntervalTask(object? state)
+    {
+        await RefreshAppInfo();
+    }
+
+    private List<JobDetails> _jobDetailsList = new List<JobDetails>();
+
+    private async Task RefreshAppInfo()
+    {
+        var data = await KubeHttpClient.JobHttp
+            .List(IamId, GrpName!);
+        if (data is { Count: > 0 })
+        {
+            _jobDetailsList = data;
+
+            if (string.IsNullOrWhiteSpace(AppName))
+            {
+                _defaultActiveKey = _jobDetailsList[0].Name;
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task OnScaleClickAsync(JobDetails jobDetails)
+    {
+        var modal = new ScaleForm();
+        modal.Num = jobDetails.PodDetails.Count;
+
+        async Task OnOk(int num)
+        {
+            await KubeHttpClient.ScalerHttp.AppScale(
+                IamId,
+                jobDetails.Name,
+                num
+                );
+        }
+
+        modal.OnOk = (Func<int, Task>)OnOk;
+        await modal.ShowAsync();
+    }
+
+
+
+    private async Task OnEditClickAsync(JobDetails jobDetails)
+    {
+        var cmd = await
+            KubeHttpClient.JobHttp.Details(IamId, jobDetails.Name);
+        if (cmd != null)
+        {
+            var modal = new CreateJobAppForm();
+            modal.IamId = IamId;
+            modal.IsEdit = true;
+            modal.JobEditCommand = cmd;
+
+            async Task OnOk()
+            {
+                await Task.CompletedTask;
+            }
+
+            modal.OnOk = (Func<Task>)OnOk;
+            await modal.ShowAsync();
+        }
+    }
+
+    private async Task OnDelClickAsync(JobDetails jobDetails)
+    {
+        var confirmResult = await ConfirmService.Show("确定要删除这个 Job 吗？", "删除");
+        if (confirmResult == ConfirmResult.OK)
+        {
+            var delRes = await KubeHttpClient.JobHttp.Del(IamId, jobDetails.Name);
+
+            await MessageService.Success(delRes ? "删除成功" : "删除失败，请稍候重试");
+            if (delRes)
+            {
+                Parent?.ReturnGrpList();
+            }
+        }
+    }
+
+    private async Task OnPublishClickAsync(JobDetails jobDetails)
+    {
+        var publishForm = new AppPublishForm(IamId, GrpName, jobDetails.Name);
+        await publishForm.ShowAsync();
+    }
+
+
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}

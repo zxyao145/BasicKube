@@ -1,0 +1,12 @@
+﻿@import "./Common.scss";
+
+
+.job-edit-form {
+    .job-form-control-label {
+        width: 114px;
+    }
+
+    .form-content > .ant-input-number {
+        width: 100%;
+    }
+}

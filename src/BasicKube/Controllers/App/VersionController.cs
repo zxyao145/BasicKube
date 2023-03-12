@@ -2,10 +2,10 @@
 
 public class VersionController
 {
-    [HttpGet("{deployUnitName}")]
+    [HttpGet("{resName}")]
     public ActionResult GetVersionList
         (
-         [FromRoute] string deployUnitName
+         [FromRoute] string resName
         )
     {
         return ApiResult.Success;

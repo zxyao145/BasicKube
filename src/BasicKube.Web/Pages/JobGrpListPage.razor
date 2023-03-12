@@ -1,0 +1,85 @@
+﻿@page "/pages/jobGrpList/{IamId:int?}/{GrpName?}"
+
+@inject KubeHttpClient KubeHttp
+@inject NavigationManager NavigationManager
+<div class="page-content">
+    <Breadcrumb Style="margin-bottom: 1rem;">
+        @if (string.IsNullOrWhiteSpace(GrpName))
+        {
+            <BreadcrumbItem>
+                <b>
+                    <Icon Type="link" Theme="outline" />
+                    任务组列表
+                </b>
+            </BreadcrumbItem>
+        }
+        else
+        {
+            <BreadcrumbItem OnClick="ReturnGrpList">
+                <b class="cursor-pointer">
+                    <Icon Type="link" Theme="outline" /> 任务组列表
+                </b>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+                <b><IconLinkSelect /> 任务</b>
+            </BreadcrumbItem>
+        }
+    </Breadcrumb>
+
+     <blockquote class="operate-wrapper">
+        <Button Type="@ButtonType.Primary" Size="small" OnClick="@OnCreateJobClick">新建Job</Button>
+    </blockquote>
+
+    @if (string.IsNullOrWhiteSpace(GrpName))
+    {
+        <AntList DataSource="@_grpInfos" TItem="JobGrpInfo">
+            <ListItem Class="page-resource-list-item" OnClick="() => OnGrpClick(context)">
+                <ListItemMeta Description="">
+                    <TitleTemplate>
+                        @context.Name
+                    </TitleTemplate>
+                </ListItemMeta>
+            </ListItem>
+        </AntList>
+    }
+    else
+    {
+        <CascadingValue Value="@(IamId)" Name="@("IamId")">
+            <CascadingValue Value="@(this)" IsFixed="true">
+                <JobList GrpName="@GrpName" />
+            </CascadingValue>
+        </CascadingValue>
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public int IamId { get; set; }
+    [Parameter]
+    public string? GrpName { get; set; }
+
+    private List<JobGrpInfo> _grpInfos = new List<JobGrpInfo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _grpInfos = await KubeHttp.JobHttp.ListGrp(IamId);
+    }
+
+    private void OnGrpClick(JobGrpInfo context)
+    {
+        NavigationManager.NavigateTo($"/{Routes.JobGrpPage}/{IamId}/{context.Name}");
+    }
+
+    internal void ReturnGrpList()
+    {
+        NavigationManager.NavigateTo($"/{Routes.JobGrpPage}/{IamId}");
+    }
+
+    private async Task OnCreateJobClick()
+    {
+        var form = new CreateJobAppForm();
+        form.IamId = IamId;
+        await form.ShowAsync();
+    }
+}

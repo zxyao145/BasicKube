@@ -24,6 +24,7 @@ namespace BasicKube.Web.Client
             builder.Services.AddHttpClient<SvcHttp>();
             builder.Services.AddHttpClient<PodHttp>();
             builder.Services.AddHttpClient<IngHttp>();
+            builder.Services.AddHttpClient<JobHttp>();
             builder.Services.AddScoped<KubeHttpClient>();
             builder.Services.AddAntDesign();
 

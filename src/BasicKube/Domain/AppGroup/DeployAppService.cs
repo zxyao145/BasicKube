@@ -43,25 +43,25 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
 
     #endregion
 
-    public override async Task DelAsync(int iamId, string deployUnitName)
+    public override async Task DelAsync(int iamId, string resName)
     {
         var nsName = IamService.GetNsName(iamId);
-        await _kubernetes.AppsV1.DeleteNamespacedDeploymentAsync(deployUnitName, nsName);
+        await _kubernetes.AppsV1.DeleteNamespacedDeploymentAsync(resName, nsName);
     }
 
     #region Details
 
-    public override async Task<DeployCreateCommand?> DetailsAsync(int iamId, string deployUnitName)
+    public override async Task<DeployCreateCommand?> DetailsAsync(int iamId, string resName)
     {
         var nsName = IamService.GetNsName(iamId);
         var deployment = await _kubernetes.AppsV1
-            .ReadNamespacedDeploymentAsync(deployUnitName, nsName);
+            .ReadNamespacedDeploymentAsync(resName, nsName);
         if (deployment == null)
         {
             return null;
         }
 
-        var cmd = GetAppCreateCommand<DeployCreateCommand>(deployUnitName, deployment);
+        var cmd = GetAppCreateCommand<DeployCreateCommand>(resName, deployment);
 
         return cmd;
     }

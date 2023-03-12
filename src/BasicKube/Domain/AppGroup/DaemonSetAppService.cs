@@ -40,25 +40,25 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
 
     #endregion
 
-    public override async Task DelAsync(int iamId, string deployUnitName)
+    public override async Task DelAsync(int iamId, string resName)
     {
         var nsName = IamService.GetNsName(iamId);
-        await _kubernetes.AppsV1.DeleteNamespacedDaemonSetAsync(deployUnitName, nsName);
+        await _kubernetes.AppsV1.DeleteNamespacedDaemonSetAsync(resName, nsName);
     }
 
     #region Details
 
-    public override async Task<DaemonSetCreateCommand?> DetailsAsync(int iamId, string deployUnitName)
+    public override async Task<DaemonSetCreateCommand?> DetailsAsync(int iamId, string resName)
     {
         var nsName = IamService.GetNsName(iamId);
         var daemonSetment = await _kubernetes.AppsV1
-                .ReadNamespacedDaemonSetAsync(deployUnitName, nsName);
+                .ReadNamespacedDaemonSetAsync(resName, nsName);
         if (daemonSetment == null)
         {
             return null;
         }
 
-        var cmd = GetAppCreateCommand<DaemonSetCreateCommand>(deployUnitName, daemonSetment);
+        var cmd = GetAppCreateCommand<DaemonSetCreateCommand>(resName, daemonSetment);
 
         return cmd;
     }

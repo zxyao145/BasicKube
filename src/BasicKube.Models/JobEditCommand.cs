@@ -1,7 +1,7 @@
 ﻿namespace BasicKube.Models;
 #nullable disable
 
-public class JobCreateCommand : AppCreateCommand
+public class JobEditCommand : AppCreateCommand
 {
     public static string Type => "job";
 
@@ -28,7 +28,7 @@ public class JobCreateCommand : AppCreateCommand
     public int? Parallelism { get; set; } = 1;
 }
 
-public class CronJobCreateCommand : AppCreateCommand
+public class CronJobEditCommand : AppCreateCommand
 {
     public static string Type => "cron-job";
 
