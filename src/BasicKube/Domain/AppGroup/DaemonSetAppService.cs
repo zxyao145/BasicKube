@@ -1,11 +1,22 @@
 ﻿using BasicKube.Api.Common;
 using BasicKube.Api.Domain.Pod;
+using BasicKube.Api.Exceptions;
 using Json.Patch;
 using System.Text.Json;
 
 namespace BasicKube.Api.Domain.App;
 
-public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCreateCommand>
+public interface IDaemonSetAppService 
+    : IAppService<DaemonSetGrpInfo, DaemonSetDetails, DaemonSetEditCommand>
+{
+
+}
+
+
+[Service<IDaemonSetAppService>]
+public class DaemonSetAppService 
+    : AppServiceBase<DaemonSetGrpInfo, DaemonSetDetails, DaemonSetEditCommand>
+    , IDaemonSetAppService
 {
     private readonly IKubernetes _kubernetes;
 
@@ -17,9 +28,63 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
         _logger = logger;
     }
 
+    public override async Task<IEnumerable<DaemonSetGrpInfo>> ListGrpAsync
+        (int iamId)
+    {
+        var nsName = IamService.GetNsName(iamId);
+
+        var deploymentListV1 = await _kubernetes.AppsV1
+            .ListNamespacedDaemonSetAsync(
+                nsName, 
+                labelSelector: $"{K8sLabelsConstants.LabelIamId}={iamId}"
+            );
+
+        var appNames = deploymentListV1.Items
+            .Select(x =>
+            {
+                if (!x.Metadata.Labels.ContainsKey(K8sLabelsConstants.LabelAppGrpName))
+                {
+                    return null;
+                }
+                var info = new DaemonSetGrpInfo()
+                {
+                    Name = x.Metadata.Labels[K8sLabelsConstants.LabelAppGrpName]
+                };
+
+                var containers = x.Spec.Template.Spec.Containers;
+                var mainContainer = containers[0];
+                if (mainContainer.Ports is { Count: > 0 })
+                {
+                    var ports = info.Ports;
+                    foreach (var item in mainContainer.Ports)
+                    {
+                        if (item.HostPort != null)
+                        {
+                            ports.Add(item.HostPort.Value);
+                        }
+                    }
+                }
+
+                return info;
+            })
+            .Where(x => x != null)
+            .GroupBy(x => x!.Name)
+            .Select(grp =>
+            {
+                return new DaemonSetGrpInfo()
+                {
+                    Name = grp.Key,
+                    Ports = grp.SelectMany(x => x!.Ports).ToList(),
+                };
+            });
+
+        return appNames;
+    }
+
+
     #region edit
 
-    public override async Task CreateAsync(int iamId, DaemonSetCreateCommand command)
+    public override async Task CreateAsync(int iamId, DaemonSetEditCommand command)
     {
         var nsName = IamService.GetNsName(iamId);
         var v1DaemonSet = CreateKubeApp<V1DaemonSet>(nsName, command);
@@ -28,7 +93,7 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
     }
 
 
-    public override async Task UpdateAsync(int iamId, DaemonSetCreateCommand command)
+    public override async Task UpdateAsync(int iamId, DaemonSetEditCommand command)
     {
         var nsName = IamService.GetNsName(iamId);
         var v1DaemonSet = CreateKubeApp<V1DaemonSet>(nsName, command);
@@ -48,7 +113,7 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
 
     #region Details
 
-    public override async Task<DaemonSetCreateCommand?> DetailsAsync(int iamId, string resName)
+    public override async Task<DaemonSetEditCommand?> DetailsAsync(int iamId, string resName)
     {
         var nsName = IamService.GetNsName(iamId);
         var daemonSetment = await _kubernetes.AppsV1
@@ -58,23 +123,24 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
             return null;
         }
 
-        var cmd = GetAppCreateCommand<DaemonSetCreateCommand>(resName, daemonSetment);
+        var cmd = GetAppCreateCommand<DaemonSetEditCommand>(resName, daemonSetment);
 
         return cmd;
     }
 
     #endregion
 
+
     public override async Task<IEnumerable<DaemonSetDetails>> ListAsync
-        (int iamId, string appName, string? env = null)
+        (int iamId, string? appName, string? env = null)
     {
         var nsName = IamService.GetNsName(iamId);
-        var labelSelector = $"{Constants.LableIamId}={iamId}," +
-            $"{Constants.LableAppGrpName}={appName}," +
-            $"{Constants.LableAppType}={DaemonSetCreateCommand.Type}";
+        var labelSelector = $"{K8sLabelsConstants.LabelIamId}={iamId}," +
+            $"{K8sLabelsConstants.LabelAppGrpName}={appName}," +
+            $"{K8sLabelsConstants.LabelAppType}={DaemonSetEditCommand.Type}";
         if (!string.IsNullOrWhiteSpace(env))
         {
-            labelSelector += $",{Constants.LableEnv}={env}";
+            labelSelector += $",{K8sLabelsConstants.LabelEnv}={env}";
         }
 
         var deploys = await _kubernetes.AppsV1
@@ -93,7 +159,7 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
         var allPods = (
                 await _kubernetes.CoreV1
                     .ListNamespacedPodAsync(nsName, 
-                    labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableAppType}={DaemonSetCreateCommand.Type}")
+                    labelSelector: $"{K8sLabelsConstants.LabelIamId}={iamId},{K8sLabelsConstants.LabelAppType}={DaemonSetEditCommand.Type}")
             ).Items
             .OrderBy(x => x.Status.StartTime)
             .ThenBy(x => x.Metadata.Name)
@@ -129,6 +195,7 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
         return result.OrderBy(x => x.Name);
     }
 
+
     public override async Task PublishAsync(
         int iamId, 
         AppPublishCommand command
@@ -159,5 +226,4 @@ public class DaemonSetAppService : AppServiceBase<DaemonSetDetails, DaemonSetCre
             nsName
             );
     }
-
 }

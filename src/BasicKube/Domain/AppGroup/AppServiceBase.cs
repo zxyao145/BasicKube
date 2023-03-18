@@ -1,20 +1,14 @@
 ﻿using BasicKube.Api.Common;
+using BasicKube.Api.Domain.AppGroup;
 using BasicKube.Api.Domain.Pod;
-using k8s;
-using k8s.Models;
-using Microsoft.AspNetCore.SignalR;
-using Org.BouncyCastle.Security;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Xml.Linq;
-using static KubeClient.K8sAnnotations;
 
 namespace BasicKube.Api.Domain.App;
 
-public abstract class AppServiceBase<TAppDetails, TEditCmd>
-    : IAppService<TAppDetails, TEditCmd>
+public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
+    : IAppService<TGrpInfo, TAppDetails, TEditCmd>
     where TAppDetails : AppDetailsQuery
-    where TEditCmd : AppCreateCommand
+    where TEditCmd : AppEditCommand
 {
 
     protected readonly IamService IamService;
@@ -24,21 +18,27 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
         IamService = iamService;
     }
 
+    public abstract Task<IEnumerable<TGrpInfo>> ListGrpAsync(int iamId);
+
+    public abstract Task<IEnumerable<TAppDetails>> ListAsync(int iamId, string? appName, string? evn = null);
+
+
     public abstract Task CreateAsync(int iamId, TEditCmd cmd);
     public abstract Task DelAsync(int iamId, string appName);
     public abstract Task<TEditCmd?> DetailsAsync(int iamId, string appName);
-    public abstract Task<IEnumerable<TAppDetails>> ListAsync(int iamId, string appName, string? evn = null);
+
     public abstract Task PublishAsync(int iamId, AppPublishCommand cmd);
     public abstract Task UpdateAsync(int iamId, TEditCmd cmd);
 
+
     #region CreateKubeApp
 
-    public static TKubeObj CreateKubeApp<TKubeObj>(string nsName, AppCreateCommand command)
+    public static TKubeObj CreateKubeApp<TKubeObj>(string nsName, AppEditCommand command)
         where TKubeObj : IKubernetesObject<V1ObjectMeta>, IValidate
     {
         var obj = Activator.CreateInstance<TKubeObj>();
         Debug.Assert(obj != null);
-        if (command is DeployCreateCommand deployCreateCmd)
+        if (command is DeployEditCommand deployCreateCmd)
         {
             var spec = new V1DeploymentSpec();
             (obj as V1Deployment)!.Spec = spec;
@@ -48,7 +48,7 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
             spec.Replicas = deployCreateCmd.Replicas < 0
                 ? 0 : deployCreateCmd.Replicas;
         }
-        else if (command is DaemonSetCreateCommand daemonSetCreateCommand)
+        else if (command is DaemonSetEditCommand daemonSetCreateCommand)
         {
             var spec = new V1DaemonSetSpec();
             (obj as V1DaemonSet)!.Spec = spec;
@@ -67,7 +67,7 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
     }
 
     public static V1ObjectMeta CreateObjectMeta
-        (string nsName, AppCreateCommand command)
+        (string nsName, AppEditCommand command)
     {
         var metadata = new V1ObjectMeta
         {
@@ -75,21 +75,21 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
             NamespaceProperty = nsName,
             Annotations = new Dictionary<string, string>
             {
-                [Constants.LableRegion] = command.Region,
-                [Constants.LableRoom] = command.Room,
-                [Constants.LableAppGrpName] = command.GrpName
+                [K8sLabelsConstants.LabelRegion] = command.Region,
+                [K8sLabelsConstants.LabelRoom] = command.Room,
+                [K8sLabelsConstants.LabelAppGrpName] = command.GrpName
             },
             Labels = new Dictionary<string, string>
             {
-                [Constants.LableAppGrpName] = command.GrpName,
-                [Constants.LableIamId] = command.IamId + "",
-                [Constants.LableEnv] = command.Env
+                [K8sLabelsConstants.LabelAppGrpName] = command.GrpName,
+                [K8sLabelsConstants.LabelIamId] = command.IamId + "",
+                [K8sLabelsConstants.LabelEnv] = command.Env
             }
         };
 
         if (!string.IsNullOrWhiteSpace(command.TypeName))
         {
-            metadata.Labels.Add(Constants.LableAppType, command.TypeName);
+            metadata.Labels.Add(K8sLabelsConstants.LabelAppType, command.TypeName);
         }
 
 
@@ -97,14 +97,14 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
     }
 
     public static V1LabelSelector GetV1LabelSelector
-        (string nsName, AppCreateCommand command)
+        (string nsName, AppEditCommand command)
     {
         return new V1LabelSelector
         {
             MatchLabels = new Dictionary<string, string>
             {
-                [Constants.LableApp] = command.AppName,
-                [Constants.LableAppType] = command.TypeName,
+                [K8sLabelsConstants.LabelApp] = command.AppName,
+                [K8sLabelsConstants.LabelAppType] = command.TypeName,
             }
         };
     }
@@ -113,19 +113,19 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
 
     public static TCmd GetAppCreateCommand<TCmd>
         (string resName, IKubernetesObject<V1ObjectMeta> kubeApp)
-        where TCmd : AppCreateCommand
+        where TCmd : AppEditCommand
     {
         var obj = Activator.CreateInstance<TCmd>();
         Debug.Assert(obj != null);
 
-        obj.GrpName = kubeApp.Metadata.Labels[Constants.LableAppGrpName];
+        obj.GrpName = kubeApp.Metadata.Labels[K8sLabelsConstants.LabelAppGrpName];
         obj.AppName = resName;
-        obj.Env = kubeApp.Metadata.Labels[Constants.LableEnv];
-        obj.IamId = int.Parse(kubeApp.Metadata.Labels[Constants.LableIamId] ?? "0");
-        obj.Region = kubeApp.Metadata.Annotations[Constants.LableRegion];
-        obj.Room = kubeApp.Metadata.Annotations[Constants.LableRoom];
+        obj.Env = kubeApp.Metadata.Labels[K8sLabelsConstants.LabelEnv];
+        obj.IamId = int.Parse(kubeApp.Metadata.Labels[K8sLabelsConstants.LabelIamId] ?? "0");
+        obj.Region = kubeApp.Metadata.Annotations[K8sLabelsConstants.LabelRegion];
+        obj.Room = kubeApp.Metadata.Annotations[K8sLabelsConstants.LabelRoom];
         
-        if(obj is DeployCreateCommand deployCreateCommand)
+        if(obj is DeployEditCommand deployCreateCommand)
         {
             var app = kubeApp as V1Deployment;
             Debug.Assert(app != null);
@@ -134,7 +134,7 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
                 .GetContainerInfos(app.Spec.Template.Spec.Containers);
             deployCreateCommand.Replicas = app.Spec.Replicas ?? 0;
         }
-        else if (obj is DaemonSetCreateCommand)
+        else if (obj is DaemonSetEditCommand)
         {
             var app = kubeApp as V1DaemonSet;
             Debug.Assert(app != null);
@@ -145,4 +145,6 @@ public abstract class AppServiceBase<TAppDetails, TEditCmd>
 
         return obj;
     }
+
+
 }

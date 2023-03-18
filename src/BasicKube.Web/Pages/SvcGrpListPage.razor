@@ -63,7 +63,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await GetGrpList();
+    }
+
+    private async Task GetGrpList()
+    {
         _svcInfos = await SvcHttp.ListGrp(IamId);
+        StateHasChanged();
     }
 
     private void OnSvcClick(SvcGrpInfo context)
@@ -79,6 +85,10 @@
     private async Task OnCreateSvcClick()
     {
         var form = new CreateSvcForm(IamId);
+        form.OnOk = async () =>
+        {
+            await GetGrpList();
+        };
         await form.ShowAsync();
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace BasicKube.Models;
 #nullable disable
 
-public class DeployCreateCommand : AppCreateCommand
+public class DeployEditCommand : AppEditCommand
 {
     public static string Type => "deploy";
 

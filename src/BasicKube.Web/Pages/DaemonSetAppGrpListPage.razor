@@ -1,6 +1,5 @@
 ﻿@page "/pages/daemonSetAppGrpList/{IamId:int?}/{DaempnAppName?}"
 @inject DaemonSetHttp DaemonSetHttp
-@inject AppManagerHttp AppManagerHttp
 @inject NavigationManager NavigationManager
 
 <div class="page-content">
@@ -30,7 +29,7 @@
 
     @if (string.IsNullOrWhiteSpace(_activityAppName))
     {
-        <AntList DataSource="@_appList" TItem="DaemonSetAppInfo">
+        <AntList DataSource="@_appList" TItem="DaemonSetGrpInfo">
             <ListItem Class="page-resource-list-item" OnClick="() => OnAppClick(context)">
                 <ListItemMeta Description="">
                         <TitleTemplate>
@@ -78,17 +77,18 @@
     [SupplyParameterFromQuery(Name = "deploy")]
     public string? DeployName{ get; set; }
 
-    private List<DaemonSetAppInfo> _appList = new List<DaemonSetAppInfo>();
+    private List<DaemonSetGrpInfo> _appList = new List<DaemonSetGrpInfo>();
 
     protected override async Task OnInitializedAsync()
     {
-        await GetAppList();
+        await GetGrpList();
     }
 
-    private async Task GetAppList()
+    private async Task GetGrpList()
     {
-        var appList = await AppManagerHttp.GetDaemonSetAppList(_iamId);
+        var appList = await DaemonSetHttp.ListGrp(_iamId);
         _appList = appList;
+        StateHasChanged();
     }
 
 
@@ -96,10 +96,14 @@
     {
         var modal = new CreateDaemonSetAppForm();
         modal.IamId = _iamId;
+        modal.OnOk = async () =>
+        {
+            await GetGrpList();
+        };
         await modal.ShowAsync();
     }
 
-    public void OnAppClick(DaemonSetAppInfo context)
+    public void OnAppClick(DaemonSetGrpInfo context)
     {
         NavigationManager.NavigateTo($"/{Routes.DaemonSetAppGrpPage}/{_iamId}/{context.Name}");
     }

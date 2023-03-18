@@ -4,7 +4,8 @@ using KubeClient.Models;
 
 namespace BasicKube.Api.Controllers.Svc;
 
-public class SvcController : KubeControllerBase
+public class SvcController 
+    : KubeControllerBase, IGrpResControllerWithoutPublish<SvcEditCommand>
 {
     private readonly ILogger<SvcController> _logger;
     private readonly ISvcService _svcService;
@@ -19,7 +20,7 @@ public class SvcController : KubeControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> SvcGrpNameList()
+    public async Task<IActionResult> ListGrp()
     {
         var grp = await _svcService.ListGrpAsync(IamId);
         return ApiResult.BuildSuccess(grp);
@@ -50,7 +51,7 @@ public class SvcController : KubeControllerBase
     #region edit
 
     [HttpPost]
-    public async Task<IActionResult> Add([FromBody] SvcEditCommand command)
+    public async Task<IActionResult> Create([FromBody] SvcEditCommand command)
     {
         await _svcService.CreateAsync(IamId, command);
         return ApiResult.Success;

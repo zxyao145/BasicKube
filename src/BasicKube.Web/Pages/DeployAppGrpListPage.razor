@@ -30,7 +30,7 @@
 
     @if (string.IsNullOrWhiteSpace(_activityAppName))
     {
-        <AntList DataSource="@_appList" TItem="AppInfo">
+        <AntList DataSource="@_appList" TItem="DeployGrpInfo">
             <ListItem Class="page-resource-list-item" OnClick="() => OnAppClick(context)">
                 <ListItemMeta Description="">
                         <TitleTemplate>
@@ -71,17 +71,18 @@
     [SupplyParameterFromQuery(Name = "deploy")]
     public string? DeployName{ get; set; }
 
-    private List<AppInfo> _appList = new List<AppInfo>();
+    private List<DeployGrpInfo> _appList = new List<DeployGrpInfo>();
 
     protected override async Task OnInitializedAsync()
     {
-        await GetAppList();
+        await GetGrpList();
     }
 
-    private async Task GetAppList()
+    private async Task GetGrpList()
     {
-        var appList = await KubeHttpClient.AppManagerHttp.GetDeployAppList(_iamId);
+        var appList = await KubeHttpClient.DeployHttp.ListGrp(_iamId);
         _appList = appList;
+        StateHasChanged();
     }
 
 
@@ -89,10 +90,14 @@
     {
         var modal = new CreateDeployAppForm();
         modal.IamId = _iamId;
+        modal.OnOk = async () =>
+        {
+            await GetGrpList();
+        };
         await modal.ShowAsync();
     }
 
-    public void OnAppClick(AppInfo context)
+    public void OnAppClick(DeployGrpInfo context)
     {
         NavigationManager.NavigateTo($"/{Routes.DeployGrpPage}/{_iamId}/{context.Name}");
     }

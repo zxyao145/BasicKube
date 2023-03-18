@@ -2,7 +2,7 @@
 
 namespace BasicKube.Api.Controllers.Pod;
 
-public class PodController: KubeControllerBase
+public class PodController : KubeControllerBase
 {
     private readonly IPodService _podService;
     private readonly ILogger<PodController> _logger;
@@ -25,7 +25,7 @@ public class PodController: KubeControllerBase
     [HttpDelete("{podName}")]
     public async Task<ActionResult> Del(
         [FromRoute] string podName
-        )
+    )
     {
         await _podService.DelAsync(podName, NsName);
         return ApiResult.Success;

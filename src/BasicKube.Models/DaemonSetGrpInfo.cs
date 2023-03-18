@@ -1,7 +1,7 @@
 ﻿namespace BasicKube.Models;
 #nullable disable
 
-public class DaemonSetAppInfo
+public class DaemonSetGrpInfo
 {
     public string Name { get; set; }
 

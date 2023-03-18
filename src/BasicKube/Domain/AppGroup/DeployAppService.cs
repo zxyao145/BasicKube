@@ -1,13 +1,19 @@
 ﻿using BasicKube.Api.Common;
 using BasicKube.Api.Domain.Pod;
+using BasicKube.Api.Exceptions;
 using Json.Patch;
-using Org.BouncyCastle.Security;
 using System.Text.Json;
-using System.Xml.Linq;
 
 namespace BasicKube.Api.Domain.App;
 
-public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateCommand>
+public interface IDeployAppService : IAppService<DeployGrpInfo, DeployDetails, DeployEditCommand>
+{
+
+}
+
+[Service<IDeployAppService>]
+public class DeployAppService 
+    : AppServiceBase<DeployGrpInfo, DeployDetails, DeployEditCommand>, IDeployAppService
 {
     private readonly IKubernetes _kubernetes;
 
@@ -21,7 +27,7 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
 
     #region edit
 
-    public override async Task CreateAsync(int iamId, DeployCreateCommand command)
+    public override async Task CreateAsync(int iamId, DeployEditCommand command)
     {
         var nsName = IamService.GetNsName(iamId);
         var v1Deploy = CreateKubeApp<V1Deployment>(nsName, command);
@@ -30,7 +36,7 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
     }
 
 
-    public override async Task UpdateAsync(int iamId, DeployCreateCommand command)
+    public override async Task UpdateAsync(int iamId, DeployEditCommand command)
     {
         var nsName = IamService.GetNsName(iamId);
         var v1Deploy = CreateKubeApp<V1Deployment>(nsName, command);
@@ -51,7 +57,7 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
 
     #region Details
 
-    public override async Task<DeployCreateCommand?> DetailsAsync(int iamId, string resName)
+    public override async Task<DeployEditCommand?> DetailsAsync(int iamId, string resName)
     {
         var nsName = IamService.GetNsName(iamId);
         var deployment = await _kubernetes.AppsV1
@@ -61,23 +67,57 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
             return null;
         }
 
-        var cmd = GetAppCreateCommand<DeployCreateCommand>(resName, deployment);
+        var cmd = GetAppCreateCommand<DeployEditCommand>(resName, deployment);
 
         return cmd;
     }
 
     #endregion
 
-    public override async Task<IEnumerable<DeployDetails>> ListAsync
-        (int iamId, string appName, string? env = null)
+
+    public override async Task<IEnumerable<DeployGrpInfo>> ListGrpAsync(int iamId)
     {
         var nsName = IamService.GetNsName(iamId);
-        var labelSelector = $"{Constants.LableIamId}={iamId}," +
-            $"{Constants.LableAppGrpName}={appName}," +
-            $"{Constants.LableAppType}={DeployCreateCommand.Type}";
+
+        var deploymentListV1 = await _kubernetes
+            .AppsV1
+            .ListNamespacedDeploymentAsync(
+                nsName, labelSelector: $"{K8sLabelsConstants.LabelIamId}={iamId}"
+            );
+
+        var appNames = deploymentListV1.Items
+            .Select(x =>
+            {
+                if (x.Metadata.Labels.ContainsKey(K8sLabelsConstants.LabelAppGrpName))
+                {
+                    return x.Metadata.Labels[K8sLabelsConstants.LabelAppGrpName];
+                }
+
+                return "";
+            })
+            .ToHashSet()
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => new DeployGrpInfo()
+            {
+                Name = x
+            })
+            .ToList();
+        return appNames;
+    }
+
+    public override async Task<IEnumerable<DeployDetails>> ListAsync
+        (int iamId, string? appName, string? env = null)
+    {
+        var nsName = IamService.GetNsName(iamId);
+        var labelSelector = $"{K8sLabelsConstants.LabelIamId}={iamId}," +
+            $"{K8sLabelsConstants.LabelAppType}={DeployEditCommand.Type}";
+        if(!string.IsNullOrWhiteSpace(appName))
+        {
+            labelSelector += $",{K8sLabelsConstants.LabelAppGrpName}={appName}";
+        }
         if (!string.IsNullOrWhiteSpace(env))
         {
-            labelSelector += $",{Constants.LableEnv}={env}";
+            labelSelector += $",{K8sLabelsConstants.LabelEnv}={env}";
         }
 
         var deploys = await _kubernetes.AppsV1
@@ -95,7 +135,7 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
         var result = new List<DeployDetails>();
         var allPods = (
                 await _kubernetes.CoreV1
-                    .ListNamespacedPodAsync(nsName, labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableAppType}={DeployCreateCommand.Type}")
+                    .ListNamespacedPodAsync(nsName, labelSelector: $"{K8sLabelsConstants.LabelIamId}={iamId},{K8sLabelsConstants.LabelAppType}={DeployEditCommand.Type}")
             ).Items
             .OrderBy(x => x.Status.StartTime)
             .ThenBy(x => x.Metadata.Name)
@@ -164,5 +204,4 @@ public class DeployAppService : AppServiceBase<DeployDetails, DeployCreateComman
             nsName
             );
     }
-
 }

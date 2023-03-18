@@ -5,10 +5,10 @@
     <div style="margin-bottom: 0.75rem;">
         <Space>
             <SpaceItem>
-                Job名
+                应用组
             </SpaceItem>
             <SpaceItem Style="width: 300px;">
-                <Input Placeholder="Job"
+                <Input Placeholder="应用组"
                        MaxLength="32"
                        @bind-Value="@DeployCreateCommand.GrpName" 
                        Disabled="@IsEdit" />
@@ -82,9 +82,9 @@
 
     public Func<Task>? OnOk { get; set; }
 
-    private DeployCreateCommand _createCommand = new DeployCreateCommand();
+    private DeployEditCommand _createCommand = new DeployEditCommand();
 
-    public DeployCreateCommand DeployCreateCommand
+    public DeployEditCommand DeployCreateCommand
     {
         get => _createCommand;
         set
@@ -147,11 +147,11 @@
         bool res = false;
         if (IsEdit)
         {
-            res = await http.Update(IamId, DeployCreateCommand);
+            res = await http.Update(DeployCreateCommand);
         }
         else
         {
-            res = await http.Create(IamId, DeployCreateCommand);
+            res = await http.Create(DeployCreateCommand);
         }
 
         var messageService = ServiceProvider.GetRequiredService<MessageService>();

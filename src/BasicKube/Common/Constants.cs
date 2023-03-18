@@ -1,19 +1,27 @@
 ﻿namespace BasicKube.Api.Common;
 
-public class Constants
+public class RouteConstants
 {
-    public const string LableIamId = "iamId";
-    public const string LableRegion = "region";
-    public const string LableRoom = "room";
-    public const string LableEnv = "env";
+    public const string IamId = "iamId";
+    public const string NsName = "nsName";
+    public const string Env = "env";
+}
 
-    public const string LableAppGrpName = "basickube/app-grp";
-    //public const string LabelJobGrpName = "basickube/job-grp";
-    //public const string LabelCronJobGrpName = "basickube/cron-job-grp";
-    public const string LableApp = "app";
-    public const string LableAppType = "type";
+public class K8sLabelsConstants
+{
+    public const string NsName = "nsName";
+
+    public const string LabelIamId = "basickube/iamId";
+    public const string LabelRegion = "basickube/region";
+    public const string LabelRoom = "basickube/room";
+    public const string LabelEnv = "basickube/env";
+
+    public const string LabelAppGrpName = "basickube/app-grp";
+    public const string LabelAppType = "basickube/type";
 
     public const string LabelSvcGrpName = "basickube/svc-grp";
     public const string LabelIngGrpName = "basickube/ing-grp";
 
+    public const string LabelApp = "app";
+    public const string LabelDeployName = "deployName";
 }

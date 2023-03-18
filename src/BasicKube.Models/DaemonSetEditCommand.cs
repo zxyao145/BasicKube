@@ -1,7 +1,7 @@
 ﻿namespace BasicKube.Models;
 #nullable disable
 
-public class DaemonSetCreateCommand : AppCreateCommand
+public class DaemonSetEditCommand : AppEditCommand
 {
     public static string Type => "daemon-set";
 

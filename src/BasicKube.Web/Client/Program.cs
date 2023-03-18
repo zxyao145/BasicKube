@@ -16,7 +16,6 @@ namespace BasicKube.Web.Client
             {
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
             });
-            builder.Services.AddHttpClient<AppManagerHttp>();
             builder.Services.AddHttpClient<DeployHttp>();
             builder.Services.AddHttpClient<DaemonSetHttp>();
             builder.Services.AddHttpClient<ScalerHttp>();

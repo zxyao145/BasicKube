@@ -114,7 +114,7 @@
     private async Task RefreshDeployInfo()
     {
         var data = await KubeHttpClient.DeployHttp
-            .ListApp(IamId, AppName!);
+            .List(IamId, AppName!);
         if (data is { Count: > 0 })
         {
             _deployDetails = data;
@@ -156,7 +156,8 @@
             deployDetail.Name.Split("-")[0..^1]
             );
         var cmd = await
-            KubeHttpClient.DeployHttp.Details(IamId, appName, deployDetail.Name);
+            KubeHttpClient.DeployHttp
+            .Details(IamId, deployDetail.Name);
         if (cmd != null)
         {
             var modal = new CreateDeployAppForm();
@@ -186,7 +187,8 @@
         var confirmResult = await ConfirmService.Show("确定要删除这个 Deployment 吗？", "删除");
         if (confirmResult == ConfirmResult.OK)
         {
-            var delRes = await KubeHttpClient.DeployHttp.Del(IamId, AppName, deployDetail.Name);
+            var delRes = await KubeHttpClient
+            .DeployHttp.Del(IamId, deployDetail.Name);
 
             await MessageService.Success(delRes ? "删除成功" : "删除失败，请稍候重试");
             if (delRes)

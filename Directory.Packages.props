@@ -3,6 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Ao.Logger" Version="0.7.1" />
     <PackageVersion Include="BlazorIcons.Full" Version="2.0.0" />
     <PackageVersion Include="Jil" Version="2.17.0" />
     <PackageVersion Include="JsonPatch.Net" Version="2.0.4" />

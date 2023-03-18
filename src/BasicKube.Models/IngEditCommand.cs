@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace BasicKube.Models;
 
-public class IngEditCommand
+public class IngEditCommand: IIamModel
 {
     public static string Type => "ingress";
 

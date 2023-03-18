@@ -22,7 +22,7 @@ namespace BasicKube.Web.Services
             int replicas
         )
         {
-            var scaleCmd = new DeployScaleCommand
+            var scaleCmd = new ScaleDeployCommand
             {
                 DeployName = resName,
                 Replicas = replicas,

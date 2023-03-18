@@ -63,7 +63,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await GetGrpList();
+    }
+
+    private async Task GetGrpList()
+    {
         _grpInfos = await KubeHttpClient.IngHttp.ListGrp(IamId);
+        StateHasChanged();
     }
 
     private void OnGrpClick(IngGrpInfo context)
@@ -79,6 +85,10 @@
     private async Task OnCreateIngClick()
     {
         var form = new CreateIngForm(IamId);
+        form.OnOk = async () =>
+        {
+            await GetGrpList();
+        };
         await form.ShowAsync();
     }
 }

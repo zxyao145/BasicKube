@@ -45,10 +45,10 @@
 
     public Func<Task>? OnOk { get; set; }
 
-    private DaemonSetCreateCommand _createCommand = new DaemonSetCreateCommand();
+    private DaemonSetEditCommand _createCommand = new DaemonSetEditCommand();
     private PodContainerEdit? _podContainerEdit;
 
-    public DaemonSetCreateCommand DaemonSetCreateCommand
+    public DaemonSetEditCommand DaemonSetCreateCommand
     {
         get => _createCommand;
         set => _createCommand = value;
@@ -75,18 +75,15 @@
         bool res = false;
         if (IsEdit)
         {
-            res = await http.Update(IamId, DaemonSetCreateCommand);
+            res = await http.Update(DaemonSetCreateCommand);
         }
         else
         {
-            res = await http.Create(IamId, DaemonSetCreateCommand);
+            res = await http.Create(DaemonSetCreateCommand);
         }
 
         var messageService = ServiceProvider.GetRequiredService<MessageService>();
-
-        await messageService.Success(res ? "创建成功" : "创建失败");
-
- 
+        _ = messageService.Success(res ? "创建成功" : "创建失败");
 
         if (OnOk != null)
         {

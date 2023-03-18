@@ -1,9 +1,10 @@
 ﻿namespace BasicKube.Web.Services;
 
+
+
 public class KubeHttpClient
 {
     public KubeHttpClient(
-        AppManagerHttp appManagerHttp,
         DeployHttp deployHttp,
         DaemonSetHttp daemonSetHttp,
         SvcHttp svcHttp,
@@ -14,7 +15,6 @@ public class KubeHttpClient
         JobHttp jobHttp
         )
     {
-        AppManagerHttp = appManagerHttp;
         DeployHttp = deployHttp;
         DaemonSetHttp = daemonSetHttp;
         SvcHttp = svcHttp;
@@ -25,7 +25,6 @@ public class KubeHttpClient
         JobHttp = jobHttp;
     }
 
-    public AppManagerHttp AppManagerHttp { get; }
     public DeployHttp DeployHttp { get; }
     public DaemonSetHttp DaemonSetHttp { get; }
     public SvcHttp SvcHttp { get; }

@@ -2,30 +2,43 @@
 @inherits BcdForm
 
 <div>
-    <GridRow>
+    <GridRow Class="mb-3">
         <GridCol Span="12">
-            <DivFormItem Label="服务组名" LabelSpan="4">
-                <Input Placeholder="服务组名"
-                       MaxLength="32"
-                       @bind-Value="@SvcEditCommand.SvcGrpName"
-                       Disabled="@IsEdit" />
-            </DivFormItem>
+            <FormControl Required="true" LabelCls="label-5">
+                <LabelContent>
+                    服务组名
+                </LabelContent>
+                <ChildContent>
+                    <Input Placeholder="服务组名"
+                           MaxLength="32"
+                           @bind-Value="@SvcEditCommand.SvcGrpName"
+                           Disabled="@IsEdit" />
+                </ChildContent>
+            </FormControl>
         </GridCol>
         <GridCol Span="12">
-            <DivFormItem Label="环境" LabelSpan="4">
-                <AppEnvSelect DefaultEnvName="@(SvcEditCommand.Env)"
-                              Disable="@IsEdit"
-                              @bind-EnvName="SvcEditCommand.Env" />
-            </DivFormItem>
+            <FormControl Required="true" LabelCls="label-5">
+                <LabelContent>
+                    环境
+                </LabelContent>
+                <ChildContent>
+                    <AppEnvSelect DefaultEnvName="@(SvcEditCommand.Env)"
+                                  Disable="@IsEdit"
+                                  @bind-EnvName="SvcEditCommand.Env" />
+                </ChildContent>
+            </FormControl>
         </GridCol>
     </GridRow>
 
 
-    <div>
-        <CascadingValue Value="@SvcEditCommand">
-            <GridRow>
-                <GridCol Span="12">
-                    <DivFormItem Label="服务类型" LabelSpan="4">
+    <CascadingValue Value="@SvcEditCommand">
+        <GridRow Class="mb-5">
+            <GridCol Span="12">
+                <FormControl Required="true" LabelCls="label-5">
+                    <LabelContent>
+                        服务类型
+                    </LabelContent>
+                    <ChildContent>
                         <Select TItem="string"
                                 TItemValue="string"
                                 DataSource="@SvcType.SvcTypeList"
@@ -35,25 +48,30 @@
                                 DefaultValue="@SvcType.ClusterIP"
                                 OnSelectedItemChanged="OnSelectedSvcTypeChanged">
                         </Select>
-                    </DivFormItem>
-                </GridCol>
-                <GridCol Span="12">
-                    <DivFormItem Label="关联应用" LabelSpan="4">
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="12">
+                <FormControl Required="true" LabelCls="label-5">
+                    <LabelContent>
+                        关联应用
+                    </LabelContent>
+                    <ChildContent>
                         <Select TItem="string"
                                 TItemValue="string"
                                 DataSource="@_appNames"
                                 @bind-Value="@SvcEditCommand.RelationAppName"
                                 Placeholder="选择关联的应用"
                                 DefaultActiveFirstOption="true"
-                                EnableSearch>
+                                    EnableSearch>
                         </Select>
-                    </DivFormItem>
-                </GridCol>
-            </GridRow>
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+        </GridRow>
 
-            <SvcPortConfig />
-        </CascadingValue>
-    </div>
+        <SvcPortConfig />
+    </CascadingValue>
 
 
     <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
@@ -100,14 +118,14 @@
         ShowMask = true;
         MinimizeBox = false;
         MaximizeBox = false;
-        Width = 800;
+        Width = 1000;
     }
 
 
     protected override async Task OnShowingAsync(System.ComponentModel.CancelEventArgs e)
     {
-        var http = ServiceProvider.GetRequiredService<AppManagerHttp>();
-        var appList = await http.GetDeployAppList(IamId);
+        var http = ServiceProvider.GetRequiredService<DeployHttp>();
+        var appList = await http.List(IamId);
 
         _appNames = appList.Select(x => x.Name).ToList();
         StateHasChanged();
@@ -132,7 +150,7 @@
         }
         else
         {
-            res = await http.Add(SvcEditCommand);
+            res = await http.Create(SvcEditCommand);
         }
 
         var messageService = ServiceProvider.GetRequiredService<MessageService>();

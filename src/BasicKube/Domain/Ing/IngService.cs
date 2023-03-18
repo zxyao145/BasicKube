@@ -1,63 +1,18 @@
 ﻿using BasicKube.Api.Common;
+using BasicKube.Api.Domain.App;
+using BasicKube.Api.Domain.AppGroup;
+using BasicKube.Api.Exceptions;
 using k8s;
 using System.Linq;
 
 namespace BasicKube.Api.Domain.Ing;
 
-public interface IIngService
+public interface IIngService 
+    : IResService<IngGrpInfo, IngDetails, IngEditCommand>
 {
-    /// <summary>
-    /// 列出Ing组简介列表
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="appName"></param>
-    /// <param name="env"></param>
-    /// <returns></returns>
-    public Task<IEnumerable<IngGrpInfo>> ListGrpAsync(int iamId);
-
-
-    /// <summary>
-    /// 列出Ing服务组详情列表
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="ingGrpName"></param>
-    /// <param name="env"></param>
-    /// <returns></returns>
-    public Task<IEnumerable<IngDetails>> ListAsync(int iamId, string grpName, string? env = null);
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="cmd"></param>
-    /// <returns></returns>
-    public Task CreateAsync(int iamId, IngEditCommand cmd);
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="cmd"></param>
-    /// <returns></returns>
-    public Task UpdateAsync(int iamId, IngEditCommand cmd);
-
-    /// <summary>
-    /// 删除
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="ingName"></param>
-    /// <returns></returns>
-    public Task DelAsync(int iamId, string ingName);
-
-    /// <summary>
-    /// 资源详情
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="ingName"></param>
-    /// <returns></returns>
-    public Task<IngEditCommand?> DetailsAsync(int iamId, string ingName);
 }
 
+[Service<IIngService>]
 public class IngService : IIngService
 {
     private readonly ILogger<IngService> _logger;
@@ -75,7 +30,7 @@ public class IngService : IIngService
 
     public async Task<IEnumerable<IngGrpInfo>> ListGrpAsync(int iamId)
     {
-        var label = $"{Constants.LableIamId}={iamId}";
+        var label = $"{K8sLabelsConstants.LabelIamId}={iamId}";
 
         var service = await _kubernetes.NetworkingV1.ListNamespacedIngressAsync(
             _iamService.GetNsName(iamId),
@@ -83,7 +38,7 @@ public class IngService : IIngService
             );
 
         return service.Items
-            .Select(x => x.Metadata.Labels[Constants.LabelIngGrpName])
+            .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelIngGrpName])
             .ToHashSet()
             .Select(x => new IngGrpInfo()
             {
@@ -96,10 +51,10 @@ public class IngService : IIngService
     public async Task<IEnumerable<IngDetails>> ListAsync(int iamId, string grpName, string? env = null)
     {
         var nsName = _iamService.GetNsName(iamId);
-        var label = $"{Constants.LableIamId}={iamId},{Constants.LabelIngGrpName}={grpName}";
+        var label = $"{K8sLabelsConstants.LabelIamId}={iamId},{K8sLabelsConstants.LabelIngGrpName}={grpName}";
         if (!string.IsNullOrWhiteSpace(env))
         {
-            label += $",{Constants.LableEnv}={env}";
+            label += $",{K8sLabelsConstants.LabelEnv}={env}";
         }
 
         var ingressRes = await _kubernetes.NetworkingV1
@@ -201,9 +156,9 @@ public class IngService : IIngService
                 NamespaceProperty = nsName,
                 Labels = new Dictionary<string, string>()
                 {
-                    { Constants.LabelIngGrpName, command.IngGrpName },
-                    { Constants.LableEnv, command.Env },
-                    { Constants.LableIamId, iamId + "" },
+                    { K8sLabelsConstants.LabelIngGrpName, command.IngGrpName },
+                    { K8sLabelsConstants.LabelEnv, command.Env },
+                    { K8sLabelsConstants.LabelIamId, iamId + "" },
                 }
             },
             Spec = new V1IngressSpec()
@@ -274,8 +229,8 @@ public class IngService : IIngService
         }
 
         var cmd = new IngEditCommand();
-        cmd.IngGrpName = ing.Metadata.Labels[Constants.LabelIngGrpName];
-        cmd.Env = ing.Metadata.Labels[Constants.LableEnv];
+        cmd.IngGrpName = ing.Metadata.Labels[K8sLabelsConstants.LabelIngGrpName];
+        cmd.Env = ing.Metadata.Labels[K8sLabelsConstants.LabelEnv];
         cmd.IngClassName = ing.Spec.IngressClassName;
         cmd.Rules = GetRules(ing);
 

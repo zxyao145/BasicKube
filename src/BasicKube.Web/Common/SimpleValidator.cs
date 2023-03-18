@@ -27,7 +27,6 @@ public static class SimpleValidator
     public static bool IsModelValid(object model)
     {
         var response = Validate(model);
-
         return response.IsValid;
     }
 }

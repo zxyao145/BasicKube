@@ -2,7 +2,7 @@
 
 #nullable disable
 
-public class SvcInfo
+public class SvcDetails
 {
     public int IamId { get; set; }
 
@@ -31,7 +31,7 @@ public class SvcInfo
 
     public override bool Equals(object obj)
     {
-        if (obj is SvcInfo svcInfo)
+        if (obj is SvcDetails svcInfo)
         {
             return Equals(svcInfo);
         }
@@ -39,7 +39,7 @@ public class SvcInfo
         return false;
     }
 
-    protected bool Equals(SvcInfo other)
+    protected bool Equals(SvcDetails other)
     {
         return IamId == other.IamId
                && Name == other.Name

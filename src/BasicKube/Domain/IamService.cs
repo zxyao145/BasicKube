@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using BasicKube.Api.Exceptions;
 
 namespace BasicKube.Api.Domain;
 
+[Service]
 public class IamService
 {
     private readonly IConfiguration _configuration;

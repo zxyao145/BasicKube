@@ -1,64 +1,16 @@
 ﻿using BasicKube.Api.Common;
+using BasicKube.Api.Domain.App;
 using BasicKube.Api.Domain.Pod;
-using System.Xml.Linq;
+using BasicKube.Api.Exceptions;
 
 namespace BasicKube.Api.Domain.Svc;
 
-
 public interface ISvcService
+    : IResService<SvcGrpInfo, SvcDetails, SvcEditCommand>
 {
-    /// <summary>
-    /// 列出服务组简介列表
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="appName"></param>
-    /// <param name="env"></param>
-    /// <returns></returns>
-    public Task<IEnumerable<SvcGrpInfo>> ListGrpAsync(int iamId);
-
-
-    /// <summary>
-    /// 列出服务组详情列表
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="svcGrpName"></param>
-    /// <param name="env"></param>
-    /// <returns></returns>
-    public Task<IEnumerable<SvcInfo>> ListAsync(int iamId, string? svcGrpName, string? env = null);
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="cmd"></param>
-    /// <returns></returns>
-    public Task CreateAsync(int iamId, SvcEditCommand cmd);
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="cmd"></param>
-    /// <returns></returns>
-    public Task UpdateAsync(int iamId, SvcEditCommand cmd);
-
-    /// <summary>
-    /// 删除
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="svcName"></param>
-    /// <returns></returns>
-    public Task DelAsync(int iamId, string svcName);
-
-    /// <summary>
-    /// 资源详情
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="svcName"></param>
-    /// <returns></returns>
-    public Task<SvcEditCommand?> DetailsAsync(int iamId, string svcName);
 }
 
+[Service<ISvcService>]
 public class SvcService : ISvcService
 {
     private readonly IKubernetes _kubernetes;
@@ -108,9 +60,9 @@ public class SvcService : ISvcService
                 NamespaceProperty = nsName,
                 Labels = new Dictionary<string, string>()
                 {
-                    { Constants.LabelSvcGrpName, command.SvcGrpName },
-                    { Constants.LableEnv, command.Env },
-                    { Constants.LableIamId, iamId + "" },
+                    { K8sLabelsConstants.LabelSvcGrpName, command.SvcGrpName },
+                    { K8sLabelsConstants.LabelEnv, command.Env },
+                    { K8sLabelsConstants.LabelIamId, iamId + "" },
                 }
             },
             Spec = new V1ServiceSpec()
@@ -134,10 +86,10 @@ public class SvcService : ISvcService
 
         svc.Spec.Selector = new Dictionary<string, string>();
         var appName = command.RelationAppName;
-        svc.Spec.Selector.Add(Constants.LableEnv, command.Env);
-        svc.Spec.Selector.Add(Constants.LableApp, $"{appName}-{command.Env}");
-        svc.Spec.Selector.Add(Constants.LableIamId, iamId + "");
-        svc.Spec.Selector.Add(Constants.LableAppType, DeployCreateCommand.Type);
+        svc.Spec.Selector.Add(K8sLabelsConstants.LabelEnv, command.Env);
+        svc.Spec.Selector.Add(K8sLabelsConstants.LabelApp, $"{appName}-{command.Env}");
+        svc.Spec.Selector.Add(K8sLabelsConstants.LabelIamId, iamId + "");
+        svc.Spec.Selector.Add(K8sLabelsConstants.LabelAppType, DeployEditCommand.Type);
         return svc;
     }
 
@@ -167,10 +119,10 @@ public class SvcService : ISvcService
         }
 
         var cmd = new SvcEditCommand();
-        cmd.SvcGrpName = svc.Metadata.Labels[Constants.LabelSvcGrpName];
-        cmd.Env = svc.Metadata.Labels[Constants.LableEnv];
+        cmd.SvcGrpName = svc.Metadata.Labels[K8sLabelsConstants.LabelSvcGrpName];
+        cmd.Env = svc.Metadata.Labels[K8sLabelsConstants.LabelEnv];
         cmd.Type = svc.Spec.Type;
-        cmd.RelationAppName = string.Join("-", svc.Spec.Selector[Constants.LableApp].Split("-")[0..^1]);
+        cmd.RelationAppName = string.Join("-", svc.Spec.Selector[K8sLabelsConstants.LabelApp].Split("-")[0..^1]);
         cmd.Ports = svc.Spec.Ports.Select((x, i) =>
         {
             var p = new SvcPortInfo();
@@ -185,26 +137,26 @@ public class SvcService : ISvcService
         return cmd;
     }
 
-    public async Task<IEnumerable<SvcInfo>> ListAsync(int iamId, string? svcGrpName, string? env = null)
+    public async Task<IEnumerable<SvcDetails>> ListAsync(int iamId, string? svcGrpName, string? env = null)
     {
         var nsName = _iamService.GetNsName(iamId);
-        var label = $"{Constants.LableIamId}={iamId}";
+        var label = $"{K8sLabelsConstants.LabelIamId}={iamId}";
         if (!string.IsNullOrWhiteSpace(svcGrpName))
         {
-            label += $",{Constants.LabelSvcGrpName}={svcGrpName}";
+            label += $",{K8sLabelsConstants.LabelSvcGrpName}={svcGrpName}";
         }
         if (!string.IsNullOrWhiteSpace(env))
         {
-            label += $",{Constants.LableEnv}={env}";
+            label += $",{K8sLabelsConstants.LabelEnv}={env}";
         }
 
         var service = await _kubernetes.CoreV1
             .ListNamespacedServiceAsync(nsName, labelSelector: label);
 
-        var services = new List<SvcInfo>();
+        var services = new List<SvcDetails>();
         foreach (var x in service.Items)
         {
-            SvcInfo svcInfo = await GetSvcInfo(iamId, nsName, x);
+            SvcDetails svcInfo = await GetSvcInfo(iamId, nsName, x);
             services.Add(svcInfo);
         }
 
@@ -213,7 +165,7 @@ public class SvcService : ISvcService
 
     public async Task<IEnumerable<SvcGrpInfo>> ListGrpAsync(int iamId)
     {
-        var label = $"{Constants.LableIamId}={iamId}";
+        var label = $"{K8sLabelsConstants.LabelIamId}={iamId}";
 
         var service = await _kubernetes.CoreV1
             .ListNamespacedServiceAsync(
@@ -222,7 +174,7 @@ public class SvcService : ISvcService
             );
 
         return service.Items
-            .Select(x => x.Metadata.Labels[Constants.LabelSvcGrpName])
+            .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelSvcGrpName])
             .ToHashSet()
             .Select(x => new SvcGrpInfo()
             {
@@ -231,9 +183,9 @@ public class SvcService : ISvcService
     }
 
 
-    private async Task<SvcInfo> GetSvcInfo(int iamId, string nsName, V1Service? x)
+    private async Task<SvcDetails> GetSvcInfo(int iamId, string nsName, V1Service? x)
     {
-        var svcInfo = new SvcInfo()
+        var svcInfo = new SvcDetails()
         {
             Name = x.Metadata.Name, //x.Metadata.Name.Split("-")[0],
             IamId = iamId,

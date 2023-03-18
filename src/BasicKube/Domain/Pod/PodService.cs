@@ -1,8 +1,10 @@
 ﻿using BasicKube.Api.Common;
+using BasicKube.Api.Exceptions;
 using Org.BouncyCastle.Security;
 
 namespace BasicKube.Api.Domain.Pod;
 
+[Service]
 public class PodService : IPodService
 {
     private readonly ILogger<PodService> _logger;
@@ -213,7 +215,7 @@ public class PodService : IPodService
     #region PodTemplateSpec
 
     public static V1PodTemplateSpec GetPodTemplateSpec
-        (string nsName, AppCreateCommand command, string type = "")
+        (string nsName, AppEditCommand command, string type = "")
     {
         if (string.IsNullOrWhiteSpace(type))
         {
@@ -227,16 +229,16 @@ public class PodService : IPodService
                 NamespaceProperty = nsName,
                 Annotations = new Dictionary<string, string>
                 {
-                    [Constants.LableRegion] = command.Region,
-                    [Constants.LableRoom] = command.Room,
+                    [K8sLabelsConstants.LabelRegion] = command.Region,
+                    [K8sLabelsConstants.LabelRoom] = command.Room,
                 },
                 Labels = new Dictionary<string, string>
                 {
-                    [Constants.LableIamId] = command.IamId + "",
-                    [Constants.LableEnv] = command.Env,
+                    [K8sLabelsConstants.LabelIamId] = command.IamId + "",
+                    [K8sLabelsConstants.LabelEnv] = command.Env,
 
                     // pod 独有的
-                    [Constants.LableApp] = command.AppName,
+                    [K8sLabelsConstants.LabelApp] = command.AppName,
                 }
             },
             Spec = new V1PodSpec()
@@ -244,7 +246,7 @@ public class PodService : IPodService
 
         if (!string.IsNullOrWhiteSpace(type))
         {
-            podTemp.Metadata.Labels.Add(Constants.LableAppType, type);
+            podTemp.Metadata.Labels.Add(K8sLabelsConstants.LabelAppType, type);
         }
 
         podTemp.Spec.RestartPolicy = command.RestartPolicy;
@@ -253,7 +255,7 @@ public class PodService : IPodService
     }
 
     private static IList<V1Container> CreateContainers
-        (string nsName, AppCreateCommand command)
+        (string nsName, AppEditCommand command)
     {
         var containers = new List<V1Container>();
         foreach (var item in command.Containers)
@@ -503,7 +505,7 @@ public class PodService : IPodService
 
 
     public static V1ObjectMeta CreateObjectMeta
-    (string nsName, AppCreateCommand command)
+    (string nsName, AppEditCommand command)
     {
         var metadata = new V1ObjectMeta
         {
@@ -511,21 +513,21 @@ public class PodService : IPodService
             NamespaceProperty = nsName,
             Annotations = new Dictionary<string, string>
             {
-                [Constants.LableRegion] = command.Region,
-                [Constants.LableRoom] = command.Room,
-                [Constants.LableAppGrpName] = command.GrpName
+                [K8sLabelsConstants.LabelRegion] = command.Region,
+                [K8sLabelsConstants.LabelRoom] = command.Room,
+                [K8sLabelsConstants.LabelAppGrpName] = command.GrpName
             },
             Labels = new Dictionary<string, string>
             {
-                [Constants.LableAppGrpName] = command.GrpName,
-                [Constants.LableIamId] = command.IamId + "",
-                [Constants.LableEnv] = command.Env
+                [K8sLabelsConstants.LabelAppGrpName] = command.GrpName,
+                [K8sLabelsConstants.LabelIamId] = command.IamId + "",
+                [K8sLabelsConstants.LabelEnv] = command.Env
             }
         };
 
         if (!string.IsNullOrWhiteSpace(command.TypeName))
         {
-            metadata.Labels.Add(Constants.LableAppType, command.TypeName);
+            metadata.Labels.Add(K8sLabelsConstants.LabelAppType, command.TypeName);
         }
 
 
@@ -533,14 +535,14 @@ public class PodService : IPodService
     }
 
     public static V1LabelSelector GetV1LabelSelector
-        (string nsName, AppCreateCommand command)
+        (string nsName, AppEditCommand command)
     {
         return new V1LabelSelector
         {
             MatchLabels = new Dictionary<string, string>
             {
-                [Constants.LableApp] = command.AppName,
-                [Constants.LableAppType] = command.TypeName,
+                [K8sLabelsConstants.LabelApp] = command.AppName,
+                [K8sLabelsConstants.LabelAppType] = command.TypeName,
             }
         };
     }

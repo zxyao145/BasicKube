@@ -1,84 +1,89 @@
-﻿using BasicKube.Api.Controllers.App;
-using BasicKube.Api.Domain.App;
+﻿using BasicKube.Api.Domain.App;
 using BasicKube.Api.Domain.Pod;
 
 namespace BasicKube.Api.Controllers.App.DaemonSet
 {
-    public partial class DaemonSetController : AppControllerBase
+    public partial class DaemonSetController
+        : KubeControllerBase, IGrpResController<DaemonSetEditCommand>
     {
-
         private readonly ILogger<DaemonSetController> _logger;
-        private readonly DaemonSetAppService _daemonSetAppService;
+        private readonly IDaemonSetAppService _domainSvc;
 
         public DaemonSetController(
             ILogger<DaemonSetController> logger,
-            IPodService podService,
-            DaemonSetAppService deployAppService)
+            IDaemonSetAppService deployAppService)
         {
             _logger = logger;
-            _daemonSetAppService = deployAppService;
+            _domainSvc = deployAppService;
         }
 
-        /// <summary>
-        /// 查询 appName 中的 deploy 及其 Pod 列表
-        /// </summary>
-
-        /// <param name="appName"></param>
-        /// <param name="env"></param>
-        /// <param name="ns"></param>
-        /// <returns></returns>
         [HttpGet]
-        public async Task<ActionResult> List(
-            [FromQuery] string? env
-            )
+        public async Task<IActionResult> ListGrp()
         {
-            var res = await _daemonSetAppService.ListAsync(IamId, AppName, env);
+            var res = await _domainSvc.ListGrpAsync(IamId);
             return ApiResult.BuildSuccess(res);
         }
 
-        [HttpPost]
-        public async Task<ActionResult> Create(
-            [FromBody] DaemonSetCreateCommand command
+
+        [HttpGet("{grpName}")]
+        public async Task<IActionResult> List
+            (
+                [FromRoute] string grpName
             )
         {
-            await _daemonSetAppService.CreateAsync(IamId, command);
+            var res = await _domainSvc.ListAsync(IamId, grpName);
+            return ApiResult.BuildSuccess(res);
+        }
+
+
+        #region edit
+
+        [HttpPost]
+        public async Task<IActionResult> Create(
+                [FromBody] DaemonSetEditCommand command
+            )
+        {
+            await _domainSvc.CreateAsync(IamId, command);
             return ApiResult.Success;
         }
 
         [HttpPost]
-        public async Task<ActionResult> Update(
-            [FromBody] DaemonSetCreateCommand command
+        public async Task<IActionResult> Update(
+                [FromBody] DaemonSetEditCommand command
             )
         {
-            await _daemonSetAppService.UpdateAsync(IamId, command);
+            await _domainSvc.UpdateAsync(IamId, command);
             return ApiResult.Success;
         }
 
         [HttpPut]
-        public async Task<ActionResult> Publish(
+        public async Task<IActionResult> Publish(
             [FromBody] AppPublishCommand command
         )
         {
-            await _daemonSetAppService.PublishAsync(IamId, command);
+            await _domainSvc.PublishAsync(IamId, command);
             return ApiResult.Success;
         }
 
-        [HttpDelete("{resName}")]
-        public async Task<ActionResult> Del(
-            [FromRoute] string resName
+        #endregion
+
+
+        [HttpDelete("{appName}")]
+        public async Task<IActionResult> Del(
+            [FromRoute] string appName
         )
         {
-            await _daemonSetAppService.DelAsync(IamId, resName);
+            await _domainSvc.DelAsync(IamId, appName);
             return ApiResult.Success;
         }
 
 
-        [HttpGet("{resName}")]
-        public async Task<ActionResult> Details(
-            [FromRoute] string resName
+        [HttpGet("{appName}")]
+        public async Task<IActionResult> Details(
+            [FromRoute] string appName
             )
         {
-            var cmd = await _daemonSetAppService.DetailsAsync(IamId, resName);
+            var cmd = await _domainSvc.DetailsAsync(IamId, appName);
             return ApiResult.BuildSuccess(cmd);
         }
     }

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace BasicKube.Models;
 
-public abstract class AppCreateCommand
+public abstract class AppEditCommand: IIamModel
 {
     [JsonIgnore]
     public abstract string TypeName { get; }

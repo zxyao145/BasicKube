@@ -1,6 +1,6 @@
 ﻿namespace BasicKube.Models
 {
-    public class DeployScaleCommand
+    public class ScaleDeployCommand
     {
         public int IamId { get; set; }
 

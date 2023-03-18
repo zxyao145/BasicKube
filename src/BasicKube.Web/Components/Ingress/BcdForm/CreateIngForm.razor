@@ -131,8 +131,8 @@
 
     protected override async Task OnShowingAsync(System.ComponentModel.CancelEventArgs e)
     {
-        var http = ServiceProvider.GetRequiredService<AppManagerHttp>();
-        var appList = await http.GetDeployAppList(IamId);
+        var http = ServiceProvider.GetRequiredService<DeployHttp>();
+        var appList = await http.ListGrp(IamId);
 
         _appNames = appList.Select(x => x.Name).ToList();
         StateHasChanged();
@@ -157,7 +157,7 @@
         }
         else
         {
-            res = await http.Add(IngEditCommand);
+            res = await http.Create(IngEditCommand);
         }
 
         var messageService = ServiceProvider.GetRequiredService<MessageService>();

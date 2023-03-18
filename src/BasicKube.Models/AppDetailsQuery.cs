@@ -3,13 +3,13 @@ namespace BasicKube.Models;
 public class AppDetailsQuery
 {
     /// <summary>
-    /// DaemonSetName
+    /// deploy Name
     /// </summary>
     public string AppName { get; set; } = "";
 
 
     /// <summary>
-    /// DaemonSetName
+    /// deploy Name
     /// </summary>
     public string Name
     {
@@ -18,5 +18,4 @@ public class AppDetailsQuery
     }
 
     public List<PodDetail> PodDetails { get; set; } = new List<PodDetail>();
-
 }

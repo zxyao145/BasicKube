@@ -1,82 +1,20 @@
 ﻿using BasicKube.Api.Common;
 using BasicKube.Api.Domain.App;
 using BasicKube.Api.Domain.Pod;
+using BasicKube.Api.Exceptions;
 using Json.Patch;
-using k8s;
 using k8s.Autorest;
 using System.Text.Json;
-using System.Xml.Linq;
 
 namespace BasicKube.Api.Domain.AppGroup;
 
-public interface IResService<TGrpInfo, TResDetails, TEditCmd>
-{
-    /// <summary>
-    /// 列出服务组简介列表
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="appName"></param>
-    /// <param name="env"></param>
-    /// <returns></returns>
-    public Task<IEnumerable<TGrpInfo>> ListGrpAsync(int iamId);
-
-
-    /// <summary>
-    /// 列出服务组详情列表
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="svcGrpName"></param>
-    /// <param name="env"></param>
-    /// <returns></returns>
-    public Task<IEnumerable<TResDetails>> ListAsync(int iamId, string? grpName, string? env = null);
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="cmd"></param>
-    /// <returns></returns>
-    public Task CreateAsync(int iamId, TEditCmd cmd);
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="cmd"></param>
-    /// <returns></returns>
-    public Task UpdateAsync(int iamId, TEditCmd cmd);
-
-    /// <summary>
-    /// 删除
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="svcName"></param>
-    /// <returns></returns>
-    public Task DelAsync(int iamId, string resName);
-
-    /// <summary>
-    /// 资源详情
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="svcName"></param>
-    /// <returns></returns>
-    public Task<TEditCmd?> DetailsAsync(int iamId, string svcName);
-
-    /// <summary>
-    /// 更新应用
-    /// </summary>
-    /// <param name="iamId"></param>
-    /// <param name="cmd"></param>
-    /// <returns></returns>
-    public Task PublishAsync(int iamId, AppPublishCommand cmd);
-}
-
-public interface IJobAppService : IResService<JobGrpInfo, JobDetails, JobEditCommand>
+public interface IJobAppService : IAppService<JobGrpInfo, JobDetails, JobEditCommand>
 {
 
 }
 
-public class JobAppService : IJobAppService
+[Service<IJobAppService>]
+public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditCommand>, IJobAppService
 {
     private readonly IKubernetes _kubernetes;
     private readonly ILogger<JobAppService> _logger;
@@ -85,7 +23,7 @@ public class JobAppService : IJobAppService
     public JobAppService(
         IKubernetes kubernetes,
         ILogger<JobAppService> logger,
-        IamService iamService)
+        IamService iamService) : base(iamService)
     {
         _kubernetes = kubernetes;
         _logger = logger;
@@ -95,30 +33,17 @@ public class JobAppService : IJobAppService
 
     #region edit
 
-    public async Task CreateAsync(int iamId, JobEditCommand command)
+    public override async Task CreateAsync(int iamId, JobEditCommand command)
     {
         var nsName = _iamService.GetNsName(iamId);
         V1Job job = CmdToJob(nsName, command);
         await _kubernetes.BatchV1.CreateNamespacedJobAsync(job, nsName);
     }
 
-    public async Task UpdateAsync(int iamId, JobEditCommand command)
+    public override async Task UpdateAsync(int iamId, JobEditCommand command)
     {
         var nsName = _iamService.GetNsName(iamId);
         V1Job job = CmdToJob(nsName, command);
-        //var oldJob = await _kubernetes.BatchV1
-        //    .ReadNamespacedJobAsync(job.Metadata.Name, job.Metadata.NamespaceProperty);
-        //job.Spec.Selector = oldJob.Spec.Selector;
-        //job.Metadata.Uid = oldJob.Metadata.Uid;
-        //job.Spec.Template.Metadata.Labels["controller-uid"] =
-        //    oldJob.Spec.Selector.MatchLabels["controller-uid"];
-        //job.Spec.Template.Metadata.Labels["job-name"] = command.AppName;
-        //await _kubernetes.BatchV1
-        //    .ReplaceNamespacedJobAsync(
-        //        job,
-        //        job.Metadata.Name,
-        //        job.Metadata.NamespaceProperty
-        //    );
         try
         {
             await _kubernetes.BatchV1.DeleteNamespacedJobAsync(
@@ -162,26 +87,26 @@ public class JobAppService : IJobAppService
     #endregion
 
 
-    public async Task DelAsync(int iamId, string resName)
+    public override async Task DelAsync(int iamId, string resName)
     {
         var nsName = _iamService.GetNsName(iamId);
         await _kubernetes.BatchV1.DeleteNamespacedJobAsync(resName, nsName);
         _logger.LogInformation("Del end:{0}", resName);
     }
 
-    public async Task<JobEditCommand?> DetailsAsync(int iamId, string resName)
+    public override async Task<JobEditCommand?> DetailsAsync(int iamId, string resName)
     {
         var nsName = _iamService.GetNsName(iamId);
         var job = await _kubernetes.BatchV1
             .ReadNamespacedJobAsync(resName, nsName);
 
         var cmd = new JobEditCommand();
-        cmd.GrpName = job.Metadata.Labels[Constants.LableAppGrpName];
-        cmd.Env = job.Metadata.Labels[Constants.LableEnv];
+        cmd.GrpName = job.Metadata.Labels[K8sLabelsConstants.LabelAppGrpName];
+        cmd.Env = job.Metadata.Labels[K8sLabelsConstants.LabelEnv];
         cmd.AppName = resName;
-        cmd.IamId = int.Parse(job.Metadata.Labels[Constants.LableIamId] ?? "0");
-        cmd.Region = job.Metadata.Annotations[Constants.LableRegion];
-        cmd.Room = job.Metadata.Annotations[Constants.LableRoom];
+        cmd.IamId = int.Parse(job.Metadata.Labels[K8sLabelsConstants.LabelIamId] ?? "0");
+        cmd.Region = job.Metadata.Annotations[K8sLabelsConstants.LabelRegion];
+        cmd.Room = job.Metadata.Annotations[K8sLabelsConstants.LabelRoom];
 
 
         cmd.Containers = PodService.GetContainerInfos(job.Spec.Template.Spec.Containers);
@@ -193,15 +118,15 @@ public class JobAppService : IJobAppService
         return cmd;
     }
 
-    public async Task<IEnumerable<JobDetails>> ListAsync(int iamId, string? grpName, string? env = null)
+    public override async Task<IEnumerable<JobDetails>> ListAsync(int iamId, string? grpName, string? env = null)
     {
         var nsName = _iamService.GetNsName(iamId);
-        var labelSelector = $"{Constants.LableIamId}={iamId}," +
-            $"{Constants.LableAppGrpName}={grpName}," +
-            $"{Constants.LableAppType}={JobEditCommand.Type}";
+        var labelSelector = $"{K8sLabelsConstants.LabelIamId}={iamId}," +
+            $"{K8sLabelsConstants.LabelAppGrpName}={grpName}," +
+            $"{K8sLabelsConstants.LabelAppType}={JobEditCommand.Type}";
         if (!string.IsNullOrWhiteSpace(env))
         {
-            labelSelector += $",{Constants.LableEnv}={env}";
+            labelSelector += $",{K8sLabelsConstants.LabelEnv}={env}";
         }
 
         var apps = await _kubernetes.BatchV1
@@ -220,7 +145,7 @@ public class JobAppService : IJobAppService
         var allPods = (
                 await _kubernetes.CoreV1
                     .ListNamespacedPodAsync(nsName,
-                    labelSelector: $"{Constants.LableIamId}={iamId},{Constants.LableAppType}={JobEditCommand.Type}")
+                    labelSelector: $"{K8sLabelsConstants.LabelIamId}={iamId},{K8sLabelsConstants.LabelAppType}={JobEditCommand.Type}")
             ).Items
             .OrderBy(x => x.Status.StartTime)
             .ThenBy(x => x.Metadata.Name)
@@ -262,9 +187,9 @@ public class JobAppService : IJobAppService
         return result.OrderBy(x => x.Name);
     }
 
-    public async Task<IEnumerable<JobGrpInfo>> ListGrpAsync(int iamId)
+    public override async Task<IEnumerable<JobGrpInfo>> ListGrpAsync(int iamId)
     {
-        var label = $"{Constants.LableIamId}={iamId}";
+        var label = $"{K8sLabelsConstants.LabelIamId}={iamId}";
 
         var jobs = await _kubernetes.BatchV1
             .ListNamespacedJobAsync(
@@ -273,7 +198,7 @@ public class JobAppService : IJobAppService
             );
 
         return jobs.Items
-            .Select(x => x.Metadata.Labels[Constants.LableAppGrpName])
+            .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelAppGrpName])
             .ToHashSet()
             .Select(x => new JobGrpInfo()
             {
@@ -282,7 +207,7 @@ public class JobAppService : IJobAppService
     }
 
 
-    public async Task PublishAsync(
+    public override async Task PublishAsync(
         int iamId,
         AppPublishCommand command
         )

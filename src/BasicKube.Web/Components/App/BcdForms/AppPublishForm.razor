@@ -69,10 +69,10 @@
                 Tag = Tag,
                 AppName = DeployName
             };
-        var res = await http.Publish(IamId, AppName, command);
+        var res = await http.Publish(IamId, command);
 
         var messageService = ServiceProvider.GetRequiredService<MessageService>();
-        await messageService.Success(res ? "发布成功" : "发布失败");
+        _ = messageService.Success(res ? "发布成功" : "发布失败");
 
         if (OnOk != null)
         {

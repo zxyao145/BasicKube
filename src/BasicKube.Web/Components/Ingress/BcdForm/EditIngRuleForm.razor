@@ -83,13 +83,13 @@
                 </SimpleSelect>
             </GridCol>
             <GridCol Span="6">
-                <Select TItem="SvcInfo"
+                <Select TItem="SvcDetails"
                     TItemValue="string"
                     DataSource="@_svcInfo"
                     @bind-Value="@item.TargetService"
                         DefaultActiveFirstOption
-                    ValueName="@nameof(SvcInfo.Name)"
-                    LabelName="@nameof(SvcInfo.Name)" />
+                    ValueName="@nameof(SvcDetails.Name)"
+                    LabelName="@nameof(SvcDetails.Name)" />
                 </GridCol>
                 <GridCol Span="3">
                 <Select TItem="PortInfo"
@@ -150,8 +150,8 @@
     public bool IsEdit { get; set; } = false;
     private IngRuleOptions RuleOptions { get; set; } = default!;
 
-    private List<SvcInfo> _svcInfo = new List<SvcInfo>();
-    private Task<List<SvcInfo>> _querySvcInfoTask;
+    private List<SvcDetails> _svcInfo = new List<SvcDetails>();
+    private Task<List<SvcDetails>> _querySvcInfoTask;
     private Dictionary<string, List<PortInfo>> _ports
         = new Dictionary<string, List<PortInfo>>();
 

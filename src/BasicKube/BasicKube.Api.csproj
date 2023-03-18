@@ -22,8 +22,4 @@
 		<ProjectReference Include="..\BasicKube.Models\BasicKube.Models.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Domain\Job\" />
-	</ItemGroup>
-
 </Project>

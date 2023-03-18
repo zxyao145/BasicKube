@@ -1,7 +1,7 @@
 ﻿namespace BasicKube.Models;
 #nullable disable
 
-public class AppInfo
+public class DeployGrpInfo
 {
     public string Name { get; set; }
 }

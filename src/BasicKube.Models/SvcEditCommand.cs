@@ -1,7 +1,7 @@
 ﻿namespace BasicKube.Models;
 #nullable disable
 
-public class SvcEditCommand
+public class SvcEditCommand:IIamModel
 {
     public string SvcName => $"{SvcGrpName}-{Env}";
 

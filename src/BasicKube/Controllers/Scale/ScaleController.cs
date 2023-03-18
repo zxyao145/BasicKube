@@ -1,5 +1,4 @@
-﻿using BasicKube.Api.Controllers.Deploy;
-using KubeClient;
+﻿using BasicKube.Api.Common;
 
 namespace BasicKube.Api.Controllers.AutoScale;
 
@@ -23,7 +22,7 @@ public class ScalerController : KubeControllerBase
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost]
-    public async Task<ActionResult> Scale([FromBody] DeployScaleCommand command)
+    public async Task<ActionResult> Scale([FromBody] ScaleDeployCommand command)
     {
         var patchStr = $@"
                     {{
@@ -35,14 +34,11 @@ public class ScalerController : KubeControllerBase
             new V1Patch(patchStr, V1Patch.PatchType.MergePatch), command.DeployName, NsName
             );
 
-        // _kubeClient.DeploymentsV1().Update(command.DeployName, doc =>
-        // {
-        //    doc.Replace(x => x.Spec.Replicas, command.Replicas < 0 ? 0 : command.Replicas);
-        // });
         return ApiResult.Success;
     }
 
-    #region AutoScale
+
+    #region AutoScale Deploy
 
     /// <summary>
     /// more see: https://juejin.cn/post/7086438714867449864
@@ -50,42 +46,40 @@ public class ScalerController : KubeControllerBase
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost]
-    public async Task<ActionResult> CreateAutoScale([FromBody] AutoScaleCreateCommand command)
+    public async Task<ActionResult> CreateAutoScaleDeploy([FromBody] AutoScaleDeployCommand command)
     {
         var vha = CreateHpaBody(IamId, command, NsName);
         await _kubernetes.AutoscalingV2.CreateNamespacedHorizontalPodAutoscalerAsync(vha, NsName);
-
         return ApiResult.Success;
     }
 
-    [HttpPost]
-    public async Task<ActionResult> EditAutoScale([FromBody] AutoScaleCreateCommand command)
+    [HttpPut]
+    public async Task<ActionResult> EditScaleDeploy([FromBody] AutoScaleDeployCommand command)
     {
         V2HorizontalPodAutoscaler vha = CreateHpaBody(IamId, command, NsName);
         await _kubernetes.AutoscalingV2
             .ReplaceNamespacedHorizontalPodAutoscalerStatusAsync(vha, vha.Metadata.Name, NsName);
-
         return ApiResult.Success;
     }
 
-    private static V2HorizontalPodAutoscaler CreateHpaBody(int iamId, AutoScaleCreateCommand command, string ns)
+    private static V2HorizontalPodAutoscaler CreateHpaBody(int iamId, AutoScaleDeployCommand command, string ns)
     {
         var deployName = command.DeployName;
         var vha = new V2HorizontalPodAutoscaler()
         {
             Metadata = new V1ObjectMeta()
             {
-                Name = $"{deployName}-hpa",
+                Name = GetHpaName(deployName),
                 NamespaceProperty = ns,
                 Annotations = new Dictionary<string, string>
                 {
-                    ["deployName"] = deployName
+                    [K8sLabelsConstants.LabelDeployName] = deployName
                 },
                 Labels = new Dictionary<string, string>
                 {
-                    ["deployName"] = deployName,
-                    ["iamId"] = iamId + "",
-                    ["env"] = deployName.Split('-')[^1]
+                    [K8sLabelsConstants.LabelDeployName] = deployName,
+                    [K8sLabelsConstants.LabelIamId] = iamId + "",
+                    [K8sLabelsConstants.LabelEnv] = deployName.Split('-')[^1]
                 }
             },
             Spec = new V2HorizontalPodAutoscalerSpec()
@@ -129,12 +123,21 @@ public class ScalerController : KubeControllerBase
     }
 
     [HttpDelete("{deployName}")]
-    public async Task<ActionResult> DelAutoScale([FromRoute] string deployName)
+    public async Task<ActionResult> AutoScaleDeploy([FromRoute] string deployName)
     {
-        var name = $"{deployName}-hpa";
-        await _kubernetes.AutoscalingV2.DeleteNamespacedHorizontalPodAutoscalerAsync(name, NsName);
+        await _kubernetes.AutoscalingV2
+            .DeleteNamespacedHorizontalPodAutoscalerAsync(
+            GetHpaName(deployName),
+                NsName
+            );
         return ApiResult.Success;
     }
 
+    private static string GetHpaName(string deployName)
+    {
+        return $"{deployName}-hpa";
+    }
+
     #endregion
+
 }

@@ -107,7 +107,7 @@
     private async Task RefreshDeployInfo()
     {
         var data = await KubeHttpClient.DaemonSetHttp
-            .ListApp(IamId, AppName!);
+            .List(IamId, AppName!);
         if (data is { Count: > 0 })
         {
             _daemonSetDetailss = data;
@@ -128,7 +128,8 @@
             daemonSetDetails.Name.Split("-")[0..^1]
             );
         var cmd = await
-            KubeHttpClient.DaemonSetHttp.Details(IamId, appName, daemonSetDetails.Name);
+            KubeHttpClient.DaemonSetHttp
+            .Details(IamId, daemonSetDetails.Name);
         if (cmd != null)
         {
             var modal = new CreateDaemonSetAppForm();
@@ -158,7 +159,8 @@
         var confirmResult = await ConfirmService.Show("确定要删除这个 DaemonSet 吗？", "删除");
         if (confirmResult == ConfirmResult.OK)
         {
-            var delRes = await KubeHttpClient.DaemonSetHttp.Del(IamId, AppName, daemonSetDetails.Name);
+            var delRes = await KubeHttpClient.DaemonSetHttp
+            .Del(IamId, daemonSetDetails.Name);
 
             await MessageService.Success(delRes ? "删除成功" : "删除失败，请稍候重试");
             if (delRes)

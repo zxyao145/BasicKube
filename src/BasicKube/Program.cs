@@ -4,7 +4,6 @@ using BasicKube.Api.Filters;
 using KubeClient;
 
 var builder = WebApplication.CreateBuilder(args);
-
 DiUtil.Configuration = builder.Configuration;
 builder.Services.AddControllers(options =>
 {
@@ -24,12 +23,10 @@ KubeClientOptions clientOptions = K8sConfig.Load().ToKubeClientOptions(
     defaultKubeNamespace: "default"
 // loggerFactory: builder.Services.g
 );
-
 builder.Services.AddKubeClient(clientOptions);
 
 // Load kubernetes configuration
 var kubernetesClientConfig = KubernetesClientConfiguration.BuildDefaultConfig();
-//kubernetesClientConfig = new KubernetesClientConfiguration { Host = "http://127.0.0.1:8001" };
 builder.Services.AddSingleton<IKubernetes>(new Kubernetes(kubernetesClientConfig));
 
 builder.Services.AddCors(options =>

@@ -63,7 +63,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await GetGrpList();
+    }
+
+    private async Task GetGrpList()
+    {
         _grpInfos = await KubeHttp.JobHttp.ListGrp(IamId);
+        StateHasChanged();
     }
 
     private void OnGrpClick(JobGrpInfo context)
@@ -80,6 +86,10 @@
     {
         var form = new CreateJobAppForm();
         form.IamId = IamId;
+        form.OnOk = async () =>
+        {
+            await GetGrpList();
+        };
         await form.ShowAsync();
     }
 }

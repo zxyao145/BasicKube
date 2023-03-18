@@ -1,9 +1,9 @@
-﻿using BasicKube.Api.Controllers.App;
-using BasicKube.Api.Domain.AppGroup;
+﻿using BasicKube.Api.Domain.AppGroup;
 
 namespace BasicKube.Api.Controllers.Job
 {
-    public partial class JobController : KubeControllerBase
+    public partial class JobController 
+        : KubeControllerBase, IGrpResController<JobEditCommand>
     {
         private readonly ILogger<JobController> _logger;
         private readonly IJobAppService _domainSvc;
@@ -17,27 +17,28 @@ namespace BasicKube.Api.Controllers.Job
         }
 
         [HttpGet]
-        public async Task<ActionResult> ListGrp()
+        public async Task<IActionResult> ListGrp()
         {
             var res = await _domainSvc.ListGrpAsync(IamId);
             return ApiResult.BuildSuccess(res);
         }
 
         [HttpGet("{grpName}")]
-        public async Task<IActionResult> List([FromRoute] string grpName)
+        public async Task<IActionResult> List(
+            [FromRoute] string grpName
+            )
         {
             var services = await _domainSvc.ListAsync(IamId, grpName);
             return ApiResult.BuildSuccess(services);
         }
 
-
-        [HttpGet("{resName}")]
-        public async Task<IActionResult> Details([FromRoute] string resName)
+        [HttpGet("{appName}")]
+        public async Task<IActionResult> Details([FromRoute] string appName)
         {
-            var cmd = await _domainSvc.DetailsAsync(IamId, resName);
+            var cmd = await _domainSvc.DetailsAsync(IamId, appName);
             if (cmd == null)
             {
-                return NotFound($"Resource {resName} not found");
+                return NotFound($"Resource {appName} not found");
             }
 
             return ApiResult.BuildSuccess(cmd);
@@ -47,7 +48,7 @@ namespace BasicKube.Api.Controllers.Job
         #region edit
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] JobEditCommand command)
+        public async Task<IActionResult> Create([FromBody] JobEditCommand command)
         {
             await _domainSvc.CreateAsync(IamId, command);
             return ApiResult.Success;
@@ -60,9 +61,8 @@ namespace BasicKube.Api.Controllers.Job
             return ApiResult.Success;
         }
 
-
         [HttpPut]
-        public async Task<ActionResult> Publish(
+        public async Task<IActionResult> Publish(
             [FromBody] AppPublishCommand command
         )
         {
@@ -73,10 +73,12 @@ namespace BasicKube.Api.Controllers.Job
         #endregion edit
 
 
-        [HttpDelete("{grpName}/{resName}")]
-        public async Task<IActionResult> Del([FromRoute] string resName)
+        [HttpDelete("{appName}")]
+        public async Task<IActionResult> Del(
+            [FromRoute] string appName
+            )
         {
-            await _domainSvc.DelAsync(IamId, resName);
+            await _domainSvc.DelAsync(IamId, appName);
             return ApiResult.Success;
         }
     }
