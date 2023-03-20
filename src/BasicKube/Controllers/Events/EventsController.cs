@@ -1,17 +1,19 @@
-﻿namespace BasicKube.Api.Controllers.Deploy;
+﻿using BasicKube.Api.Common;
+
+namespace BasicKube.Api.Controllers.Deploy;
 
 public class EventsController : KubeControllerBase
 {
-    private readonly IKubernetes _kubernetes;
+    private readonly KubernetesFactory _k8sFactory;
 
     private readonly ILogger<EventsController> _logger;
 
     public EventsController(
         ILogger<EventsController> logger,
-        IKubernetes kubernetes)
+        KubernetesFactory k8sFactory)
     {
         _logger = logger;
-        _kubernetes = kubernetes;
+        _k8sFactory = k8sFactory;
     }
 
 
@@ -22,12 +24,12 @@ public class EventsController : KubeControllerBase
         )
     {
         // https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/383-new-event-api-ga-graduation/README.md#backward-compatibility
-        //var ee = await _kubernetes.EventsV1.ListNamespacedEventAsync(
+        //var ee = await kubernetes.EventsV1.ListNamespacedEventAsync(
         //    namespaceParameter: ns,
         //    fieldSelector: $"regarding.name={podName}"
         //);
-
-        var eventListObj = await _kubernetes.CoreV1
+        var env = GetEnvByPodName(podName);
+        var eventListObj = await _k8sFactory.MustGet(env).CoreV1
             .ListNamespacedEventAsync(
               namespaceParameter: NsName,
               fieldSelector: $"involvedObject.name={podName}"

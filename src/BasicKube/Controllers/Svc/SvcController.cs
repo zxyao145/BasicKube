@@ -1,6 +1,6 @@
-﻿using BasicKube.Api.Common;
-using BasicKube.Api.Domain.Svc;
-using KubeClient.Models;
+﻿using BasicKube.Api.Domain.Svc;
+using Org.BouncyCastle.Asn1.Cmp;
+using System.Collections.Generic;
 
 namespace BasicKube.Api.Controllers.Svc;
 
@@ -30,7 +30,15 @@ public class SvcController
     [HttpGet("{svcName?}")]
     public async Task<IActionResult> List([FromRoute] string? svcName)
     {
-        var services = await _svcService.ListAsync(IamId, svcName);
+        IEnumerable<SvcDetails> services;
+        if (string.IsNullOrWhiteSpace(svcName))
+        {
+            services = await _svcService.ListInEnvAsync(IamId, EnvName!);
+        }
+        else
+        {
+            services = await _svcService.ListAsync(IamId, svcName);
+        }
         return ApiResult.BuildSuccess(services);
     }
 

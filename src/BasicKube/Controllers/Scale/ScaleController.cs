@@ -1,19 +1,20 @@
 ﻿using BasicKube.Api.Common;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace BasicKube.Api.Controllers.AutoScale;
 
 public class ScalerController : KubeControllerBase
 {
-    private readonly IKubernetes _kubernetes;
+    private readonly KubernetesFactory _k8sFactory;
     private readonly ILogger<ScalerController> _logger;
 
     public ScalerController(
         ILogger<ScalerController> logger,
-        IKubernetes kubernetes
+        KubernetesFactory k8sFactory
         )
     {
         _logger = logger;
-        _kubernetes = kubernetes;
+        _k8sFactory = k8sFactory;
     }
 
     /// <summary>
@@ -30,7 +31,9 @@ public class ScalerController : KubeControllerBase
                             ""replicas"": {command.Replicas}
                         }}
                     }}";
-        await _kubernetes.AppsV1.PatchNamespacedDeploymentScaleAsync(
+        await _k8sFactory.MustGet(command.DeployName)
+            .AppsV1
+            .PatchNamespacedDeploymentScaleAsync(
             new V1Patch(patchStr, V1Patch.PatchType.MergePatch), command.DeployName, NsName
             );
 
@@ -49,7 +52,9 @@ public class ScalerController : KubeControllerBase
     public async Task<ActionResult> CreateAutoScaleDeploy([FromBody] AutoScaleDeployCommand command)
     {
         var vha = CreateHpaBody(IamId, command, NsName);
-        await _kubernetes.AutoscalingV2.CreateNamespacedHorizontalPodAutoscalerAsync(vha, NsName);
+        await _k8sFactory.MustGet(command.DeployName)
+            .AutoscalingV2
+            .CreateNamespacedHorizontalPodAutoscalerAsync(vha, NsName);
         return ApiResult.Success;
     }
 
@@ -57,7 +62,8 @@ public class ScalerController : KubeControllerBase
     public async Task<ActionResult> EditScaleDeploy([FromBody] AutoScaleDeployCommand command)
     {
         V2HorizontalPodAutoscaler vha = CreateHpaBody(IamId, command, NsName);
-        await _kubernetes.AutoscalingV2
+        await _k8sFactory.MustGet(command.DeployName)
+            .AutoscalingV2
             .ReplaceNamespacedHorizontalPodAutoscalerStatusAsync(vha, vha.Metadata.Name, NsName);
         return ApiResult.Success;
     }
@@ -125,7 +131,8 @@ public class ScalerController : KubeControllerBase
     [HttpDelete("{deployName}")]
     public async Task<ActionResult> AutoScaleDeploy([FromRoute] string deployName)
     {
-        await _kubernetes.AutoscalingV2
+        await _k8sFactory.MustGet(deployName)
+            .AutoscalingV2
             .DeleteNamespacedHorizontalPodAutoscalerAsync(
             GetHpaName(deployName),
                 NsName

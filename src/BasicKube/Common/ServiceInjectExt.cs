@@ -1,9 +1,8 @@
-﻿using AutoMapper.Internal;
-using System.Reflection;
+﻿using System.Reflection;
 
-namespace BasicKube.Api.Exceptions;
+namespace BasicKube.Api.Common;
 
-public class ServiceAttribute<T>: ServiceAttribute
+public class ServiceAttribute<T> : ServiceAttribute
 {
     public ServiceAttribute(ServiceLifetime lifetime = ServiceLifetime.Scoped
        )
@@ -29,22 +28,9 @@ public class ServiceAttribute : Attribute
     public Type? BaseType { get; set; }
 }
 
-public static class ServiceInjectExt
+public static class ServiceAttributeExt
 {
-    static bool IsCare(CustomAttributeData attr)
-    {
-        if (attr.ToString().ToString().Contains("BasicKube.Api.Exceptions.ServiceAttribute"))
-        {
-            var t = attr.AttributeType;
-            var b = attr.AttributeType == typeof(ServiceAttribute)
-                || attr.AttributeType.BaseType == typeof(ServiceAttribute);
-          return attr.AttributeType == typeof(ServiceAttribute)
-           || attr.AttributeType.BaseType == typeof(ServiceAttribute);
-        }
-       return false;
-    }
-
-    public static void ScanService(this IServiceCollection serviceConllection)
+    public static IServiceCollection ScanService(this IServiceCollection serviceConllection)
     {
         var assembles = AppDomain.CurrentDomain.GetAssemblies()
             .Where(u => u.FullName!.Contains("BasicKube"));
@@ -54,10 +40,10 @@ public static class ServiceInjectExt
                 .Where(x => !x.IsInterface
                     && !x.IsAbstract
                     && x.CustomAttributes.Any(
-                        attr => (
+                        attr =>
                         attr.AttributeType == typeof(ServiceAttribute)
                         || attr.AttributeType.BaseType == typeof(ServiceAttribute)
-                        )
+
                    )
                 )
                 .ToList();
@@ -81,6 +67,8 @@ public static class ServiceInjectExt
                 serviceConllection.Add(serviceDescriptor);
             }
         }
+
+        return serviceConllection;
     }
 
     private static Type? GetFirstBaseType(Type service, ServiceAttribute serviceAttribute)

@@ -22,5 +22,14 @@ public abstract class KubeControllerBase : ControllerBase
             return (string)obj;
         }
     }
+    
+    public static string GetEnvByPodName(string podName)
+    {
+        return K8sUtil.GetEnvByPodName(podName);
+    }
 
+    public static string GetEnvByAppName(string appName)
+    {
+        return K8sUtil.GetEnvByAppName(appName);
+    }
 }

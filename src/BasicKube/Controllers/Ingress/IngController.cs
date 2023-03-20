@@ -37,9 +37,18 @@ public class IngController
     [HttpGet("{grpName}")]
     public async Task<IActionResult> List([FromRoute] string grpName)
     {
-        var ingList = await _ingService.ListAsync(IamId, grpName);
+        IEnumerable<IngDetails> ingList;
+        if (string.IsNullOrWhiteSpace(grpName))
+        {
+            ingList = await _ingService.ListInEnvAsync(IamId, EnvName!);
+        }
+        else
+        {
+            ingList = await _ingService.ListAsync(IamId, grpName);
+        }
         return ApiResult.BuildSuccess(ingList);
     }
+
 
     [HttpGet("{ingName}")]
     public async Task<IActionResult> Details([FromRoute] string ingName)

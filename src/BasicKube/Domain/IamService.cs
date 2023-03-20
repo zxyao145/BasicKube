@@ -1,17 +1,16 @@
-﻿using BasicKube.Api.Exceptions;
+﻿using BasicKube.Api.Options;
+using Microsoft.Extensions.Options;
 
 namespace BasicKube.Api.Domain;
 
 [Service]
 public class IamService
 {
-    private readonly IConfiguration _configuration;
-    private readonly IConfigurationSection _nameSpaceMap;
+    private readonly K8sOptions _k8sOptions;
 
-    public IamService(IConfiguration configuration)
+    public IamService(IOptions<K8sOptions> options)
     {
-        _configuration = configuration;
-        _nameSpaceMap = _configuration.GetSection("NameSpaceMap");
+        _k8sOptions = options.Value ;
     }
 
     public string GetNsName(int iamId)
@@ -22,12 +21,9 @@ public class IamService
     public string GetNsName(string iamId)
     {
         var nsName = "default";
-        if (_configuration != null)
+        if (_k8sOptions.NameSpaceMap.ContainsKey(iamId))
         {
-            if (_nameSpaceMap != null)
-            {
-                nsName = _nameSpaceMap.GetSection(iamId)?.Value ?? "default";
-            }
+            nsName = _k8sOptions.NameSpaceMap[iamId];
         }
 
         return nsName;

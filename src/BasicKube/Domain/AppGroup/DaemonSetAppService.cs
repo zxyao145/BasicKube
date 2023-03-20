@@ -2,7 +2,9 @@
 using BasicKube.Api.Domain.Pod;
 using BasicKube.Api.Exceptions;
 using Json.Patch;
+using System.Collections.Generic;
 using System.Text.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace BasicKube.Api.Domain.App;
 
@@ -18,13 +20,13 @@ public class DaemonSetAppService
     : AppServiceBase<DaemonSetGrpInfo, DaemonSetDetails, DaemonSetEditCommand>
     , IDaemonSetAppService
 {
-    private readonly IKubernetes _kubernetes;
+    private readonly KubernetesFactory _k8sFactory;
 
     private readonly ILogger<DaemonSetAppService> _logger;
 
-    public DaemonSetAppService(IamService iamService, IKubernetes kubernetes, ILogger<DaemonSetAppService> logger) : base(iamService)
+    public DaemonSetAppService(IamService iamService, KubernetesFactory kubernetes, ILogger<DaemonSetAppService> logger) : base(iamService)
     {
-        _kubernetes = kubernetes;
+        _k8sFactory = kubernetes;
         _logger = logger;
     }
 
@@ -32,23 +34,33 @@ public class DaemonSetAppService
         (int iamId)
     {
         var nsName = IamService.GetNsName(iamId);
+        List<V1DaemonSet> allRes = new();
+        var labelSelector = $"{K8sLabelsConstants.LabelIamId}={iamId}";
+        foreach (var item in _k8sFactory.All)
+        {
+            var cutLabel = $"{labelSelector},{K8sLabelsConstants.LabelEnv}={item.Key}";
+            var kubernetes = item.Value;
+            var deploymentListV1 = await kubernetes.AppsV1
+                .ListNamespacedDaemonSetAsync(
+                    nsName,
+                    labelSelector: cutLabel
+                );
+            if (deploymentListV1 != null)
+            {
+                allRes.AddRange(deploymentListV1.Items);
+            }
+        }
 
-        var deploymentListV1 = await _kubernetes.AppsV1
-            .ListNamespacedDaemonSetAsync(
-                nsName, 
-                labelSelector: $"{K8sLabelsConstants.LabelIamId}={iamId}"
-            );
-
-        var appNames = deploymentListV1.Items
+        var appNames = allRes
             .Select(x =>
             {
-                if (!x.Metadata.Labels.ContainsKey(K8sLabelsConstants.LabelAppGrpName))
+                if (!x.Metadata.Labels.ContainsKey(K8sLabelsConstants.LabelGrpName))
                 {
                     return null;
                 }
                 var info = new DaemonSetGrpInfo()
                 {
-                    Name = x.Metadata.Labels[K8sLabelsConstants.LabelAppGrpName]
+                    Name = x.Metadata.Labels[K8sLabelsConstants.LabelGrpName]
                 };
 
                 var containers = x.Spec.Template.Spec.Containers;
@@ -86,18 +98,20 @@ public class DaemonSetAppService
 
     public override async Task CreateAsync(int iamId, DaemonSetEditCommand command)
     {
+        var kubernetes = _k8sFactory.MustGet(command.Env);
         var nsName = IamService.GetNsName(iamId);
         var v1DaemonSet = CreateKubeApp<V1DaemonSet>(nsName, command);
-        await _kubernetes.AppsV1
+        await kubernetes.AppsV1
             .CreateNamespacedDaemonSetAsync(v1DaemonSet, v1DaemonSet.Metadata.NamespaceProperty);
     }
 
 
     public override async Task UpdateAsync(int iamId, DaemonSetEditCommand command)
     {
+        var kubernetes = _k8sFactory.MustGet(command.Env);
         var nsName = IamService.GetNsName(iamId);
         var v1DaemonSet = CreateKubeApp<V1DaemonSet>(nsName, command);
-        await _kubernetes.AppsV1
+        await kubernetes.AppsV1
             .ReplaceNamespacedDaemonSetAsync(v1DaemonSet, v1DaemonSet.Metadata.Name,
             v1DaemonSet.Metadata.NamespaceProperty
             );
@@ -107,16 +121,18 @@ public class DaemonSetAppService
 
     public override async Task DelAsync(int iamId, string resName)
     {
+        var kubernetes = _k8sFactory.MustGetByAppName(resName);
         var nsName = IamService.GetNsName(iamId);
-        await _kubernetes.AppsV1.DeleteNamespacedDaemonSetAsync(resName, nsName);
+        await kubernetes.AppsV1.DeleteNamespacedDaemonSetAsync(resName, nsName);
     }
 
     #region Details
 
     public override async Task<DaemonSetEditCommand?> DetailsAsync(int iamId, string resName)
     {
+        var kubernetes = _k8sFactory.MustGetByAppName(resName);
         var nsName = IamService.GetNsName(iamId);
-        var daemonSetment = await _kubernetes.AppsV1
+        var daemonSetment = await kubernetes.AppsV1
                 .ReadNamespacedDaemonSetAsync(resName, nsName);
         if (daemonSetment == null)
         {
@@ -130,23 +146,40 @@ public class DaemonSetAppService
 
     #endregion
 
-
     public override async Task<IEnumerable<DaemonSetDetails>> ListAsync
-        (int iamId, string? appName, string? env = null)
+        (int iamId, string grpName, string? env = null)
     {
         var nsName = IamService.GetNsName(iamId);
-        var labelSelector = $"{K8sLabelsConstants.LabelIamId}={iamId}," +
-            $"{K8sLabelsConstants.LabelAppGrpName}={appName}," +
-            $"{K8sLabelsConstants.LabelAppType}={DaemonSetEditCommand.Type}";
-        if (!string.IsNullOrWhiteSpace(env))
+        if(env  != null)
         {
-            labelSelector += $",{K8sLabelsConstants.LabelEnv}={env}";
+            return await ListOneClusterAsync(iamId, env, nsName, grpName);
         }
 
-        var deploys = await _kubernetes.AppsV1
+        List<DaemonSetDetails> res = new();
+        foreach (var item in _k8sFactory.All)
+        {
+            var oneRes = await ListOneClusterAsync(iamId, item.Key, nsName, grpName);
+            res.AddRange(oneRes);
+        }
+        return res;
+    }
+
+    private async Task<List<DaemonSetDetails>> ListOneClusterAsync
+    (int iamId, string env, string nsName, string grpName)
+    {
+        var kubernetes = _k8sFactory.MustGet(env);
+        var labelSelector = $"{K8sLabelsConstants.LabelIamId}={iamId}," +
+           $"{K8sLabelsConstants.LabelEnv}={env}";
+
+        var appLabelSelector = labelSelector +
+            $",{K8sLabelsConstants.LabelGrpName}={grpName}";
+        var podSelector = labelSelector +
+            $",{K8sLabelsConstants.LabelApp}={grpName}-{env}";
+
+        var deploys = await kubernetes.AppsV1
             .ListNamespacedDaemonSetAsync(
                 nsName,
-                labelSelector: labelSelector
+                labelSelector: appLabelSelector
                 );
 
         if (deploys.Items.Count < 1)
@@ -157,9 +190,11 @@ public class DaemonSetAppService
         var deploysList = deploys.Items;
         var result = new List<DaemonSetDetails>();
         var allPods = (
-                await _kubernetes.CoreV1
-                    .ListNamespacedPodAsync(nsName, 
-                    labelSelector: $"{K8sLabelsConstants.LabelIamId}={iamId},{K8sLabelsConstants.LabelAppType}={DaemonSetEditCommand.Type}")
+                await kubernetes.CoreV1
+                    .ListNamespacedPodAsync(nsName,
+                    labelSelector: podSelector // + $",{K8sLabelsConstants.LabelAppType}={DaemonSetEditCommand.Type}"
+
+                    )
             ).Items
             .OrderBy(x => x.Status.StartTime)
             .ThenBy(x => x.Metadata.Name)
@@ -192,7 +227,7 @@ public class DaemonSetAppService
             result.Add(details);
         }
 
-        return result.OrderBy(x => x.Name);
+        return result.OrderBy(x => x.Name).ToList();
     }
 
 
@@ -201,9 +236,10 @@ public class DaemonSetAppService
         AppPublishCommand command
         )
     {
+        var kubernetes = _k8sFactory.MustGetByAppName(command.AppName);
         string daemonSetName = command.AppName;
         var nsName = IamService.GetNsName(iamId);
-        var daemonSet = await _kubernetes
+        var daemonSet = await kubernetes
                 .AppsV1
                 .ReadNamespacedDaemonSetAsync(daemonSetName, nsName);
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
@@ -218,7 +254,7 @@ public class DaemonSetAppService
         var expected = JsonSerializer.SerializeToDocument(daemonSet);
         // JsonPatch.Net
         var patch = old.CreatePatch(expected);
-        var patchResponse = await _kubernetes
+        var patchResponse = await kubernetes
             .AppsV1
             .PatchNamespacedDaemonSetAsync(
             new V1Patch(patch, V1Patch.PatchType.JsonPatch),

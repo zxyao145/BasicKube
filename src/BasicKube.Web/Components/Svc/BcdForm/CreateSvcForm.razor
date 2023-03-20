@@ -24,7 +24,8 @@
                 <ChildContent>
                     <AppEnvSelect DefaultEnvName="@(SvcEditCommand.Env)"
                                   Disable="@IsEdit"
-                                  @bind-EnvName="SvcEditCommand.Env" />
+                                  EnvNameChanged="@OnEnvNameChanged"
+                                  />
                 </ChildContent>
             </FormControl>
         </GridCol>
@@ -124,18 +125,27 @@
 
     protected override async Task OnShowingAsync(System.ComponentModel.CancelEventArgs e)
     {
-        var http = ServiceProvider.GetRequiredService<DeployHttp>();
-        var appList = await http.List(IamId);
-
-        _appNames = appList.Select(x => x.Name).ToList();
-        StateHasChanged();
-
+        await GetEnvAppName();
         await base.OnShowingAsync(e);
+    }
+
+    private async Task GetEnvAppName()
+    {
+        var http = ServiceProvider.GetRequiredService<DeployHttp>();
+        var appList = await http.List(IamId, "", SvcEditCommand.Env);
+        _appNames = appList.Select(x => x.Name).ToList();
+        await StateHasChangedAsync();
     }
 
     private async Task OnSelectedSvcTypeChanged(string value)
     {
         await StateHasChangedAsync();
+    }
+
+    private async Task OnEnvNameChanged(string value)
+    {
+        SvcEditCommand.Env = value;
+        await GetEnvAppName();
     }
 
     private async Task OnOkAsync()

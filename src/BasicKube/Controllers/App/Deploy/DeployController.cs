@@ -29,7 +29,7 @@ namespace BasicKube.Api.Controllers.Deploy
         [HttpGet("{grpName?}")]
         public async Task<IActionResult> List([FromRoute] string? grpName)
         {
-            var res = await _domainSvc.ListAsync(IamId, grpName);
+            var res = await _domainSvc.ListAsync(IamId, grpName, EnvName);
             return ApiResult.BuildSuccess(res);
         }
 

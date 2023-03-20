@@ -1,6 +1,4 @@
-﻿using BasicKube.Api.Common;
-using BasicKube.Api.Domain.AppGroup;
-using BasicKube.Api.Domain.Pod;
+﻿using BasicKube.Api.Domain.Pod;
 using System.Diagnostics;
 
 namespace BasicKube.Api.Domain.App;
@@ -20,18 +18,21 @@ public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
 
     public abstract Task<IEnumerable<TGrpInfo>> ListGrpAsync(int iamId);
 
-    public abstract Task<IEnumerable<TAppDetails>> ListAsync(int iamId, string? appName, string? evn = null);
+    public abstract Task<IEnumerable<TAppDetails>> ListAsync(int iamId, string appName, string? evn = null);
 
 
     public abstract Task CreateAsync(int iamId, TEditCmd cmd);
-    public abstract Task DelAsync(int iamId, string appName);
-    public abstract Task<TEditCmd?> DetailsAsync(int iamId, string appName);
-
-    public abstract Task PublishAsync(int iamId, AppPublishCommand cmd);
     public abstract Task UpdateAsync(int iamId, TEditCmd cmd);
 
 
-    #region CreateKubeApp
+    public abstract Task DelAsync(int iamId, string appName);
+
+    public abstract Task<TEditCmd?> DetailsAsync(int iamId, string appName);
+
+    public abstract Task PublishAsync(int iamId, AppPublishCommand cmd);
+
+
+    #region internal
 
     public static TKubeObj CreateKubeApp<TKubeObj>(string nsName, AppEditCommand command)
         where TKubeObj : IKubernetesObject<V1ObjectMeta>, IValidate
@@ -77,20 +78,20 @@ public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
             {
                 [K8sLabelsConstants.LabelRegion] = command.Region,
                 [K8sLabelsConstants.LabelRoom] = command.Room,
-                [K8sLabelsConstants.LabelAppGrpName] = command.GrpName
+                [K8sLabelsConstants.LabelGrpName] = command.GrpName
             },
             Labels = new Dictionary<string, string>
             {
-                [K8sLabelsConstants.LabelAppGrpName] = command.GrpName,
+                [K8sLabelsConstants.LabelGrpName] = command.GrpName,
                 [K8sLabelsConstants.LabelIamId] = command.IamId + "",
                 [K8sLabelsConstants.LabelEnv] = command.Env
             }
         };
 
-        if (!string.IsNullOrWhiteSpace(command.TypeName))
-        {
-            metadata.Labels.Add(K8sLabelsConstants.LabelAppType, command.TypeName);
-        }
+        //if (!string.IsNullOrWhiteSpace(command.TypeName))
+        //{
+        //    metadata.Labels.Add(K8sLabelsConstants.LabelAppType, command.TypeName);
+        //}
 
 
         return metadata;
@@ -118,7 +119,7 @@ public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
         var obj = Activator.CreateInstance<TCmd>();
         Debug.Assert(obj != null);
 
-        obj.GrpName = kubeApp.Metadata.Labels[K8sLabelsConstants.LabelAppGrpName];
+        obj.GrpName = kubeApp.Metadata.Labels[K8sLabelsConstants.LabelGrpName];
         obj.AppName = resName;
         obj.Env = kubeApp.Metadata.Labels[K8sLabelsConstants.LabelEnv];
         obj.IamId = int.Parse(kubeApp.Metadata.Labels[K8sLabelsConstants.LabelIamId] ?? "0");

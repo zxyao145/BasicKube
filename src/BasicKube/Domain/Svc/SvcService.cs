@@ -1,28 +1,27 @@
-﻿using BasicKube.Api.Common;
-using BasicKube.Api.Domain.App;
+﻿using BasicKube.Api.Domain.App;
 using BasicKube.Api.Domain.Pod;
-using BasicKube.Api.Exceptions;
 
 namespace BasicKube.Api.Domain.Svc;
 
 public interface ISvcService
     : IResService<SvcGrpInfo, SvcDetails, SvcEditCommand>
 {
+    Task<IEnumerable<SvcDetails>> ListInEnvAsync(int iamId, string env);
 }
 
 [Service<ISvcService>]
 public class SvcService : ISvcService
 {
-    private readonly IKubernetes _kubernetes;
+    private readonly KubernetesFactory _k8sFactory;
     private readonly ILogger<SvcService> _logger;
     private readonly IamService _iamService;
 
     public SvcService(
-        IKubernetes kubernetes,
+        KubernetesFactory kubernetes,
         ILogger<SvcService> logger,
         IamService iamService)
     {
-        _kubernetes = kubernetes;
+        _k8sFactory = kubernetes;
         _logger = logger;
         _iamService = iamService;
     }
@@ -33,13 +32,17 @@ public class SvcService : ISvcService
     public async Task CreateAsync(int iamId, SvcEditCommand cmd)
     {
         var svc = CmdToSvc(cmd, iamId);
-        await _kubernetes.CoreV1
-                .CreateNamespacedServiceAsync(svc, svc.Metadata.NamespaceProperty);
+        await _k8sFactory.MustGet(cmd.Env)
+            .CoreV1
+            .CreateNamespacedServiceAsync(svc, svc.Metadata.NamespaceProperty);
     }
+
     public async Task UpdateAsync(int iamId, SvcEditCommand cmd)
     {
         var svc = CmdToSvc(cmd, iamId);
-        await _kubernetes.CoreV1
+
+        await _k8sFactory.MustGet(cmd.Env)
+            .CoreV1
             .ReplaceNamespacedServiceAsync(svc,
                 svc.Metadata.Name,
                 svc.Metadata.NamespaceProperty);
@@ -60,7 +63,7 @@ public class SvcService : ISvcService
                 NamespaceProperty = nsName,
                 Labels = new Dictionary<string, string>()
                 {
-                    { K8sLabelsConstants.LabelSvcGrpName, command.SvcGrpName },
+                    { K8sLabelsConstants.LabelGrpName, command.SvcGrpName },
                     { K8sLabelsConstants.LabelEnv, command.Env },
                     { K8sLabelsConstants.LabelIamId, iamId + "" },
                 }
@@ -87,9 +90,9 @@ public class SvcService : ISvcService
         svc.Spec.Selector = new Dictionary<string, string>();
         var appName = command.RelationAppName;
         svc.Spec.Selector.Add(K8sLabelsConstants.LabelEnv, command.Env);
-        svc.Spec.Selector.Add(K8sLabelsConstants.LabelApp, $"{appName}-{command.Env}");
+        svc.Spec.Selector.Add(K8sLabelsConstants.LabelApp, appName);
         svc.Spec.Selector.Add(K8sLabelsConstants.LabelIamId, iamId + "");
-        svc.Spec.Selector.Add(K8sLabelsConstants.LabelAppType, DeployEditCommand.Type);
+        //svc.Spec.Selector.Add(K8sLabelsConstants.LabelAppType, DeployEditCommand.Type);
         return svc;
     }
 
@@ -99,7 +102,8 @@ public class SvcService : ISvcService
     public async Task DelAsync(int iamId, string svcName)
     {
         string nsName = _iamService.GetNsName(iamId);
-        var res = await _kubernetes
+        var res = await _k8sFactory
+            .MustGetByAppName(svcName)
            .CoreV1
            .DeleteNamespacedServiceAsync(svcName, nsName);
 
@@ -110,16 +114,18 @@ public class SvcService : ISvcService
     {
         var nsName = _iamService.GetNsName(iamId);
 
-        var svc = await _kubernetes.CoreV1
+        var svc = await _k8sFactory
+            .MustGetByAppName(svcName)
+            .CoreV1
             .ReadNamespacedServiceAsync(svcName, nsName);
 
         if (svc == null)
         {
-            return null ;
+            return null;
         }
 
         var cmd = new SvcEditCommand();
-        cmd.SvcGrpName = svc.Metadata.Labels[K8sLabelsConstants.LabelSvcGrpName];
+        cmd.SvcGrpName = svc.Metadata.Labels[K8sLabelsConstants.LabelGrpName];
         cmd.Env = svc.Metadata.Labels[K8sLabelsConstants.LabelEnv];
         cmd.Type = svc.Spec.Type;
         cmd.RelationAppName = string.Join("-", svc.Spec.Selector[K8sLabelsConstants.LabelApp].Split("-")[0..^1]);
@@ -137,44 +143,25 @@ public class SvcService : ISvcService
         return cmd;
     }
 
-    public async Task<IEnumerable<SvcDetails>> ListAsync(int iamId, string? svcGrpName, string? env = null)
-    {
-        var nsName = _iamService.GetNsName(iamId);
-        var label = $"{K8sLabelsConstants.LabelIamId}={iamId}";
-        if (!string.IsNullOrWhiteSpace(svcGrpName))
-        {
-            label += $",{K8sLabelsConstants.LabelSvcGrpName}={svcGrpName}";
-        }
-        if (!string.IsNullOrWhiteSpace(env))
-        {
-            label += $",{K8sLabelsConstants.LabelEnv}={env}";
-        }
-
-        var service = await _kubernetes.CoreV1
-            .ListNamespacedServiceAsync(nsName, labelSelector: label);
-
-        var services = new List<SvcDetails>();
-        foreach (var x in service.Items)
-        {
-            SvcDetails svcInfo = await GetSvcInfo(iamId, nsName, x);
-            services.Add(svcInfo);
-        }
-
-        return services;
-    }
-
     public async Task<IEnumerable<SvcGrpInfo>> ListGrpAsync(int iamId)
     {
         var label = $"{K8sLabelsConstants.LabelIamId}={iamId}";
+        var nsName = _iamService.GetNsName(iamId);
+        var res = new List<V1Service>();
+        foreach (var item in _k8sFactory.All)
+        {
+            var service = await
+                item.Value
+                .CoreV1
+                .ListNamespacedServiceAsync(
+                      nsName,
+                      labelSelector: label + $",{K8sLabelsConstants.LabelEnv}={item.Key}"
+                  );
+            res.AddRange(service.Items);
+        }
 
-        var service = await _kubernetes.CoreV1
-            .ListNamespacedServiceAsync(
-            _iamService.GetNsName(iamId), 
-            labelSelector: label
-            );
-
-        return service.Items
-            .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelSvcGrpName])
+        return res
+            .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelGrpName])
             .ToHashSet()
             .Select(x => new SvcGrpInfo()
             {
@@ -182,8 +169,59 @@ public class SvcService : ISvcService
             });
     }
 
+    public async Task<IEnumerable<SvcDetails>> ListAsync
+        (int iamId, string grpName, string? env = null)
+    {
+        var nsName = _iamService.GetNsName(iamId);
 
-    private async Task<SvcDetails> GetSvcInfo(int iamId, string nsName, V1Service? x)
+        if (!string.IsNullOrWhiteSpace(env))
+        {
+            return await ListOneEnv(iamId, env, nsName, grpName);
+        }
+
+        var result = new List<SvcDetails>();
+        foreach (var item in _k8sFactory.All)
+        {
+            var temp = await ListOneEnv(iamId, item.Key, nsName, grpName);
+            result.AddRange(temp);
+        }
+        return result;
+
+    }
+
+    public async Task<IEnumerable<SvcDetails>> ListInEnvAsync(int iamId, string env)
+    {
+        var nsName = _iamService.GetNsName(iamId);
+        return await ListOneEnv(iamId, env, nsName, "");
+    }
+
+    private async Task<List<SvcDetails>> ListOneEnv
+        (int iamId, string env, string nsName, string grpName)
+    {
+        var label = $"{K8sLabelsConstants.LabelIamId}={iamId}" +
+            $",{K8sLabelsConstants.LabelEnv}={env}";
+
+        if (!string.IsNullOrWhiteSpace(grpName))
+        {
+            label += $",{K8sLabelsConstants.LabelGrpName}={grpName}";
+        }
+
+        var kubernetes = _k8sFactory.MustGet(env);
+        var service = await kubernetes.CoreV1
+            .ListNamespacedServiceAsync(nsName, labelSelector: label);
+
+        var services = new List<SvcDetails>();
+        foreach (var x in service.Items)
+        {
+            SvcDetails svcInfo = await GetSvcInfo(kubernetes, iamId, nsName, x);
+            services.Add(svcInfo);
+        }
+
+        return services;
+    }
+
+
+    private async Task<SvcDetails> GetSvcInfo(IKubernetes kubernetes, int iamId, string nsName, V1Service? x)
     {
         var svcInfo = new SvcDetails()
         {
@@ -215,10 +253,10 @@ public class SvcService : ISvcService
         {
             svcInfo.Status = "Terminating";
         }
-
         var podLabel = string.Join(",", svcInfo.Selectors.Select(x => $"{x.Key}={x.Value}"));
-        var pods = await _kubernetes.CoreV1
-                .ListNamespacedPodAsync(nsName, labelSelector: podLabel);
+        var pods = await kubernetes
+            .CoreV1
+            .ListNamespacedPodAsync(nsName, labelSelector: podLabel);
         svcInfo.PodDetails = pods.Items.Select(x =>
         {
             return PodService.GetPodDetail(x, false);

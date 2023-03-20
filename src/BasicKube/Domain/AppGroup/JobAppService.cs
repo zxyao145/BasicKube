@@ -1,7 +1,5 @@
-﻿using BasicKube.Api.Common;
-using BasicKube.Api.Domain.App;
+﻿using BasicKube.Api.Domain.App;
 using BasicKube.Api.Domain.Pod;
-using BasicKube.Api.Exceptions;
 using Json.Patch;
 using k8s.Autorest;
 using System.Text.Json;
@@ -16,18 +14,16 @@ public interface IJobAppService : IAppService<JobGrpInfo, JobDetails, JobEditCom
 [Service<IJobAppService>]
 public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditCommand>, IJobAppService
 {
-    private readonly IKubernetes _kubernetes;
+    private readonly KubernetesFactory _k8sFactory;
     private readonly ILogger<JobAppService> _logger;
-    private readonly IamService _iamService;
 
     public JobAppService(
-        IKubernetes kubernetes,
+        KubernetesFactory kubernetes,
         ILogger<JobAppService> logger,
         IamService iamService) : base(iamService)
     {
-        _kubernetes = kubernetes;
+        _k8sFactory = kubernetes;
         _logger = logger;
-        _iamService = iamService;
     }
 
 
@@ -35,20 +31,24 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
 
     public override async Task CreateAsync(int iamId, JobEditCommand command)
     {
-        var nsName = _iamService.GetNsName(iamId);
+        var nsName = IamService.GetNsName(iamId);
         V1Job job = CmdToJob(nsName, command);
-        await _kubernetes.BatchV1.CreateNamespacedJobAsync(job, nsName);
+        await _k8sFactory.MustGet(command.Env)
+            .BatchV1
+            .CreateNamespacedJobAsync(job, nsName);
     }
 
     public override async Task UpdateAsync(int iamId, JobEditCommand command)
     {
-        var nsName = _iamService.GetNsName(iamId);
+        var nsName = IamService.GetNsName(iamId);
         V1Job job = CmdToJob(nsName, command);
         try
         {
-            await _kubernetes.BatchV1.DeleteNamespacedJobAsync(
-                job.Metadata.Name,
-                job.Metadata.NamespaceProperty
+            await _k8sFactory.MustGet(command.Env)
+                .BatchV1
+                .DeleteNamespacedJobAsync(
+                    job.Metadata.Name,
+                    job.Metadata.NamespaceProperty
             );
         }
         catch (HttpOperationException e)
@@ -56,7 +56,8 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
             if(((int)e.Response.StatusCode) > 499) throw;
         }
         
-        await _kubernetes.BatchV1.CreateNamespacedJobAsync(job, nsName);
+        await _k8sFactory.MustGet(command.Env)
+            .BatchV1.CreateNamespacedJobAsync(job, nsName);
     }
 
     private static V1Job CmdToJob(string nsName, JobEditCommand command)
@@ -89,19 +90,21 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
 
     public override async Task DelAsync(int iamId, string resName)
     {
-        var nsName = _iamService.GetNsName(iamId);
-        await _kubernetes.BatchV1.DeleteNamespacedJobAsync(resName, nsName);
+        var nsName = IamService.GetNsName(iamId);
+        await _k8sFactory.MustGetByAppName(resName)
+            .BatchV1.DeleteNamespacedJobAsync(resName, nsName);
         _logger.LogInformation("Del end:{0}", resName);
     }
 
     public override async Task<JobEditCommand?> DetailsAsync(int iamId, string resName)
     {
-        var nsName = _iamService.GetNsName(iamId);
-        var job = await _kubernetes.BatchV1
+        var nsName = IamService.GetNsName(iamId);
+        var job = await _k8sFactory.MustGetByAppName(resName)
+            .BatchV1
             .ReadNamespacedJobAsync(resName, nsName);
 
         var cmd = new JobEditCommand();
-        cmd.GrpName = job.Metadata.Labels[K8sLabelsConstants.LabelAppGrpName];
+        cmd.GrpName = job.Metadata.Labels[K8sLabelsConstants.LabelGrpName];
         cmd.Env = job.Metadata.Labels[K8sLabelsConstants.LabelEnv];
         cmd.AppName = resName;
         cmd.IamId = int.Parse(job.Metadata.Labels[K8sLabelsConstants.LabelIamId] ?? "0");
@@ -118,21 +121,42 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
         return cmd;
     }
 
-    public override async Task<IEnumerable<JobDetails>> ListAsync(int iamId, string? grpName, string? env = null)
+    public override async Task<IEnumerable<JobDetails>> ListAsync
+        (int iamId, string grpName, string? env = null)
     {
-        var nsName = _iamService.GetNsName(iamId);
-        var labelSelector = $"{K8sLabelsConstants.LabelIamId}={iamId}," +
-            $"{K8sLabelsConstants.LabelAppGrpName}={grpName}," +
-            $"{K8sLabelsConstants.LabelAppType}={JobEditCommand.Type}";
+        var nsName = IamService.GetNsName(iamId);
         if (!string.IsNullOrWhiteSpace(env))
         {
-            labelSelector += $",{K8sLabelsConstants.LabelEnv}={env}";
+            return await ListOneEnv(iamId, env, nsName, grpName);
         }
 
-        var apps = await _kubernetes.BatchV1
+        var result = new List<JobDetails>();
+        foreach (var item in _k8sFactory.All)
+        {
+            var temp = await ListOneEnv(iamId, item.Key, nsName, grpName);
+            result.AddRange(temp);
+        }
+        return result;
+
+    }
+
+
+    private async Task<List<JobDetails>> ListOneEnv
+        (int iamId, string env, string nsName, string grpName)
+    {
+        var labelSelector = $"{K8sLabelsConstants.LabelIamId}={iamId}" +
+            $",{K8sLabelsConstants.LabelEnv}={env}";
+
+        var appLabelSelector = labelSelector +
+            $",{K8sLabelsConstants.LabelGrpName}={grpName}";
+        var podSelector = labelSelector +
+            $",{K8sLabelsConstants.LabelApp}={grpName}-{env}";
+
+        var kubernetes = _k8sFactory.MustGet(env);
+        var apps = await kubernetes.BatchV1
             .ListNamespacedJobAsync(
                 nsName,
-                labelSelector: labelSelector
+                labelSelector: appLabelSelector // + $",{K8sLabelsConstants.LabelAppType}={DeployEditCommand.Type}"
                 );
 
         if (apps.Items.Count < 1)
@@ -143,9 +167,10 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
         var appList = apps.Items;
         var result = new List<JobDetails>();
         var allPods = (
-                await _kubernetes.CoreV1
+                await kubernetes.CoreV1
                     .ListNamespacedPodAsync(nsName,
-                    labelSelector: $"{K8sLabelsConstants.LabelIamId}={iamId},{K8sLabelsConstants.LabelAppType}={JobEditCommand.Type}")
+                    labelSelector: podSelector
+                    )
             ).Items
             .OrderBy(x => x.Status.StartTime)
             .ThenBy(x => x.Metadata.Name)
@@ -184,21 +209,30 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
             result.Add(details);
         }
 
-        return result.OrderBy(x => x.Name);
+        return result.OrderBy(x => x.Name).ToList();
     }
+
+
 
     public override async Task<IEnumerable<JobGrpInfo>> ListGrpAsync(int iamId)
     {
         var label = $"{K8sLabelsConstants.LabelIamId}={iamId}";
 
-        var jobs = await _kubernetes.BatchV1
+        var res = new List<V1Job>();
+        foreach (var item in _k8sFactory.All)
+        {
+            var jobs = await item.Value.BatchV1
             .ListNamespacedJobAsync(
-            _iamService.GetNsName(iamId),
-            labelSelector: label
+            IamService.GetNsName(iamId),
+            labelSelector: label + $",{K8sLabelsConstants.LabelEnv}={item.Key}"
             );
 
-        return jobs.Items
-            .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelAppGrpName])
+            res.AddRange(jobs.Items);
+        }
+        
+
+        return res
+            .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelGrpName])
             .ToHashSet()
             .Select(x => new JobGrpInfo()
             {
@@ -212,9 +246,10 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
         AppPublishCommand command
         )
     {
+        var kubernetes = _k8sFactory.MustGetByAppName(command.AppName);
         string dnName = command.AppName;
-        var nsName = _iamService.GetNsName(iamId);
-        var app = await _kubernetes.BatchV1
+        var nsName = IamService.GetNsName(iamId);
+        var app = await kubernetes.BatchV1
             .ReadNamespacedJobAsync(dnName, nsName);
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
         var old = JsonSerializer.SerializeToDocument(app, options);
@@ -227,7 +262,7 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
         var expected = JsonSerializer.SerializeToDocument(app);
         // JsonPatch.Net
         var patch = old.CreatePatch(expected);
-        await _kubernetes.BatchV1
+        await kubernetes.BatchV1
             .PatchNamespacedJobAsync(
             new V1Patch(patch, V1Patch.PatchType.JsonPatch),
             dnName,

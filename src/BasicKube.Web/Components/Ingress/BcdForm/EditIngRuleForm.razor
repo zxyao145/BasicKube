@@ -160,12 +160,15 @@
     private IngEditCommand _editCmd;
     private bool isCancel = true;
 
-    public EditIngRuleForm(int iamId, IngEditCommand command, IngRuleOptions? oldOptions = null)
+    public EditIngRuleForm(
+        int iamId, 
+        IngEditCommand command, 
+        IngRuleOptions? oldOptions = null)
     {
         _iamId = iamId;
         _editCmd = command;
         _kubeHttpClient = ServiceProvider.GetRequiredService<KubeHttpClient>();
-        _querySvcInfoTask = _kubeHttpClient.SvcHttp.List(_iamId, "");
+        _querySvcInfoTask = _kubeHttpClient.SvcHttp.List(_iamId, "", command.Env);
 
         if (oldOptions != null)
         {

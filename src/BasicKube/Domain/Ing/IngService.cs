@@ -1,30 +1,34 @@
 ﻿using BasicKube.Api.Common;
 using BasicKube.Api.Domain.App;
 using BasicKube.Api.Domain.AppGroup;
+using BasicKube.Api.Domain.Pod;
 using BasicKube.Api.Exceptions;
 using k8s;
 using System.Linq;
+using System.Xml.Linq;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace BasicKube.Api.Domain.Ing;
 
 public interface IIngService 
     : IResService<IngGrpInfo, IngDetails, IngEditCommand>
 {
+    Task<IEnumerable<IngDetails>> ListInEnvAsync(int iamId, string env);
 }
 
 [Service<IIngService>]
 public class IngService : IIngService
 {
     private readonly ILogger<IngService> _logger;
-    private readonly IKubernetes _kubernetes;
+    private readonly KubernetesFactory _k8sFactory;
     private readonly IamService _iamService;
 
-    public IngService(ILogger<IngService> logger, 
-        IKubernetes kubernetes, 
+    public IngService(ILogger<IngService> logger,
+        KubernetesFactory kubernetes, 
         IamService iamService)
     {
         _logger = logger;
-        _kubernetes = kubernetes;
+        _k8sFactory = kubernetes;
         _iamService = iamService;
     }
 
@@ -32,13 +36,21 @@ public class IngService : IIngService
     {
         var label = $"{K8sLabelsConstants.LabelIamId}={iamId}";
 
-        var service = await _kubernetes.NetworkingV1.ListNamespacedIngressAsync(
-            _iamService.GetNsName(iamId),
-            labelSelector: label
-            );
+        var result = new List<V1Ingress>();
+        foreach (var item in _k8sFactory.All)
+        {
+            var res = await item.Value
+                .NetworkingV1
+                .ListNamespacedIngressAsync(
+                    _iamService.GetNsName(iamId),
+                    labelSelector: label + $",{K8sLabelsConstants.LabelEnv}={item.Key}"
+                );
 
-        return service.Items
-            .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelIngGrpName])
+            result.AddRange(res.Items);
+        }
+
+        return result
+            .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelGrpName])
             .ToHashSet()
             .Select(x => new IngGrpInfo()
             {
@@ -48,17 +60,20 @@ public class IngService : IIngService
 
     #region ListAsync
 
-    public async Task<IEnumerable<IngDetails>> ListAsync(int iamId, string grpName, string? env = null)
+    private async Task<List<IngDetails>> ListOneEnv
+       (int iamId, string env, string nsName, string grpName)
     {
-        var nsName = _iamService.GetNsName(iamId);
-        var label = $"{K8sLabelsConstants.LabelIamId}={iamId},{K8sLabelsConstants.LabelIngGrpName}={grpName}";
-        if (!string.IsNullOrWhiteSpace(env))
+        var label = $"{K8sLabelsConstants.LabelIamId}={iamId}" +
+                $",{K8sLabelsConstants.LabelEnv}={env}";
+
+        if (!string.IsNullOrWhiteSpace(grpName))
         {
-            label += $",{K8sLabelsConstants.LabelEnv}={env}";
+            label += $",{K8sLabelsConstants.LabelGrpName}={grpName}";
         }
 
-        var ingressRes = await _kubernetes.NetworkingV1
-            .ListNamespacedIngressAsync(nsName, labelSelector: label);
+        var kubernetes = _k8sFactory.MustGet(env);
+        var ingressRes = await kubernetes.NetworkingV1
+           .ListNamespacedIngressAsync(nsName, labelSelector: label);
 
         var ingRes = new List<IngDetails>();
         foreach (var x in ingressRes.Items)
@@ -68,6 +83,31 @@ public class IngService : IIngService
         }
 
         return ingRes;
+    }
+
+    public async Task<IEnumerable<IngDetails>> ListInEnvAsync
+       (int iamId, string env)
+    {
+        var nsName = _iamService.GetNsName(iamId);
+        return await ListOneEnv(iamId, env, nsName, "");
+    }
+
+   public async Task<IEnumerable<IngDetails>> ListAsync
+        (int iamId, string grpName, string? env = null)
+    {
+        var nsName = _iamService.GetNsName(iamId);
+        if (!string.IsNullOrWhiteSpace(env))
+        {
+            return await ListOneEnv(iamId, env, nsName, grpName);
+        }
+
+        var result = new List<IngDetails>();
+        foreach (var item in _k8sFactory.All)
+        {
+            var temp = await ListOneEnv(iamId, item.Key, nsName, grpName);
+            result.AddRange(temp);
+        }
+        return result;
     }
 
     private IngDetails GetIngDetails(V1Ingress x)
@@ -129,14 +169,16 @@ public class IngService : IIngService
     {
         var cmd = Cmd2ResObj(iamId, command);
         cmd.Validate();
-        await _kubernetes.NetworkingV1
+        await _k8sFactory.MustGet(command.Env)
+            .NetworkingV1
             .CreateNamespacedIngressAsync(cmd, cmd.Metadata.NamespaceProperty);
     }
 
     public async Task UpdateAsync(int iamId, IngEditCommand command)
     {
         var ingress = Cmd2ResObj(iamId, command);
-        await _kubernetes.NetworkingV1
+        await _k8sFactory.MustGet(command.Env)
+            .NetworkingV1
             .ReplaceNamespacedIngressAsync(
             ingress,
             ingress.Metadata.Name,
@@ -156,7 +198,7 @@ public class IngService : IIngService
                 NamespaceProperty = nsName,
                 Labels = new Dictionary<string, string>()
                 {
-                    { K8sLabelsConstants.LabelIngGrpName, command.IngGrpName },
+                    { K8sLabelsConstants.LabelGrpName, command.IngGrpName },
                     { K8sLabelsConstants.LabelEnv, command.Env },
                     { K8sLabelsConstants.LabelIamId, iamId + "" },
                 }
@@ -220,7 +262,8 @@ public class IngService : IIngService
     {
         var nsName = _iamService.GetNsName(iamId);
 
-        var ing = await _kubernetes.NetworkingV1
+        var ing = await _k8sFactory.MustGetByAppName(ingName)
+            .NetworkingV1
             .ReadNamespacedIngressAsync(ingName, nsName);
 
         if (ing == null)
@@ -229,7 +272,7 @@ public class IngService : IIngService
         }
 
         var cmd = new IngEditCommand();
-        cmd.IngGrpName = ing.Metadata.Labels[K8sLabelsConstants.LabelIngGrpName];
+        cmd.IngGrpName = ing.Metadata.Labels[K8sLabelsConstants.LabelGrpName];
         cmd.Env = ing.Metadata.Labels[K8sLabelsConstants.LabelEnv];
         cmd.IngClassName = ing.Spec.IngressClassName;
         cmd.Rules = GetRules(ing);
@@ -241,7 +284,8 @@ public class IngService : IIngService
     public async Task DelAsync(int iamId, string ingName)
     {
         var nsName = _iamService.GetNsName(iamId);
-        var ing = await _kubernetes.NetworkingV1
+        var ing = await _k8sFactory.MustGetByAppName(ingName)
+            .NetworkingV1
             .DeleteNamespacedIngressAsync(ingName, nsName);
     }
 }

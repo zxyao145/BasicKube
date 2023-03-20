@@ -18,17 +18,22 @@ public abstract class AppEditCommand: IIamModel
     /// </summary>
     public string Env { get; set; } = "dev";
 
-    private string _appName = "";
+    private string _name = "";
 
     /// <summary>
     /// AppName
     /// </summary>
     public string AppName
     {
-        get => string.IsNullOrWhiteSpace(_appName) ? $"{GrpName}-{Env}" : _appName;
-        set => _appName = value;
+        get => Name;
+        set => Name = value;
     }
 
+    public string Name
+    {
+        get => string.IsNullOrWhiteSpace(_name) ? $"{GrpName}-{Env}" : _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// treeid

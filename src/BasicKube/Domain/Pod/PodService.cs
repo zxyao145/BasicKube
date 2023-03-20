@@ -8,16 +8,18 @@ namespace BasicKube.Api.Domain.Pod;
 public class PodService : IPodService
 {
     private readonly ILogger<PodService> _logger;
-    private readonly IKubernetes _kubernetes;
-    public PodService(ILogger<PodService> logger, IKubernetes kubernetes)
+    private readonly KubernetesFactory _k8sFactory;
+    public PodService(ILogger<PodService> logger, KubernetesFactory kubernetes)
     {
         _logger = logger;
-        _kubernetes = kubernetes;
+        _k8sFactory = kubernetes;
     }
 
     public async Task DelAsync(string name, string nsName)
     {
-        await _kubernetes.CoreV1.DeleteNamespacedPodAsync(name, nsName);
+        await _k8sFactory.MustGetByPodName(name)
+            .CoreV1
+            .DeleteNamespacedPodAsync(name, nsName);
     }
 
     public static PodDetail GetPodDetail(V1Pod curPod, bool neeContainerDetails = true)
@@ -244,10 +246,10 @@ public class PodService : IPodService
             Spec = new V1PodSpec()
         };
 
-        if (!string.IsNullOrWhiteSpace(type))
-        {
-            podTemp.Metadata.Labels.Add(K8sLabelsConstants.LabelAppType, type);
-        }
+        //if (!string.IsNullOrWhiteSpace(type))
+        //{
+        //    podTemp.Metadata.Labels.Add(K8sLabelsConstants.LabelAppType, type);
+        //}
 
         podTemp.Spec.RestartPolicy = command.RestartPolicy;
         podTemp.Spec.Containers = CreateContainers(nsName, command);
@@ -515,11 +517,11 @@ public class PodService : IPodService
             {
                 [K8sLabelsConstants.LabelRegion] = command.Region,
                 [K8sLabelsConstants.LabelRoom] = command.Room,
-                [K8sLabelsConstants.LabelAppGrpName] = command.GrpName
+                [K8sLabelsConstants.LabelGrpName] = command.GrpName
             },
             Labels = new Dictionary<string, string>
             {
-                [K8sLabelsConstants.LabelAppGrpName] = command.GrpName,
+                [K8sLabelsConstants.LabelGrpName] = command.GrpName,
                 [K8sLabelsConstants.LabelIamId] = command.IamId + "",
                 [K8sLabelsConstants.LabelEnv] = command.Env
             }
@@ -542,7 +544,7 @@ public class PodService : IPodService
             MatchLabels = new Dictionary<string, string>
             {
                 [K8sLabelsConstants.LabelApp] = command.AppName,
-                [K8sLabelsConstants.LabelAppType] = command.TypeName,
+                //[K8sLabelsConstants.LabelAppType] = command.TypeName,
             }
         };
     }

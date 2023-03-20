@@ -20,7 +20,7 @@ public interface IResService<TGrpInfo, TResDetails, TEditCmd>
     /// <param name="svcGrpName"></param>
     /// <param name="env"></param>
     /// <returns></returns>
-    public Task<IEnumerable<TResDetails>> ListAsync(int iamId, string? grpName, string? env = null);
+    public Task<IEnumerable<TResDetails>> ListAsync(int iamId, string grpName, string? env = null);
 
     /// <summary>
     /// 

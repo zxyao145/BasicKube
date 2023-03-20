@@ -1,33 +1,22 @@
+using AoAuth.Common.Filters;
 using BasicKube.Api;
+using BasicKube.Api.Common;
 using BasicKube.Api.Domain;
 using BasicKube.Api.Filters;
-using KubeClient;
 
 var builder = WebApplication.CreateBuilder(args);
 DiUtil.Configuration = builder.Configuration;
 builder.Services.AddControllers(options =>
 {
+    options.Filters.Add<LoggerFilter>();
     options.Filters.Add<GlobalExceptionFilter>();
     options.Filters.Add<IamIdAndNsNameFilter>();
 });
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddApiResult()
-    .AddBasicKubeServices();
-
-var c = K8sConfig.Load();
-var cname = c.CurrentContextName;
-KubeClientOptions clientOptions = K8sConfig.Load().ToKubeClientOptions(
-    kubeContextName: cname,
-    defaultKubeNamespace: "default"
-// loggerFactory: builder.Services.g
-);
-builder.Services.AddKubeClient(clientOptions);
-
-// Load kubernetes configuration
-var kubernetesClientConfig = KubernetesClientConfiguration.BuildDefaultConfig();
-builder.Services.AddSingleton<IKubernetes>(new Kubernetes(kubernetesClientConfig));
+    .ScanService()
+    .AddK8sService(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {

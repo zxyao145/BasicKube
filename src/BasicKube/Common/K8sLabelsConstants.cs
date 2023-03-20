@@ -16,11 +16,8 @@ public class K8sLabelsConstants
     public const string LabelRoom = "basickube/room";
     public const string LabelEnv = "basickube/env";
 
-    public const string LabelAppGrpName = "basickube/app-grp";
+    public const string LabelGrpName = "basickube/grp";
     public const string LabelAppType = "basickube/type";
-
-    public const string LabelSvcGrpName = "basickube/svc-grp";
-    public const string LabelIngGrpName = "basickube/ing-grp";
 
     public const string LabelApp = "app";
     public const string LabelDeployName = "deployName";

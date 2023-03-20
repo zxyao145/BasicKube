@@ -1,4 +1,5 @@
-﻿using BasicKube.Api.Controllers.App.Deploy;
+﻿using BasicKube.Api.Common;
+using BasicKube.Api.Controllers.App.Deploy;
 using BasicKube.Api.Exceptions;
 using Jil;
 using k8s.Autorest;
@@ -12,12 +13,12 @@ namespace BasicKube.Api.Controllers.App;
 public class TerminalController : KubeControllerBase
 {
     private readonly ILogger<TerminalController> _logger;
-    private readonly IKubernetes _kubernetes;
+    private readonly KubernetesFactory _k8sFactory;
 
-    public TerminalController(ILogger<TerminalController> logger, IKubernetes kubernetes)
+    public TerminalController(ILogger<TerminalController> logger, KubernetesFactory k8sFactory)
     {
         _logger = logger;
-        _kubernetes = kubernetes;
+        _k8sFactory = k8sFactory;
     }
 
     /// <summary>
@@ -57,6 +58,7 @@ public class TerminalController : KubeControllerBase
 
     private async Task Proxy3(WebSocket clientWebSocket, TerminalInfo info)
     {
+        var kubernetes = _k8sFactory.MustGet(info.PodName);
         var chIn = Channel.CreateUnbounded<byte[]>();
         var chOut = Channel.CreateUnbounded<byte[]>();
 
@@ -65,7 +67,7 @@ public class TerminalController : KubeControllerBase
         Stream? streamOutput = null;
         foreach (var bash in ValidBashs)
         {
-            webSocket = await _kubernetes.WebSocketNamespacedPodExecAsync(
+            webSocket = await kubernetes.WebSocketNamespacedPodExecAsync(
                     info.PodName,
                     info.NsName,
                     new List<string>()
@@ -203,7 +205,7 @@ public class TerminalController : KubeControllerBase
                         Type = "stdOut",
                         Output = line
                     };
-                    var jsonStr = JSON.SerializeDynamic(obj, new Options(serializationNameFormat: SerializationNameFormat.CamelCase));
+                    var jsonStr = JSON.SerializeDynamic(obj, new Jil.Options(serializationNameFormat: SerializationNameFormat.CamelCase));
 
                     await clientWebSocket
                         .SendAsync(
@@ -256,6 +258,8 @@ public class TerminalController : KubeControllerBase
 
     private async Task Proxy4(WebSocket clientWebSocket, TerminalInfo info)
     {
+        var kubernetes = _k8sFactory.MustGet(info.PodName);
+
         var chIn = Channel.CreateUnbounded<byte[]>();
         var chOut = Channel.CreateUnbounded<byte[]>();
 
@@ -279,7 +283,7 @@ public class TerminalController : KubeControllerBase
                             Type = "stdOut",
                             Output = line
                         };
-                        var jsonStr = JSON.SerializeDynamic(obj, new Options(serializationNameFormat: SerializationNameFormat.CamelCase));
+                        var jsonStr = JSON.SerializeDynamic(obj, new Jil.Options(serializationNameFormat: SerializationNameFormat.CamelCase));
 
                         await clientWebSocket
                             .SendAsync(
@@ -382,7 +386,7 @@ public class TerminalController : KubeControllerBase
         try
         {
             var webSocket =
-            await _kubernetes.NamespacedPodExecAsync(
+            await kubernetes.NamespacedPodExecAsync(
                     info.PodName,
                     info.NsName,
                     info.ContainerName,
@@ -435,7 +439,7 @@ public class TerminalController : KubeControllerBase
                                 Type = "stdOut",
                                 Output = line
                             };
-                            var jsonStr = JSON.SerializeDynamic(obj, new Options(serializationNameFormat: SerializationNameFormat.CamelCase));
+                            var jsonStr = JSON.SerializeDynamic(obj, new Jil.Options(serializationNameFormat: SerializationNameFormat.CamelCase));
 
                             await clientWebSocket
                                     .SendAsync(
@@ -590,6 +594,8 @@ public class TerminalController : KubeControllerBase
             CancellationToken cancellationToken
      )
     {
+        var kubernetes = _k8sFactory.MustGet(name);
+
         if (handler == null)
         {
             throw new ArgumentNullException(nameof(handler));
@@ -597,7 +603,7 @@ public class TerminalController : KubeControllerBase
 
         try
         {
-            using var muxedStream = await _kubernetes.MuxedStreamNamespacedPodExecAsync(
+            using var muxedStream = await kubernetes.MuxedStreamNamespacedPodExecAsync(
                 name,
                 @namespace,
                 command,

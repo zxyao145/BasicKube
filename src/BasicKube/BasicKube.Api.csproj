@@ -10,9 +10,6 @@
 	<ItemGroup>
 		<PackageReference Include="Jil" />
 		<PackageReference Include="JsonPatch.Net" />
-		<PackageReference Include="KubeClient" />
-		<PackageReference Include="KubeClient.Extensions.DependencyInjection" />
-		<PackageReference Include="KubeClient.Extensions.WebSockets" />
 		<PackageReference Include="KubernetesClient" />
 		<PackageReference Include="Swashbuckle.AspNetCore" />
 		<PackageReference Include="ZxyBase.ActionResultExtensions" />
@@ -21,5 +18,13 @@
 	<ItemGroup>
 		<ProjectReference Include="..\BasicKube.Models\BasicKube.Models.csproj" />
 	</ItemGroup>
+
+	
+	<ItemGroup>
+		<None Update="configs\*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 
 </Project>
