@@ -17,8 +17,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicKube.Web", "src\BasicK
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicKube.Models", "src\BasicKube.Models\BasicKube.Models.csproj", "{7F062D4F-ADEA-4407-B81D-0934CD1B4892}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicKubeTest", "BasicKubeConsoleTest\BasicKubeTest.csproj", "{2CBC1501-2E01-405C-A347-49A970DC8FF9}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,10 +35,6 @@ Global
 		{7F062D4F-ADEA-4407-B81D-0934CD1B4892}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F062D4F-ADEA-4407-B81D-0934CD1B4892}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F062D4F-ADEA-4407-B81D-0934CD1B4892}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2CBC1501-2E01-405C-A347-49A970DC8FF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2CBC1501-2E01-405C-A347-49A970DC8FF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2CBC1501-2E01-405C-A347-49A970DC8FF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2CBC1501-2E01-405C-A347-49A970DC8FF9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
