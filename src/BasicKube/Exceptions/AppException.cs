@@ -10,12 +10,12 @@ public class AppException : Exception
     }
 }
 
-public class InvalidCmdException : Exception
+public class InvalidParamterException : AppException
 {
     public string? Cmd { get; set; }
 
-    public InvalidCmdException(string message, string? cmd = null)
-        : base(message)
+    public InvalidParamterException(string message, string? cmd = null)
+        : base(message, null)
     {
         this.Cmd = cmd;
     }

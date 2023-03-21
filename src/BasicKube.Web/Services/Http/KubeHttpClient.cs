@@ -1,6 +1,21 @@
 ﻿namespace BasicKube.Web.Services;
 
-
+public static class KubeHttpClientExt
+{
+    public static IServiceCollection AddKubeHttpClient(this IServiceCollection services)
+    {
+        services.AddHttpClient<DeployHttp>();
+        services.AddHttpClient<DaemonSetHttp>();
+        services.AddHttpClient<ScalerHttp>();
+        services.AddHttpClient<EventsHttp>();
+        services.AddHttpClient<SvcHttp>();
+        services.AddHttpClient<PodHttp>();
+        services.AddHttpClient<IngHttp>();
+        services.AddHttpClient<JobHttp>();
+        services.AddScoped<KubeHttpClient>();
+        return services;
+    }
+}
 
 public class KubeHttpClient
 {

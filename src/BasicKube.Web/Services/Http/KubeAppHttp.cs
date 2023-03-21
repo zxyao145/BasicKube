@@ -5,8 +5,8 @@ namespace BasicKube.Web.Services;
 public class DaemonSetHttp
     : BasicKubeAppHttp<DaemonSetGrpInfo, DaemonSetDetails, DaemonSetEditCommand>
 {
-    public DaemonSetHttp(HttpClient httpClient, ILogger<DaemonSetHttp> logger)
-        :base(httpClient, logger)
+    public DaemonSetHttp(IConfiguration configuration, HttpClient httpClient, ILogger<DaemonSetHttp> logger)
+        :base(configuration, httpClient, logger)
     {
     }
 
@@ -19,8 +19,8 @@ public class DaemonSetHttp
 public class DeployHttp
     : BasicKubeAppHttp<DeployGrpInfo, DeployDetails, DeployEditCommand>
 {
-    public DeployHttp(HttpClient httpClient, ILogger<DeployHttp> logger)
-        : base(httpClient, logger)
+    public DeployHttp(IConfiguration configuration, HttpClient httpClient, ILogger<DeployHttp> logger)
+        : base(configuration, httpClient, logger)
     {
     }
 
@@ -33,8 +33,8 @@ public class DeployHttp
 public class JobHttp
     : BasicKubeAppHttp<JobGrpInfo, JobDetails, JobEditCommand>
 {
-    public JobHttp(HttpClient httpClient, ILogger<JobHttp> logger)
-        : base(httpClient, logger)
+    public JobHttp(IConfiguration configuration, HttpClient httpClient, ILogger<JobHttp> logger)
+        : base(configuration, httpClient, logger)
     {
     }
 

@@ -421,7 +421,7 @@ public class TerminalController : KubeControllerBase
                     var read = await stdOut.ReadAsync(buff, 0, buff.Length);
                     if (read == 0)
                     {
-                        throw new InvalidCmdException("not valid exec cmd");
+                        throw new InvalidParamterException("not valid exec cmd");
                     }
                 }
                 var copy = Task.Run(async () =>
@@ -562,7 +562,7 @@ public class TerminalController : KubeControllerBase
                 Console.WriteLine($"exitCode: {exitCode}");
                 break;
             }
-            catch (InvalidCmdException)
+            catch (InvalidParamterException)
             {
                 Console.WriteLine($"InvalidCmd:{cmd}");
                 continue;

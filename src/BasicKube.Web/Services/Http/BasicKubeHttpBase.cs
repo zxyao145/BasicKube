@@ -14,10 +14,24 @@ public abstract class BasicKubeHttp<TGrpInfo, TDetails, TCmd>
     public HttpClient Client { get; private set; }
     protected readonly ILogger Logger;
 
-    protected BasicKubeHttp(HttpClient httpClient, ILogger logger)
+    protected BasicKubeHttp(
+        IConfiguration configuration,
+        HttpClient httpClient,
+        ILogger logger
+        )
     {
+        //var baseHttp = configuration
+        //    .GetSection("BasicKube")
+        //    .GetValue<string>("HttpBase");
+        //var baseHttp = configuration
+        //     .GetSection("BasicKube")
+        //     .GetSection("HttpBase")
+        //     .Get<string>();
+        //var baseHttp = configuration["BasicKube:HttpBase"];
+        var baseHttp = configuration["BasicKube:HttpBase"];
+        ArgumentNullException.ThrowIfNull(baseHttp, "BasicKube:HttpBase");
         Client = httpClient;
-        Client.BaseAddress = new Uri("http://localhost:5125");
+        Client.BaseAddress = new Uri(baseHttp);
         _controller = GetControllerName();
         ArgumentNullException.ThrowIfNull(_controller);
         Logger = logger;
@@ -87,7 +101,7 @@ public abstract class BasicKubeHttp<TGrpInfo, TDetails, TCmd>
         try
         {
             var jsonContent = GetJsonContent(command);
-            using HttpResponseMessage response = await 
+            using HttpResponseMessage response = await
                 Client.PostAsync(url, jsonContent);
             if (response.IsSuccessStatusCode)
             {
@@ -141,7 +155,7 @@ public abstract class BasicKubeHttp<TGrpInfo, TDetails, TCmd>
         {
             string url = GetBaseUrl(iamId) + "/" + appName;
 
-            using HttpResponseMessage response = 
+            using HttpResponseMessage response =
                 await Client.DeleteAsync(url);
 
             if (response.IsSuccessStatusCode)
@@ -186,8 +200,8 @@ public abstract class BasicKubeAppHttp<TGrpInfo, TDetails, TCmd>
     IBasicKubeAppHttp<TGrpInfo, TDetails, TCmd>
     where TCmd : class, IIamModel
 {
-    protected BasicKubeAppHttp(HttpClient httpClient, ILogger logger) 
-        : base(httpClient, logger)
+    protected BasicKubeAppHttp(IConfiguration configuration, HttpClient httpClient, ILogger logger)
+        : base(configuration, httpClient, logger)
     {
     }
 

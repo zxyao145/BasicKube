@@ -1,4 +1,4 @@
-﻿using BasicKube.Api.Options;
+﻿using BasicKube.Api.Config;
 
 namespace BasicKube.Api.Common;
 

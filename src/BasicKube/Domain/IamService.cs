@@ -1,4 +1,4 @@
-﻿using BasicKube.Api.Options;
+﻿using BasicKube.Api.Config;
 using Microsoft.Extensions.Options;
 
 namespace BasicKube.Api.Domain;

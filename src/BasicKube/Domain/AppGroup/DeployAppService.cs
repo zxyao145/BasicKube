@@ -2,10 +2,7 @@
 using BasicKube.Api.Domain.Pod;
 using BasicKube.Api.Exceptions;
 using Json.Patch;
-using k8s.Models;
 using System.Text.Json;
-using System.Xml.Linq;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace BasicKube.Api.Domain.App;
 

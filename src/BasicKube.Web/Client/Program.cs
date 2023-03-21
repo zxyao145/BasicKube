@@ -16,16 +16,9 @@ namespace BasicKube.Web.Client
             {
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
             });
-            builder.Services.AddHttpClient<DeployHttp>();
-            builder.Services.AddHttpClient<DaemonSetHttp>();
-            builder.Services.AddHttpClient<ScalerHttp>();
-            builder.Services.AddHttpClient<EventsHttp>();
-            builder.Services.AddHttpClient<SvcHttp>();
-            builder.Services.AddHttpClient<PodHttp>();
-            builder.Services.AddHttpClient<IngHttp>();
-            builder.Services.AddHttpClient<JobHttp>();
-            builder.Services.AddScoped<KubeHttpClient>();
-            builder.Services.AddAntDesign();
+            builder.Services
+                .AddKubeHttpClient()
+                .AddAntDesign();
 
             var host = builder.Build();
             host.Services.UseBcdForm();

@@ -1,6 +1,4 @@
-﻿using BasicKube.Api.Common;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-
+﻿
 namespace BasicKube.Api.Controllers.AutoScale;
 
 public class ScalerController : KubeControllerBase

@@ -1,6 +1,5 @@
-﻿using BasicKube.Api.Common;
+﻿
 using BasicKube.Api.Exceptions;
-using Org.BouncyCastle.Security;
 
 namespace BasicKube.Api.Domain.Pod;
 
@@ -488,7 +487,7 @@ public class PodService : IPodService
         }
         else
         {
-            throw new InvalidParameterException($"probe.Type is invalid:{probe.Type}");
+            throw new InvalidParamterException($"probe.Type is invalid:{probe.Type}");
         }
 
         return probeV1;

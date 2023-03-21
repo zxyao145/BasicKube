@@ -1,4 +1,4 @@
-﻿namespace BasicKube.Api.Options;
+﻿namespace BasicKube.Api.Config;
 
 
 public class K8sOptions

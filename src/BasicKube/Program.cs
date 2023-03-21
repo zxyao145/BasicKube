@@ -1,26 +1,23 @@
-using AoAuth.Common.Filters;
 using BasicKube.Api;
-using BasicKube.Api.Common;
-using BasicKube.Api.Domain;
 using BasicKube.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 DiUtil.Configuration = builder.Configuration;
 builder.Services.AddControllers(options =>
 {
-    options.Filters.Add<LoggerFilter>();
-    options.Filters.Add<GlobalExceptionFilter>();
-    options.Filters.Add<IamIdAndNsNameFilter>();
+    options.Filters.AddAppFilters();
 });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddApiResult()
     .ScanService()
     .AddK8sService(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: "cors",
+    options.AddPolicy(name: "allowAll",
         policy =>
         {
             policy.AllowAnyHeader()
@@ -30,7 +27,6 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-
 DiUtil.ServiceProvider = app.Services;
 
 // Configure the HTTP request pipeline.
@@ -40,7 +36,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("cors");
+app.UseCors("allowAll");
 app.UseAuthorization();
 app.UseWebSockets();
 app.MapControllers();
