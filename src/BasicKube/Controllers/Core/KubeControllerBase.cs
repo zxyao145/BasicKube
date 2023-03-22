@@ -1,4 +1,4 @@
-﻿namespace BasicKube.Api.Controllers;
+﻿namespace BasicKube.Api.Controllers.Core;
 
 [ApiController]
 [Route($"/api/[controller]/[action]/{{{RouteConstants.IamId}}}")]

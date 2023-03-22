@@ -1,6 +1,8 @@
-﻿using BasicKube.Api.Domain.Ing;
+﻿using BasicKube.Api.Common.Components.ActionResultExtensions;
+using BasicKube.Api.Controllers.Core;
+using BasicKube.Api.Domain.Ing;
 
-namespace BasicKube.Api.Controllers.App;
+namespace BasicKube.Api.Controllers.Ingress;
 
 public class IngController
     : KubeControllerBase, IGrpResControllerWithoutPublish<IngEditCommand>

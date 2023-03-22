@@ -1,4 +1,6 @@
-﻿namespace BasicKube.Api.Controllers;
+﻿using BasicKube.Api.Common.Components.ActionResultExtensions;
+
+namespace BasicKube.Api.Controllers.App;
 
 public class VersionController
 {

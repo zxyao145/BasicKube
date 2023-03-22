@@ -1,5 +1,4 @@
-﻿using BasicKube.Api.Domain.App;
-using BasicKube.Api.Domain.Pod;
+﻿using BasicKube.Api.Domain.Pod;
 
 namespace BasicKube.Api.Domain.Svc;
 

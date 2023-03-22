@@ -1,7 +1,10 @@
-using BasicKube.Api;
+using BasicKube.Api.Common.Components.Logger;
 using BasicKube.Api.Filters;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+var logger = builder.Host.AddSerilog();
+logger.Information("app starting..");
 DiUtil.Configuration = builder.Configuration;
 builder.Services.AddControllers(options =>
 {
@@ -36,6 +39,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseSerilogRequestLogging();
 app.UseCors("allowAll");
 app.UseAuthorization();
 app.UseWebSockets();

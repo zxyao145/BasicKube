@@ -7,12 +7,15 @@
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <Content Remove="wwwroot\assets\src\Terminal.ts" />
+	</ItemGroup>
+
 
 	<ItemGroup>
 		<PackageReference Include="AntDesign" />
 		<PackageReference Include="BcdLib.BcdForm" />
 		<PackageReference Include="BlazorIcons.Full" />
-		<PackageReference Include="Common.Pure" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.Extensions.Http" />
@@ -24,6 +27,10 @@
 
 	<ItemGroup>
 		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <TypeScriptCompile Include="wwwroot\assets\src\Terminal.ts" />
 	</ItemGroup>
 
 </Project>

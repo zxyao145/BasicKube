@@ -1,6 +1,8 @@
-﻿using BasicKube.Api.Domain.AppGroup;
+﻿using BasicKube.Api.Common.Components.ActionResultExtensions;
+using BasicKube.Api.Controllers.Core;
+using BasicKube.Api.Domain.AppGroup;
 
-namespace BasicKube.Api.Controllers.Job
+namespace BasicKube.Api.Controllers.App.Job
 {
     public partial class JobController
         : KubeControllerBase, IGrpResController<JobEditCommand>

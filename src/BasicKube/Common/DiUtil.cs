@@ -1,4 +1,4 @@
-﻿namespace BasicKube.Api;
+﻿namespace BasicKube.Api.Common;
 
 public class DiUtil
 {

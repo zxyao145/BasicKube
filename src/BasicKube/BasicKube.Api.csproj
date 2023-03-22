@@ -11,8 +11,14 @@
 		<PackageReference Include="Jil" />
 		<PackageReference Include="JsonPatch.Net" />
 		<PackageReference Include="KubernetesClient" />
+		<PackageReference Include="Serilog" />
+		<PackageReference Include="Serilog.AspNetCore" />
+		<PackageReference Include="Serilog.Enrichers.Thread" />
+		<PackageReference Include="Serilog.Settings.Configuration" />
+		<PackageReference Include="Serilog.Sinks.Async" />
+		<PackageReference Include="Serilog.Sinks.Console" />
+		<PackageReference Include="Serilog.Sinks.File" />
 		<PackageReference Include="Swashbuckle.AspNetCore" />
-		<PackageReference Include="ZxyBase.ActionResultExtensions" />
 	</ItemGroup>
 
 	<ItemGroup>

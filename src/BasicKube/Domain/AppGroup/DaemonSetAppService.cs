@@ -2,7 +2,7 @@
 using Json.Patch;
 using System.Text.Json;
 
-namespace BasicKube.Api.Domain.App;
+namespace BasicKube.Api.Domain.AppGroup;
 
 public interface IDaemonSetAppService
     : IAppService<DaemonSetGrpInfo, DaemonSetDetails, DaemonSetEditCommand>

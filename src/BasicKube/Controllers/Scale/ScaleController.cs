@@ -1,4 +1,7 @@
-﻿namespace BasicKube.Api.Controllers.AutoScale;
+﻿using BasicKube.Api.Common.Components.ActionResultExtensions;
+using BasicKube.Api.Controllers.Core;
+
+namespace BasicKube.Api.Controllers.Scale;
 
 public class ScalerController : KubeControllerBase
 {

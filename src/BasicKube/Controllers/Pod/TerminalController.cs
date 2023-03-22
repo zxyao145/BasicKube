@@ -1,4 +1,5 @@
 ﻿using BasicKube.Api.Controllers.App.Deploy;
+using BasicKube.Api.Controllers.Core;
 using BasicKube.Api.Exceptions;
 using Jil;
 using k8s.Autorest;
@@ -7,7 +8,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Channels;
 
-namespace BasicKube.Api.Controllers.App;
+namespace BasicKube.Api.Controllers.Pod;
 
 public class TerminalController : KubeControllerBase
 {
@@ -29,7 +30,7 @@ public class TerminalController : KubeControllerBase
     /// <param name="ns"></param>
     /// <returns></returns>
     [HttpGet("{podName}/{containerName}")]
-    public async Task Terminal(
+    public async Task Container(
         [FromRoute] string podName,
         [FromRoute] string containerName
         )
@@ -57,7 +58,7 @@ public class TerminalController : KubeControllerBase
 
     private async Task Proxy3(WebSocket clientWebSocket, TerminalInfo info)
     {
-        var kubernetes = _k8sFactory.MustGet(info.PodName);
+        var kubernetes = _k8sFactory.MustGetByPodName(info.PodName);
         var chIn = Channel.CreateUnbounded<byte[]>();
         var chOut = Channel.CreateUnbounded<byte[]>();
 
@@ -85,12 +86,12 @@ public class TerminalController : KubeControllerBase
             var read = await streamOutput.ReadAsync(buff, 0, buff.Length);
             if (read > 0)
             {
-                Console.WriteLine($"{bash}: success");
+                _logger.LogDebug($"{bash}: success");
                 break;
             }
             else
             {
-                Console.WriteLine($"{bash}: failed");
+                _logger.LogDebug($"{bash}: failed");
             }
         }
 
@@ -105,17 +106,20 @@ public class TerminalController : KubeControllerBase
 
 
         var pumpCancellation = new CancellationTokenSource();
+        // read data from user input in browser
         var accept = Task.Run(async () =>
         {
-            while (true)
+            while (!pumpCancellation.IsCancellationRequested)
             {
                 try
                 {
                     var clientBuf = new byte[4096];
                     var podBuf = new byte[4096];
-
-                    var receiveResult = await clientWebSocket.ReceiveAsync(
-                        new ArraySegment<byte>(clientBuf), CancellationToken.None);
+                    var receiveResult = await
+                        clientWebSocket.ReceiveAsync(
+                            new ArraySegment<byte>(clientBuf),
+                            CancellationToken.None
+                     );
 
                     while (!receiveResult.CloseStatus.HasValue)
                     {
@@ -127,6 +131,18 @@ public class TerminalController : KubeControllerBase
                           new ArraySegment<byte>(clientBuf), pumpCancellation.Token);
                     }
                 }
+                catch (WebSocketException e)
+                {
+                    if (clientWebSocket.State == WebSocketState.CloseReceived)
+                    {
+                        _logger.LogDebug("client close channel");
+                    }
+                    else
+                    {
+                        _logger.LogError("WebSocketException err:{0}", e.ErrorCode);
+                    }
+                    break;
+                }
                 catch (Exception e)
                 {
                     _logger.LogError("accept err:{0}", e);
@@ -134,6 +150,7 @@ public class TerminalController : KubeControllerBase
                 }
             }
         });
+        // forward user input data to k8s pod
         var forwardAccept = Task.Run(async () =>
         {
             while (await chIn.Reader.WaitToReadAsync(pumpCancellation.Token))
@@ -141,7 +158,7 @@ public class TerminalController : KubeControllerBase
                 if (chIn.Reader.TryRead(out var arraySegment))
                 {
                     var inputObj = Encoding.UTF8.GetString(arraySegment);
-                    _logger.LogInformation("receive client:{0}", inputObj);
+                    _logger.LogDebug("receive client:{0}", inputObj);
 
                     var jsonObj = JSON.DeserializeDynamic(inputObj);
                     if (jsonObj.type == "stdIn")
@@ -167,13 +184,14 @@ public class TerminalController : KubeControllerBase
                 }
             }
 
-            _logger.LogWarning("forwardAccept finisehd");
+            _logger.LogInformation("forwardAccept finisehd");
         });
 
+        // read data from k8s pod response
         var copy = Task.Run(async () =>
         {
             var buff = new byte[4096];
-            while (true)
+            while (!pumpCancellation.IsCancellationRequested)
             {
                 try
                 {
@@ -190,6 +208,7 @@ public class TerminalController : KubeControllerBase
                 }
             }
         });
+        // forward k8s pod response data to browser
         var forwardCopy = Task.Run(async () =>
         {
             while (await chOut.Reader.WaitToReadAsync(pumpCancellation.Token))
@@ -203,7 +222,7 @@ public class TerminalController : KubeControllerBase
                         Type = "stdOut",
                         Output = line
                     };
-                    var jsonStr = JSON.SerializeDynamic(obj, new Jil.Options(serializationNameFormat: SerializationNameFormat.CamelCase));
+                    var jsonStr = JSON.SerializeDynamic(obj, new Options(serializationNameFormat: SerializationNameFormat.CamelCase));
 
                     await clientWebSocket
                         .SendAsync(
@@ -215,7 +234,7 @@ public class TerminalController : KubeControllerBase
                 }
             }
 
-            _logger.LogWarning("forwardAccept finisehd");
+            _logger.LogInformation("forwardAccept finisehd");
         });
 
 
@@ -230,9 +249,9 @@ public class TerminalController : KubeControllerBase
         resizeStream.Dispose();
 
         if (webSocket.State == WebSocketState.Open
-               ||
-               webSocket.State == WebSocketState.CloseReceived
-               || webSocket.State == WebSocketState.CloseSent)
+            ||
+            webSocket.State == WebSocketState.CloseReceived
+            || webSocket.State == WebSocketState.CloseSent)
         {
             try
             {
@@ -244,13 +263,13 @@ public class TerminalController : KubeControllerBase
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError("close k8s websocket error:{0}", e);
             }
         }
         //await forwardAccept;
         //await forwardCopy;
 
-        _logger.LogWarning("finished");
+        _logger.LogInformation("finished terminal connect");
     }
 
 
@@ -281,7 +300,7 @@ public class TerminalController : KubeControllerBase
                             Type = "stdOut",
                             Output = line
                         };
-                        var jsonStr = JSON.SerializeDynamic(obj, new Jil.Options(serializationNameFormat: SerializationNameFormat.CamelCase));
+                        var jsonStr = JSON.SerializeDynamic(obj, new Options(serializationNameFormat: SerializationNameFormat.CamelCase));
 
                         await clientWebSocket
                             .SendAsync(
@@ -437,7 +456,7 @@ public class TerminalController : KubeControllerBase
                                 Type = "stdOut",
                                 Output = line
                             };
-                            var jsonStr = JSON.SerializeDynamic(obj, new Jil.Options(serializationNameFormat: SerializationNameFormat.CamelCase));
+                            var jsonStr = JSON.SerializeDynamic(obj, new Options(serializationNameFormat: SerializationNameFormat.CamelCase));
 
                             await clientWebSocket
                                     .SendAsync(

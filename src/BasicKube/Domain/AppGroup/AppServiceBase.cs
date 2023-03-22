@@ -1,7 +1,7 @@
 ﻿using BasicKube.Api.Domain.Pod;
 using System.Diagnostics;
 
-namespace BasicKube.Api.Domain.App;
+namespace BasicKube.Api.Domain.AppGroup;
 
 public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
     : IAppService<TGrpInfo, TAppDetails, TEditCmd>

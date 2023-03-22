@@ -1,4 +1,7 @@
-﻿namespace BasicKube.Api.Controllers.Deploy;
+﻿using BasicKube.Api.Common.Components.ActionResultExtensions;
+using BasicKube.Api.Controllers.Core;
+
+namespace BasicKube.Api.Controllers.Events;
 
 public class EventsController : KubeControllerBase
 {

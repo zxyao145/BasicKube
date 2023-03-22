@@ -1,6 +1,4 @@
-﻿using BasicKube.Api.Domain.App;
-
-namespace BasicKube.Api.Domain.Ing;
+﻿namespace BasicKube.Api.Domain.Ing;
 
 public interface IIngService
     : IResService<IngGrpInfo, IngDetails, IngEditCommand>

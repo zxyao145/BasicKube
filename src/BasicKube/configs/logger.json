@@ -1,0 +1,39 @@
+{
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning",
+        "Microsoft.Hosting.Lifetime": "Information"
+      }
+    },
+    "Enrich": [ "FromLogContext", "WithSpan" ],
+    "WriteTo": [
+      {
+        "Name": "Console",
+        "Args": {
+          "outputTemplate": "[{Timestamp:o} {Level:u3}][{ThreadId}][{TraceId}.{SpanId}]\t{SourceContext}.{Line}\t{Message:lj}{NewLine}{Exception}",
+          "theme": "Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme::Code, Serilog.Sinks.Console"
+        }
+      },
+      {
+        "Name": "Async",
+        "Args": {
+          "configure": [
+            {
+              "Name": "File",
+              "Args": {
+                "rollingInterval": "Hour",
+                "path": "logs/log-.log",
+                "fileSizeLimitBytes": 40960,
+                "buffered": false,
+                "outputTemplate": "[{Timestamp:o} {Level:u3}][{ThreadId}][{TraceId}.{SpanId}]\t{SourceContext}.{Line}\t{Message:lj}{NewLine}{Exception}"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

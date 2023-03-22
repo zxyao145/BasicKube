@@ -1,7 +1,8 @@
-﻿using BasicKube.Api.Domain.App;
+﻿using BasicKube.Api.Common.Components.ActionResultExtensions;
+using BasicKube.Api.Controllers.Core;
+using BasicKube.Api.Domain.AppGroup;
 
-
-namespace BasicKube.Api.Controllers.Deploy
+namespace BasicKube.Api.Controllers.App.Deploy
 {
     public partial class DeployController
         : KubeControllerBase, IGrpResController<DeployEditCommand>

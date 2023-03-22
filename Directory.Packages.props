@@ -3,21 +3,25 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Ao.Logger" Version="0.7.1" />
     <PackageVersion Include="BlazorIcons.Full" Version="2.0.0" />
     <PackageVersion Include="Jil" Version="2.17.0" />
-    <PackageVersion Include="JsonPatch.Net" Version="2.0.4" />
+    <PackageVersion Include="JsonPatch.Net" Version="2.0.6" />
     <PackageVersion Include="KubeClient" Version="2.4.10" />
     <PackageVersion Include="KubeClient.Extensions.DependencyInjection" Version="2.4.10" />
     <PackageVersion Include="KubeClient.Extensions.WebSockets" Version="2.4.10" />
-    <PackageVersion Include="KubernetesClient" Version="10.0.31" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.2.3" />
-    <PackageVersion Include="ZxyBase.ActionResultExtensions" Version="0.7.0" />
+    <PackageVersion Include="KubernetesClient" Version="10.1.4" />
+    <PackageVersion Include="Serilog" Version="2.12.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="6.1.0" />
+    <PackageVersion Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="3.4.0" />
+    <PackageVersion Include="Serilog.Sinks.Async" Version="1.5.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="4.1.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="AntDesign" Version="0.13.3" />
     <PackageVersion Include="BcdLib.BcdForm" Version="0.5.0" />
-    <PackageVersion Include="Common.Pure" Version="0.7.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.12" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.12" PrivateAssets="all" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="6.0.0" />

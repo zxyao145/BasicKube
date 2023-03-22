@@ -1,4 +1,4 @@
-﻿namespace BasicKube.Api.Controllers;
+﻿namespace BasicKube.Api.Controllers.Core;
 
 public interface IGrpResControllerWithoutPublish<in TCmd> where TCmd : class
 {

@@ -1,5 +1,6 @@
 ﻿@page "/pages/terminal/{IamId:int}/{PodName}/{ContainerName}"
 @inject IJSRuntime JsRuntime
+@inject IConfiguration configuration
 @layout EmptyLayout
 
 <div class="terminal-page">
@@ -25,12 +26,17 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await JsRuntime.InvokeVoidAsync("initTerminal", 
-            _terminalRef,
-            IamId,
-            PodName,
-            ContainerName
-            );
+        var baseHttp = configuration["BasicKube:HttpBase"];
+        var url = baseHttp.StartsWith("https")
+        ? baseHttp.Replace("https", "wss")
+        : baseHttp.Replace("http", "ws");
+        if (url.EndsWith("/"))
+        {
+            url = url.Substring(0, url.Length - 1);
+        }
+        var serverUri = $"{url}/api/Terminal/Container/{IamId}/{PodName}/{ContainerName}";
+
+        await JsRuntime.InvokeVoidAsync("initTerminal", _terminalRef, serverUri);
         await base.OnAfterRenderAsync(firstRender);
     }
 }
