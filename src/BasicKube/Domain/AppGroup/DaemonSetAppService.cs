@@ -1,19 +1,17 @@
-﻿using BasicKube.Api.Common;
-using BasicKube.Api.Domain.Pod;
+﻿using BasicKube.Api.Domain.Pod;
 using Json.Patch;
 using System.Text.Json;
 
 namespace BasicKube.Api.Domain.App;
 
-public interface IDaemonSetAppService 
+public interface IDaemonSetAppService
     : IAppService<DaemonSetGrpInfo, DaemonSetDetails, DaemonSetEditCommand>
 {
-
 }
 
 
 [Service<IDaemonSetAppService>]
-public class DaemonSetAppService 
+public class DaemonSetAppService
     : AppServiceBase<DaemonSetGrpInfo, DaemonSetDetails, DaemonSetEditCommand>
     , IDaemonSetAppService
 {
@@ -114,7 +112,7 @@ public class DaemonSetAppService
             );
     }
 
-    #endregion
+    #endregion edit
 
     public override async Task DelAsync(int iamId, string resName)
     {
@@ -141,13 +139,13 @@ public class DaemonSetAppService
         return cmd;
     }
 
-    #endregion
+    #endregion Details
 
     public override async Task<IEnumerable<DaemonSetDetails>> ListAsync
         (int iamId, string grpName, string? env = null)
     {
         var nsName = IamService.GetNsName(iamId);
-        if(env  != null)
+        if (env != null)
         {
             return await ListOneClusterAsync(iamId, env, nsName, grpName);
         }
@@ -229,7 +227,7 @@ public class DaemonSetAppService
 
 
     public override async Task PublishAsync(
-        int iamId, 
+        int iamId,
         AppPublishCommand command
         )
     {

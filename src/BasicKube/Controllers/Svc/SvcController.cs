@@ -2,7 +2,7 @@
 
 namespace BasicKube.Api.Controllers.Svc;
 
-public class SvcController 
+public class SvcController
     : KubeControllerBase, IGrpResControllerWithoutPublish<SvcEditCommand>
 {
     private readonly ILogger<SvcController> _logger;

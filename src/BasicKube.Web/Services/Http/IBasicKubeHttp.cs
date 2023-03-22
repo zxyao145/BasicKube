@@ -11,7 +11,8 @@ public interface IBasicKubeHttp<TGrpInfo, TDetails, TCmd>
     where TCmd : IIamModel
 {
     Task<List<TGrpInfo>> ListGrp(int iamId);
-    Task<List<TDetails>> List(int iamId, string? grpName=null, string? env = null);
+
+    Task<List<TDetails>> List(int iamId, string? grpName = null, string? env = null);
 
     Task<bool> Create(TCmd command);
 

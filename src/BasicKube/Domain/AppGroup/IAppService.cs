@@ -1,5 +1,4 @@
-﻿
-namespace BasicKube.Api.Domain.App;
+﻿namespace BasicKube.Api.Domain.App;
 
 
 public interface IAppService<TGrpInfo, TResDetails, TEditCmd>

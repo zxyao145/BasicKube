@@ -1,5 +1,4 @@
-﻿
-using BasicKube.Api.Exceptions;
+﻿using BasicKube.Api.Exceptions;
 
 namespace BasicKube.Api.Domain.Pod;
 
@@ -8,6 +7,7 @@ public class PodService : IPodService
 {
     private readonly ILogger<PodService> _logger;
     private readonly KubernetesFactory _k8sFactory;
+
     public PodService(ILogger<PodService> logger, KubernetesFactory kubernetes)
     {
         _logger = logger;
@@ -211,7 +211,7 @@ public class PodService : IPodService
         return string.Join(" ", handlerV1.Exec.Command);
     }
 
-    #endregion
+    #endregion GetContainerInfos
 
     #region PodTemplateSpec
 
@@ -502,7 +502,7 @@ public class PodService : IPodService
             .ToList();
     }
 
-    #endregion
+    #endregion PodTemplateSpec
 
 
     public static V1ObjectMeta CreateObjectMeta
@@ -547,5 +547,4 @@ public class PodService : IPodService
             }
         };
     }
-
 }

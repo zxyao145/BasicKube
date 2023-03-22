@@ -6,7 +6,7 @@ public class DaemonSetHttp
     : BasicKubeAppHttp<DaemonSetGrpInfo, DaemonSetDetails, DaemonSetEditCommand>
 {
     public DaemonSetHttp(IConfiguration configuration, HttpClient httpClient, ILogger<DaemonSetHttp> logger)
-        :base(configuration, httpClient, logger)
+        : base(configuration, httpClient, logger)
     {
     }
 

@@ -8,7 +8,6 @@ public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
     where TAppDetails : AppDetailsQuery
     where TEditCmd : AppEditCommand
 {
-
     protected readonly IamService IamService;
 
     protected AppServiceBase(IamService iamService)
@@ -22,6 +21,7 @@ public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
 
 
     public abstract Task CreateAsync(int iamId, TEditCmd cmd);
+
     public abstract Task UpdateAsync(int iamId, TEditCmd cmd);
 
 
@@ -110,7 +110,7 @@ public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
         };
     }
 
-    #endregion
+    #endregion internal
 
     public static TCmd GetAppCreateCommand<TCmd>
         (string resName, IKubernetesObject<V1ObjectMeta> kubeApp)
@@ -125,8 +125,8 @@ public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
         obj.IamId = int.Parse(kubeApp.Metadata.Labels[K8sLabelsConstants.LabelIamId] ?? "0");
         obj.Region = kubeApp.Metadata.Annotations[K8sLabelsConstants.LabelRegion];
         obj.Room = kubeApp.Metadata.Annotations[K8sLabelsConstants.LabelRoom];
-        
-        if(obj is DeployEditCommand deployCreateCommand)
+
+        if (obj is DeployEditCommand deployCreateCommand)
         {
             var app = kubeApp as V1Deployment;
             Debug.Assert(app != null);
@@ -146,6 +146,4 @@ public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
 
         return obj;
     }
-
-
 }

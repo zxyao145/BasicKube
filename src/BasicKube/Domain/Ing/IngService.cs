@@ -2,7 +2,7 @@
 
 namespace BasicKube.Api.Domain.Ing;
 
-public interface IIngService 
+public interface IIngService
     : IResService<IngGrpInfo, IngDetails, IngEditCommand>
 {
     Task<IEnumerable<IngDetails>> ListInEnvAsync(int iamId, string env);
@@ -16,7 +16,7 @@ public class IngService : IIngService
     private readonly IamService _iamService;
 
     public IngService(ILogger<IngService> logger,
-        KubernetesFactory kubernetes, 
+        KubernetesFactory kubernetes,
         IamService iamService)
     {
         _logger = logger;
@@ -84,8 +84,8 @@ public class IngService : IIngService
         return await ListOneEnv(iamId, env, nsName, "");
     }
 
-   public async Task<IEnumerable<IngDetails>> ListAsync
-        (int iamId, string grpName, string? env = null)
+    public async Task<IEnumerable<IngDetails>> ListAsync
+         (int iamId, string grpName, string? env = null)
     {
         var nsName = _iamService.GetNsName(iamId);
         if (!string.IsNullOrWhiteSpace(env))
@@ -152,7 +152,7 @@ public class IngService : IIngService
         }).ToList();
     }
 
-    #endregion
+    #endregion ListAsync
 
 
     #region edit
@@ -247,7 +247,7 @@ public class IngService : IIngService
         };
     }
 
-    #endregion
+    #endregion edit
 
 
     public async Task<IngEditCommand?> DetailsAsync(int iamId, string ingName)

@@ -1,6 +1,4 @@
-﻿
-
-namespace BasicKube.Models;
+﻿namespace BasicKube.Models;
 
 public class ContainerInfo
 {

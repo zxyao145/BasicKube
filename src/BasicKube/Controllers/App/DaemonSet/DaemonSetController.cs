@@ -1,5 +1,4 @@
 ﻿using BasicKube.Api.Domain.App;
-using BasicKube.Api.Domain.Pod;
 
 namespace BasicKube.Api.Controllers.App.DaemonSet
 {
@@ -65,7 +64,7 @@ namespace BasicKube.Api.Controllers.App.DaemonSet
             return ApiResult.Success;
         }
 
-        #endregion
+        #endregion edit
 
 
         [HttpDelete("{appName}")]

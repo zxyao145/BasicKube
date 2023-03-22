@@ -1,10 +1,9 @@
-﻿using BasicKube.Api.Controllers.App;
-using BasicKube.Api.Domain.App;
+﻿using BasicKube.Api.Domain.App;
 
 
 namespace BasicKube.Api.Controllers.Deploy
 {
-    public partial class DeployController 
+    public partial class DeployController
         : KubeControllerBase, IGrpResController<DeployEditCommand>
     {
         private readonly ILogger<DeployController> _logger;
@@ -62,7 +61,7 @@ namespace BasicKube.Api.Controllers.Deploy
             return ApiResult.Success;
         }
 
-        #endregion
+        #endregion edit
 
         [HttpDelete("{appName}")]
         public async Task<IActionResult> Del(

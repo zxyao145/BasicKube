@@ -1,7 +1,6 @@
-﻿
-
-namespace BasicKube.Models;
+﻿namespace BasicKube.Models;
 #nullable disable
+
 public class AutoScaleDeployCommand
 {
     public string DeployName { get; set; }

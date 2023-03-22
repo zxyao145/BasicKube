@@ -1,5 +1,4 @@
-﻿
-namespace BasicKube.Api.Domain.App;
+﻿namespace BasicKube.Api.Domain.App;
 
 public interface IResService<TGrpInfo, TResDetails, TEditCmd>
 {
@@ -23,7 +22,7 @@ public interface IResService<TGrpInfo, TResDetails, TEditCmd>
     public Task<IEnumerable<TResDetails>> ListAsync(int iamId, string grpName, string? env = null);
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="iamId"></param>
     /// <param name="cmd"></param>
@@ -31,7 +30,7 @@ public interface IResService<TGrpInfo, TResDetails, TEditCmd>
     public Task CreateAsync(int iamId, TEditCmd cmd);
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="iamId"></param>
     /// <param name="cmd"></param>

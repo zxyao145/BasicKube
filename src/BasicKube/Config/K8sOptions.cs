@@ -14,6 +14,5 @@ public class K8sOptions
     /// value：k8s config file path
     /// </summary>
     public Dictionary<string, string> ClusterConfig { get; set; } = new();
-
 }
 

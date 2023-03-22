@@ -1,5 +1,4 @@
-﻿
-namespace BasicKube.Models;
+﻿namespace BasicKube.Models;
 
 public record IngRuleOptions
 {
@@ -9,8 +8,8 @@ public record IngRuleOptions
 
     public string HostType { get; set; } = "http";
 
-    public List<IngRuleValue> RuleValues { get; set; } = new List<IngRuleValue>() 
-    { 
+    public List<IngRuleValue> RuleValues { get; set; } = new List<IngRuleValue>()
+    {
         new IngRuleValue()
     };
 }

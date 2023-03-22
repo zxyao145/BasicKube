@@ -8,7 +8,6 @@ namespace BasicKube.Api.Domain.AppGroup;
 
 public interface IJobAppService : IAppService<JobGrpInfo, JobDetails, JobEditCommand>
 {
-
 }
 
 [Service<IJobAppService>]
@@ -53,9 +52,9 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
         }
         catch (HttpOperationException e)
         {
-            if(((int)e.Response.StatusCode) > 499) throw;
+            if (((int)e.Response.StatusCode) > 499) throw;
         }
-        
+
         await _k8sFactory.MustGet(command.Env)
             .BatchV1.CreateNamespacedJobAsync(job, nsName);
     }
@@ -69,7 +68,7 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
             Spec = new V1JobSpec
             {
                 // 不设置：不会删除；0: job 删除后立即删除；>0: 等待n秒后删除
-                TtlSecondsAfterFinished = 3600, 
+                TtlSecondsAfterFinished = 3600,
                 ActiveDeadlineSeconds = command.ActiveDeadlineSeconds,
                 BackoffLimit = command.BackoffLimit,
                 Completions = command.Completions,
@@ -85,7 +84,7 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
         return job;
     }
 
-    #endregion
+    #endregion edit
 
 
     public override async Task DelAsync(int iamId, string resName)
@@ -137,7 +136,6 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
             result.AddRange(temp);
         }
         return result;
-
     }
 
 
@@ -229,7 +227,7 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
 
             res.AddRange(jobs.Items);
         }
-        
+
 
         return res
             .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelGrpName])

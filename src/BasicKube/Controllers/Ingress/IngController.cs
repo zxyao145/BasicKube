@@ -2,7 +2,7 @@
 
 namespace BasicKube.Api.Controllers.App;
 
-public class IngController 
+public class IngController
     : KubeControllerBase, IGrpResControllerWithoutPublish<IngEditCommand>
 {
     private readonly ILogger<IngController> _logger;
@@ -87,6 +87,4 @@ public class IngController
     }
 
     #endregion edit
-
-
 }

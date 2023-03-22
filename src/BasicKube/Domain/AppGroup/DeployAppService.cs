@@ -1,6 +1,4 @@
-﻿using BasicKube.Api.Common;
-using BasicKube.Api.Domain.Pod;
-using BasicKube.Api.Exceptions;
+﻿using BasicKube.Api.Domain.Pod;
 using Json.Patch;
 using System.Text.Json;
 
@@ -8,11 +6,10 @@ namespace BasicKube.Api.Domain.App;
 
 public interface IDeployAppService : IAppService<DeployGrpInfo, DeployDetails, DeployEditCommand>
 {
-
 }
 
 [Service<IDeployAppService>]
-public class DeployAppService 
+public class DeployAppService
     : AppServiceBase<DeployGrpInfo, DeployDetails, DeployEditCommand>, IDeployAppService
 {
     private readonly KubernetesFactory _k8sFactory;
@@ -47,7 +44,7 @@ public class DeployAppService
             );
     }
 
-    #endregion
+    #endregion edit
 
     public override async Task DelAsync(int iamId, string resName)
     {
@@ -74,7 +71,7 @@ public class DeployAppService
         return cmd;
     }
 
-    #endregion
+    #endregion Details
 
 
     public override async Task<IEnumerable<DeployGrpInfo>> ListGrpAsync(int iamId)
@@ -89,7 +86,7 @@ public class DeployAppService
             var deploymentListV1 = await item.Value
                 .AppsV1
                 .ListNamespacedDeploymentAsync(
-                   nsName, 
+                   nsName,
                    labelSelector: label + $",{K8sLabelsConstants.LabelEnv}={env}"
                 );
             res.AddRange(deploymentListV1.Items);
@@ -120,7 +117,7 @@ public class DeployAppService
         (int iamId, string grpName, string? env = null)
     {
         var nsName = IamService.GetNsName(iamId);
-        if(!string.IsNullOrWhiteSpace(env))
+        if (!string.IsNullOrWhiteSpace(env))
         {
             return await ListOneEnv(iamId, env, nsName, grpName);
         }
@@ -196,7 +193,7 @@ public class DeployAppService
             }
 
             details.PodDetails = details.PodDetails
-                .OrderByDescending(x=>x.StartTime)
+                .OrderByDescending(x => x.StartTime)
                 .ThenBy(x => x.Name)
                 .ToList();
             result.Add(details);
@@ -207,7 +204,7 @@ public class DeployAppService
 
 
     public override async Task PublishAsync(
-        int iamId, 
+        int iamId,
         AppPublishCommand command
         )
     {

@@ -1,10 +1,6 @@
-﻿using BasicKube.Api.Common;
-using BasicKube.Api.Domain;
-using Microsoft.AspNetCore.Mvc.Controllers;
+﻿using BasicKube.Api.Domain;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Primitives;
-using Microsoft.IdentityModel.Tokens;
-using System.Xml.Linq;
 
 namespace BasicKube.Api.Filters;
 
@@ -12,6 +8,7 @@ public class IamIdAndNsNameFilter : Attribute, IAsyncResourceFilter
 {
     private readonly IamService _iamService;
     private readonly ILogger<IamIdAndNsNameFilter> _logger;
+
     public IamIdAndNsNameFilter(IamService iamService, ILogger<IamIdAndNsNameFilter> logger)
     {
         _iamService = iamService;
@@ -29,7 +26,7 @@ public class IamIdAndNsNameFilter : Attribute, IAsyncResourceFilter
         //}
         var req = context.HttpContext.Request;
         var iamId = (string?)req.RouteValues[RouteConstants.IamId];
-        if(iamId != null)
+        if (iamId != null)
         {
             var nsName = _iamService.GetNsName(iamId);
             _logger.LogDebug("IamdId:{0},NsName:{1}", iamId, nsName);

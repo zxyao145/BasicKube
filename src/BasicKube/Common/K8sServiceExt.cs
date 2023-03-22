@@ -21,7 +21,7 @@ public class KubernetesFactory
     public IKubernetes MustGetByAppName(string appName)
     {
         ArgumentNullException.ThrowIfNull(appName);
-        var env =K8sUtil.GetEnvByAppName(appName);
+        var env = K8sUtil.GetEnvByAppName(appName);
         return MustGet(env);
     }
 
@@ -83,5 +83,4 @@ public static class K8sServiceExt
 
         return serviceConllection;
     }
-
 }

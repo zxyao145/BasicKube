@@ -1,13 +1,11 @@
-﻿using BasicKube.Api.Common;
-
-namespace BasicKube.Api.Controllers;
+﻿namespace BasicKube.Api.Controllers;
 
 [ApiController]
 [Route($"/api/[controller]/[action]/{{{RouteConstants.IamId}}}")]
 public abstract class KubeControllerBase : ControllerBase
 {
     public string NsName => (string)HttpContext.Items[RouteConstants.NsName]!;
-    
+
     public int IamId => (int)HttpContext.Items[RouteConstants.IamId]!;
 
     public string? EnvName
@@ -22,7 +20,7 @@ public abstract class KubeControllerBase : ControllerBase
             return (string)obj;
         }
     }
-    
+
     public static string GetEnvByPodName(string podName)
     {
         return K8sUtil.GetEnvByPodName(podName);

@@ -1,9 +1,8 @@
-﻿
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace BasicKube.Models;
 
-public class IngEditCommand: IIamModel
+public class IngEditCommand : IIamModel
 {
     public static string Type => "ingress";
 

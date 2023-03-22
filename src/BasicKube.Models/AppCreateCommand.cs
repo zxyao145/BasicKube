@@ -1,9 +1,8 @@
-﻿
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace BasicKube.Models;
 
-public abstract class AppEditCommand: IIamModel
+public abstract class AppEditCommand : IIamModel
 {
     [JsonIgnore]
     public abstract string TypeName { get; }
@@ -56,10 +55,10 @@ public abstract class AppEditCommand: IIamModel
 
 
     /// <summary>
-    /// Restart policy for all containers within the pod. 
+    /// Restart policy for all containers within the pod.
     /// One of Always, OnFailure, Never. Default to Always. More info:
     /// https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
-    /// 
+    ///
     /// </summary>
     public string RestartPolicy { get; set; } = "Always";
 

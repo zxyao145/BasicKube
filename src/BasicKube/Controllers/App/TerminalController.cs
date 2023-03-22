@@ -1,5 +1,4 @@
-﻿using BasicKube.Api.Common;
-using BasicKube.Api.Controllers.App.Deploy;
+﻿using BasicKube.Api.Controllers.App.Deploy;
 using BasicKube.Api.Exceptions;
 using Jil;
 using k8s.Autorest;
@@ -189,7 +188,6 @@ public class TerminalController : KubeControllerBase
                     _logger.LogError("copy err:{0}", e);
                     break;
                 }
-
             }
         });
         var forwardCopy = Task.Run(async () =>

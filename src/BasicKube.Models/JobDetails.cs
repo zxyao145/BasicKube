@@ -25,7 +25,6 @@ namespace BasicKube.Models
         public int? Parallelism { get; set; }
 
         public string RestartPolicy { get; set; } = "Always";
-
     }
 
     public class CronJobDetails : AppDetailsQuery

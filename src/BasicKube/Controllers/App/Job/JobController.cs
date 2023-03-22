@@ -2,7 +2,7 @@
 
 namespace BasicKube.Api.Controllers.Job
 {
-    public partial class JobController 
+    public partial class JobController
         : KubeControllerBase, IGrpResController<JobEditCommand>
     {
         private readonly ILogger<JobController> _logger;

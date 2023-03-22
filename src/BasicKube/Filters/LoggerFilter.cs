@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Logging;
 
 namespace AoAuth.Common.Filters;
+
 public class LoggerFilter : IAsyncActionFilter
 {
     private readonly ILogger<LoggerFilter> _logger;
+
     public LoggerFilter(ILogger<LoggerFilter> logger)
     {
         _logger = logger;

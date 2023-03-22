@@ -10,7 +10,7 @@ public class IamService
 
     public IamService(IOptions<K8sOptions> options)
     {
-        _k8sOptions = options.Value ;
+        _k8sOptions = options.Value;
     }
 
     public string GetNsName(int iamId)

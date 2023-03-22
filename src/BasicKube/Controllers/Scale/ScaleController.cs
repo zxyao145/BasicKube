@@ -1,5 +1,4 @@
-﻿
-namespace BasicKube.Api.Controllers.AutoScale;
+﻿namespace BasicKube.Api.Controllers.AutoScale;
 
 public class ScalerController : KubeControllerBase
 {
@@ -117,6 +116,7 @@ public class ScalerController : KubeControllerBase
                         }
                     };
                     break;
+
                 default:
                     continue;
             }
@@ -143,6 +143,5 @@ public class ScalerController : KubeControllerBase
         return $"{deployName}-hpa";
     }
 
-    #endregion
-
+    #endregion AutoScale Deploy
 }
