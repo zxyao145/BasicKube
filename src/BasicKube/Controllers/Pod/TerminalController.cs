@@ -38,7 +38,7 @@ public class TerminalController : KubeControllerBase
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
             using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            await Proxy3(webSocket, new TerminalInfo()
+            await Proxy(webSocket, new TerminalInfo()
             {
                 NsName = NsName,
                 ContainerName = containerName,
@@ -56,9 +56,9 @@ public class TerminalController : KubeControllerBase
             "/bin/bash","/bin/sh"
         };
 
-    private async Task Proxy3(WebSocket clientWebSocket, TerminalInfo info)
+    private async Task Proxy(WebSocket clientWebSocket, TerminalInfo info)
     {
-        var kubernetes = _k8sFactory.MustGetByPodName(info.PodName);
+        var kubernetes = _k8sFactory.MustGet(EnvName!);
         var chIn = Channel.CreateUnbounded<byte[]>();
         var chOut = Channel.CreateUnbounded<byte[]>();
 

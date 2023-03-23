@@ -1,0 +1,19 @@
+﻿@namespace BasicKube
+
+<GridRow Style="margin-top: 24px;">
+    <GridCol Span="2" Offset="20">
+        <Button OnClick="@OnCancel">取消</Button>
+    </GridCol>
+    <GridCol Span="2">
+        <Button Type="@ButtonType.Primary" OnClick="@OnOk">确定</Button>
+    </GridCol>
+</GridRow>
+
+
+@code {
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnOk { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnCancel { get; set; }
+}

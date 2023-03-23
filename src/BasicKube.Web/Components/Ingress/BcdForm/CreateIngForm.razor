@@ -1,5 +1,5 @@
 ﻿@namespace BasicKube.Web.Components
-@inherits BcdForm
+@inherits CreateResForm
 
 <div>
     <GridRow Style="margin-bottom: 16px;">
@@ -80,24 +80,10 @@
         </GridCol>
     </GridRow>
 
-    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
-        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
-    </div>
 </div>
 
-<style>
-    .bcd-form {
-        top: 50px;
-    }
-</style>
-
 @code {
-    public Func<Task>? OnOk { get; set; }
-    public bool IsEdit { get; set; } = false;
-
     private IngEditCommand _createCommand = new IngEditCommand();
-    private string _msgPrefix => IsEdit? "创建" : "编辑";
-
     public IngEditCommand IngEditCommand
     {
         get => _createCommand;
@@ -107,36 +93,19 @@
             StateHasChanged();
         }
     }
-
-    private int IamId { get; set; }
-
-
     private List<string> _appNames = new List<string>();
-
     public CreateIngForm(int iamId) : base()
     {
         IamId = iamId;
+        Title = "Ingress";
     }
-
-    protected override void InitComponent()
-    {
-        Title = _msgPrefix + "路由";
-        ShowMask = true;
-        MinimizeBox = false;
-        MaximizeBox = false;
-        Width = 1000;
-        BodyStyle = "height: calc(100vh - 150px)";
-    }
-
 
     protected override async Task OnShowingAsync(System.ComponentModel.CancelEventArgs e)
     {
         var http = ServiceProvider.GetRequiredService<DeployHttp>();
         var appList = await http.ListGrp(IamId);
-
         _appNames = appList.Select(x => x.Name).ToList();
         StateHasChanged();
-
         await base.OnShowingAsync(e);
     }
 
@@ -145,10 +114,9 @@
         await StateHasChangedAsync();
     }
 
-    private async Task OnOkAsync()
+    protected override async Task OnOkAsync()
     {
         IngEditCommand.IamId = IamId;
-
         var http = ServiceProvider.GetRequiredService<IngHttp>();
         bool res = false;
         if (IsEdit)
@@ -159,15 +127,11 @@
         {
             res = await http.Create(IngEditCommand);
         }
-
-        var messageService = ServiceProvider.GetRequiredService<MessageService>();
-        _ = messageService.Success(res ? _msgPrefix + "成功" : _msgPrefix + "失败");
-
+        _ = res ? (NoticeSuccess(MsgPrefix + "成功")) : (NoticeError(MsgPrefix + "失败"));
         if (OnOk != null)
         {
             await OnOk();
         }
-
         if (res)
         {
             await this.CloseAsync();

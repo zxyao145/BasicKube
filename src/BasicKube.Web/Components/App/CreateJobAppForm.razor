@@ -1,5 +1,5 @@
 ﻿@namespace BasicKube.Web.Components
-@inherits BcdForm
+@inherits CreateResForm
 
 <div class="job-edit-form">
     <div class="mb-4">
@@ -112,25 +112,10 @@
         </Tabs>
     </div>
 
-
-    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
-        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
-    </div>
 </div>
 
-<style>
-    .bcd-form {
-        top: 50px;
-    }
-</style>
-
 @code {
-    public int IamId { get; set; }
-
-    public Func<Task>? OnOk { get; set; }
-
     private JobEditCommand _createCommand = new JobEditCommand();
-
     public JobEditCommand JobEditCommand
     {
         get => _createCommand;
@@ -142,16 +127,10 @@
             StateHasChanged();
         }
     } 
-
-    public bool IsEdit { get; set; } = false;
-
-    protected override void InitComponent()
+    public CreateJobAppForm()
     {
-        Width = 1000;
-        MinimizeBox = false;
         Title = "Job";
     }
-
 
     private Tabs? _tabs;
     readonly List<ContainerInfo> _panes = new List<ContainerInfo>()
@@ -183,7 +162,7 @@
         }
     }
 
-    private async Task OnOkAsync()
+    protected override async Task OnOkAsync()
     {
         JobEditCommand.Containers = _panes;
         JobEditCommand.GrpName = $"{JobEditCommand.GrpName}";
@@ -202,9 +181,7 @@
             res = await http.Create(JobEditCommand);
         }
 
-        var messageService = ServiceProvider.GetRequiredService<MessageService>();
-
-        _ = messageService.Success(res ? "创建成功" : "创建失败");
+        _ = res ? (NoticeSuccess(MsgPrefix + "成功")) : (NoticeError(MsgPrefix + "失败"));
 
         if (OnOk != null)
         {
@@ -214,13 +191,6 @@
         {
             await this.CloseAsync();
         }
-    }
-
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        Console.WriteLine(string.Join(",", _panes.Select(x => x.Name)));
-        base.OnAfterRender(firstRender);
     }
 
     private void OnNameChange()

@@ -15,11 +15,6 @@
 
                 <Panel @key="@daemonSetDetails.Name" Header="@header" Key="@(@daemonSetDetails.Name)" Class="deploy-panel">
                     <ExtraTemplate>
-                        <Button Class="mr-6" OnClickStopPropagation="true" Size="small"
-                            OnClick="@(async () => await ShowHistoryVersionAsync(daemonSetDetails))">
-                            版本控制
-                        </Button>
-
                         <ButtonGroup>
                             <Button OnClick="@(async () => await OnDelClickAsync(daemonSetDetails))"
                             OnClickStopPropagation="true"

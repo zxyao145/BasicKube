@@ -1,4 +1,5 @@
 ﻿using BasicKube.Api.Config;
+using k8s.KubeConfigModels;
 
 namespace BasicKube.Api.Common;
 
@@ -25,6 +26,11 @@ public class KubernetesFactory
         return MustGet(env);
     }
 
+    /// <summary>
+    /// get IKubernetes of env or default config
+    /// </summary>
+    /// <param name="env"></param>
+    /// <returns></returns>
     public IKubernetes MustGet(string env)
     {
         ArgumentNullException.ThrowIfNull(env);
@@ -39,16 +45,6 @@ public class KubernetesFactory
             return _cluster[env];
         }
         return null;
-    }
-
-    public IKubernetes GetOrDefault(string env)
-    {
-        ArgumentNullException.ThrowIfNull(env);
-        if (_cluster.ContainsKey(env))
-        {
-            return _cluster[env];
-        }
-        return _cluster["default"];
     }
 
     public Dictionary<string, IKubernetes> All => _cluster;

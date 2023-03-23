@@ -8,18 +8,18 @@
         @if (string.IsNullOrWhiteSpace(_activityAppName))
         {
             <BreadcrumbItem>
-                <b><Icon Type="appstore" Theme="outline" /> 应用组</b>
+                <b><IconPark.AllApplication /> 应用组</b>
             </BreadcrumbItem>
         }
         else
         {
             <BreadcrumbItem OnClick="ReturnAppList">
                 <b class="cursor-pointer">
-                    <Icon Type="appstore" Theme="outline" /> 应用组
+                    <IconPark.AllApplication /> 应用组
                 </b>
             </BreadcrumbItem>
             <BreadcrumbItem>
-                <b><Icon Type="deployment-unit" Theme="outline" /> 应用</b>
+                <b>应用</b>
             </BreadcrumbItem>
         }
     </Breadcrumb>

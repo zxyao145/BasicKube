@@ -1,7 +1,7 @@
 ﻿@namespace BasicKube.Web.Components
 @using System.ComponentModel;
 @using AntDesign.Select
-@inherits BcdForm
+@inherits CreateResForm
 
 <div>
     <GridRow>
@@ -126,15 +126,6 @@
             </Button>
         </GridCol>
     </GridRow>
-
-    <GridRow Style="margin-top: 24px;">
-        <GridCol Span="2" Offset="20">
-            <Button OnClick="@OnCancelAsync">取消</Button>
-        </GridCol>
-        <GridCol Span="2">
-            <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
-        </GridCol>
-    </GridRow>
 </div>
 
 @code {
@@ -147,7 +138,6 @@
 
     private KubeHttpClient _kubeHttpClient;
 
-    public bool IsEdit { get; set; } = false;
     private IngRuleOptions RuleOptions { get; set; } = default!;
 
     private List<SvcDetails> _svcInfo = new List<SvcDetails>();
@@ -156,7 +146,6 @@
         = new Dictionary<string, List<PortInfo>>();
 
 
-    private int _iamId;
     private IngEditCommand _editCmd;
     private bool isCancel = true;
 
@@ -165,10 +154,10 @@
         IngEditCommand command, 
         IngRuleOptions? oldOptions = null)
     {
-        _iamId = iamId;
+        IamId = iamId;
         _editCmd = command;
         _kubeHttpClient = ServiceProvider.GetRequiredService<KubeHttpClient>();
-        _querySvcInfoTask = _kubeHttpClient.SvcHttp.List(_iamId, "", command.Env);
+        _querySvcInfoTask = _kubeHttpClient.SvcHttp.List(IamId, "", command.Env);
 
         if (oldOptions != null)
         {
@@ -188,8 +177,6 @@
                                 Port = x.Port,
                             }).ToList()
                 };
-            Console.WriteLine(RuleOptions.RuleValues[0]);
-            Console.WriteLine(RuleOptions.RuleValues[1]);
         }
         else
         {
@@ -198,18 +185,8 @@
                     Index = _editCmd.Rules.Count + 1
                 };
         }
-    }
 
-    protected override void InitComponent()
-    {
-        ShowMask = true;
-        MaskClosable = false;
-        Centered = true;
-        ShowMask = true;
-        MinimizeBox = false;
         MaximizeBox = false;
-        Width = 1000;
-        BodyStyle = "height: calc(100vh - 150px)";
     }
 
     protected override async Task OnShowingAsync(CancelEventArgs e)
@@ -241,28 +218,25 @@
     }
 
 
-    private async Task OnCancelAsync()
+    protected override async Task OnCancelAsync()
     {
         isCancel = true;
         await base.CloseAsync();
     }
 
-
-    private async Task OnOkAsync()
+    protected override async Task OnOkAsync()
     {
         isCancel = false;
         await base.CloseAsync();
     }
 
-
-    protected override async Task OnClosingAsync(CancelEventArgs e)
+    protected override Task OnClosingAsync(CancelEventArgs e)
     {
         if (isCancel)
         {
-            return;
+            return Task.CompletedTask;
         }
         //using var scope = base.ServiceProvider.CreateScope();
-        var notify = base.ServiceProvider.GetRequiredService<INotificationService>();
         var (res, msg) = CanClose();
         if (res)
         {
@@ -281,13 +255,11 @@
         }
         else
         {
-            await notify.Error(new NotificationConfig
-                {
-                    Message = "Error",
-                    Description = msg
-                });
+            _ = NoticeError(msg);
             e.Cancel = true;
         }
+
+        return Task.CompletedTask;
     }
 
 

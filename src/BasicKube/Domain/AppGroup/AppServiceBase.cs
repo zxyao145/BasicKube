@@ -105,7 +105,7 @@ public abstract class AppServiceBase<TGrpInfo, TAppDetails, TEditCmd>
             MatchLabels = new Dictionary<string, string>
             {
                 [K8sLabelsConstants.LabelApp] = command.AppName,
-                [K8sLabelsConstants.LabelAppType] = command.TypeName,
+                //[K8sLabelsConstants.LabelAppType] = command.TypeName,
             }
         };
     }

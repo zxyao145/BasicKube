@@ -1,5 +1,5 @@
 ﻿@namespace BasicKube.Web.Components
-@inherits BcdForm
+@inherits CreateResForm
 
 <div>
     <div style="margin-bottom: 0.75rem;">
@@ -29,22 +29,9 @@
 
     <PodContainerEdit @ref="@_podContainerEdit"  Containers="@_createCommand.Containers" />
 
-    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
-        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
-    </div>
 </div>
 
-<style>
-    .bcd-form {
-        top: 50px;
-    }
-</style>
-
 @code {
-    public int IamId { get; set; }
-
-    public Func<Task>? OnOk { get; set; }
-
     private DaemonSetEditCommand _createCommand = new DaemonSetEditCommand();
     private PodContainerEdit? _podContainerEdit;
 
@@ -54,18 +41,12 @@
         set => _createCommand = value;
     } 
 
-    public bool IsEdit { get; set; } = false;
-
-    protected override void InitComponent()
+    public CreateDaemonSetAppForm()
     {
-        Width = 1000;
-        MinimizeBox = false;
-        BodyStyle = "max-height: 500px;";
-        Title = "DeamonSet";
+        Title = "DaemonSet";
     }
-    
 
-    private async Task OnOkAsync()
+    protected override async Task OnOkAsync()
     {
         DaemonSetCreateCommand.Containers = _podContainerEdit!.Containers;
         DaemonSetCreateCommand.AppName = $"{DaemonSetCreateCommand.GrpName}-{DaemonSetCreateCommand.Env}";
@@ -82,8 +63,7 @@
             res = await http.Create(DaemonSetCreateCommand);
         }
 
-        var messageService = ServiceProvider.GetRequiredService<MessageService>();
-        _ = messageService.Success(res ? "创建成功" : "创建失败");
+        _ = res ? (NoticeSuccess(MsgPrefix + "成功")) : (NoticeError(MsgPrefix + "失败"));
 
         if (OnOk != null)
         {

@@ -64,7 +64,7 @@
                 <Space Size="@("small")">
                     <SpaceItem>
                         <a target="_blank"
-                           href="@($"/{Routes.TerminalPage}/{IamId}/{rowData.Data.Name}/{context.Name}")">
+                           href="@($"/{Routes.TerminalPage}/{IamId}/{rowData.Data.Name}/{context.Name}?env={EnvName}")">
                             终端
                         </a>
                     </SpaceItem>
@@ -92,10 +92,11 @@
 </Drawer>
 
 
-@code {
+    @code {
     [CascadingParameter(Name = "IamId")]
     public int IamId { get; set; }
 
+    public string EnvName => AppName.Split("-")[^1];
 
     [Parameter]
     public List<PodDetail> PodDetails { get; set; } = new List<PodDetail>();
@@ -119,7 +120,7 @@
             return;
         }
 
-        await Task.Delay(1000);
+        await Task.Delay(1);
         // rowData.Data.ContainerDetails =
         StateHasChanged();
     }

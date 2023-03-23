@@ -1,32 +1,33 @@
-﻿@inject IconService iconService
+﻿@using IconPark
+@inject IconService iconService
 
 <Menu DefaultSelectedKeys=@(new[]{ _activeKey })
       DefaultOpenKeys="@_openKeys"
       Mode="MenuMode.Inline">
-    <MenuItem Key="pages/deployappgrplist" Icon="appstore">
+    <MenuItem Key="pages/deployappgrplist">
         <NavLink class="nav-link" href="@(Routes.DeployGrpPage)" Match="NavLinkMatch.All">
-            应用组
+            <AllApplication /> &nbsp;应用组
         </NavLink>
     </MenuItem>
-    <MenuItem Key="pages/svcgrplist" Icon="link">
+    <MenuItem Key="pages/svcgrplist">
         <NavLink class="nav-link" href="@(Routes.SvcGrpPage)">
-            服务组
+            <ConnectionPoint /> &nbsp;服务组
         </NavLink>
     </MenuItem>
-    <MenuItem Key="pages/ingressgrplist" Icon="link">
+    <MenuItem Key="pages/ingressgrplist">
         <NavLink class="nav-link" href="@(Routes.IngGrpPage)">
-            路由组
+            <LinkIn /> &nbsp;路由组
         </NavLink>
     </MenuItem>
     <SubMenu Key="advanced" TitleTemplate=@advancedTitle>
         <MenuItem Key="pages/daemonsetappgrplist">
             <NavLink class="nav-link" href="@(Routes.DaemonSetAppGrpPage)">
-                <BlazorIcons.BiShield /> 守护应用组
+                <Shield /> &nbsp;守护应用组
             </NavLink>
         </MenuItem>
         <MenuItem Key="">
             <NavLink class="nav-link" href="@(Routes.JobGrpPage)">
-                <BlazorIcons.BiShield /> 任务组
+                <Timer /> &nbsp;任务组
             </NavLink>
         </MenuItem>
     </SubMenu>
@@ -38,8 +39,7 @@
 
     RenderFragment advancedTitle =
     @<span>
-        <Icon Type="control" Theme="outline" />
-        高级操作
+        <MoreTwo /> &nbsp;高级操作
     </span>
     ;
 

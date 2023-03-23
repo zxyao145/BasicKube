@@ -23,6 +23,11 @@
     [Parameter]
     public int IamId { get; set; } = 0;
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "env")]
+    public string EnvName { get; set; } = "";
+
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -34,7 +39,7 @@
         {
             url = url.Substring(0, url.Length - 1);
         }
-        var serverUri = $"{url}/api/Terminal/Container/{IamId}/{PodName}/{ContainerName}";
+        var serverUri = $"{url}/api/Terminal/Container/{IamId}/{PodName}/{ContainerName}?env={EnvName}";
 
         await JsRuntime.InvokeVoidAsync("initTerminal", _terminalRef, serverUri);
         await base.OnAfterRenderAsync(firstRender);

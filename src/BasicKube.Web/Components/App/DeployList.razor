@@ -15,10 +15,6 @@
 
                 <Panel @key="@deployDetail.Name" Header="@header" Key="@(@deployDetail.Name)" Class="deploy-panel">
                     <ExtraTemplate>
-                        <Button Class="mr-6" OnClickStopPropagation="true" Size="small"
-                            OnClick="@(async () => await ShowHistoryVersionAsync(deployDetail))">
-                            版本控制
-                        </Button>
 
                         <ButtonGroup>
                             <Button OnClick="@(async () => await OnDelClickAsync(deployDetail))"

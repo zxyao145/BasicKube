@@ -1,5 +1,5 @@
 ﻿@namespace BasicKube.Web.Components
-@inherits BcdForm
+@inherits CreateResForm
 
 <div>
     <div style="margin-bottom: 0.75rem;">
@@ -65,25 +65,11 @@
         </Tabs>
     </div>
 
-
-    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
-        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
-    </div>
 </div>
 
-<style>
-    .bcd-form {
-        top: 50px;
-    }
-</style>
-
 @code {
-    public int IamId { get; set; }
-
-    public Func<Task>? OnOk { get; set; }
 
     private DeployEditCommand _createCommand = new DeployEditCommand();
-
     public DeployEditCommand DeployCreateCommand
     {
         get => _createCommand;
@@ -95,17 +81,39 @@
             StateHasChanged();
         }
     } 
-
-    public bool IsEdit { get; set; } = false;
-
-    protected override void InitComponent()
+    public CreateDeployAppForm()
     {
-        Width = 1000;
-        MinimizeBox = false;
-        BodyStyle = "max-height: 500px;";
-        Title = "Deployment";
+        Title = "Deploy";
     }
 
+    protected override async Task OnOkAsync()
+    {
+        DeployCreateCommand.Containers = _panes;
+        DeployCreateCommand.DeployName = $"{DeployCreateCommand.GrpName}-{DeployCreateCommand.Env}";
+        DeployCreateCommand.IamId = IamId;
+
+        var http = ServiceProvider.GetRequiredService<DeployHttp>();
+        bool res = false;
+        if (IsEdit)
+        {
+            res = await http.Update(DeployCreateCommand);
+        }
+        else
+        {
+            res = await http.Create(DeployCreateCommand);
+        }
+
+        _ = res ? (NoticeSuccess(MsgPrefix + "成功")) : (NoticeError(MsgPrefix + "失败"));
+
+        if (OnOk != null)
+        {
+            await OnOk();
+        }
+        if (res)
+        {
+            await this.CloseAsync();
+        }
+    }
 
     private Tabs? _tabs;
     readonly List<ContainerInfo> _panes = new List<ContainerInfo>()
@@ -136,50 +144,9 @@
             _panes.Remove(c);
         }
     }
-
-    private async Task OnOkAsync()
-    {
-        DeployCreateCommand.Containers = _panes;
-        DeployCreateCommand.DeployName = $"{DeployCreateCommand.GrpName}-{DeployCreateCommand.Env}";
-        DeployCreateCommand.IamId = IamId;
-
-        var http = ServiceProvider.GetRequiredService<DeployHttp>();
-        bool res = false;
-        if (IsEdit)
-        {
-            res = await http.Update(DeployCreateCommand);
-        }
-        else
-        {
-            res = await http.Create(DeployCreateCommand);
-        }
-
-        var messageService = ServiceProvider.GetRequiredService<MessageService>();
-
-        await messageService.Success(res ? "创建成功" : "创建失败");
-
- 
-
-        if (OnOk != null)
-        {
-            await OnOk();
-        }
-        if (res)
-        {
-            await this.CloseAsync();
-        }
-    }
-
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        Console.WriteLine(string.Join(",", _panes.Select(x => x.Name)));
-        base.OnAfterRender(firstRender);
-    }
-
+   
     private void OnNameChange()
     {
         StateHasChanged();
     }
-
 }

@@ -1,5 +1,5 @@
 ﻿@namespace BasicKube.Web.Components
-@inherits BcdForm
+@inherits CreateResForm
 
 <div>
     <GridRow Class="mb-3">
@@ -73,26 +73,12 @@
 
         <SvcPortConfig />
     </CascadingValue>
-
-
-    <div style="margin-top: 0.75rem; display: flex; flex-direction: row-reverse;">
-        <Button Type="@ButtonType.Primary" OnClick="@OnOkAsync">确定</Button>
-    </div>
 </div>
 
-<style>
-    .bcd-form {
-        top: 50px;
-    }
-</style>
 
 @code {
-    public Func<Task>? OnOk { get; set; }
-    public bool IsEdit { get; set; } = false;
 
     private SvcEditCommand _createCommand = new SvcEditCommand();
-    private string _msgPrefix => IsEdit? "创建" : "编辑";
-
     public SvcEditCommand SvcEditCommand
     {
         get => _createCommand;
@@ -102,26 +88,12 @@
             StateHasChanged();
         }
     }
-
-    private int IamId { get; set; }
-
-
     private List<string> _appNames = new List<string>();
-
     public CreateSvcForm(int iamId) : base()
     {
         IamId = iamId;
+        Title = "Service";
     }
-
-    protected override void InitComponent()
-    {
-        Title = _msgPrefix + "服务";
-        ShowMask = true;
-        MinimizeBox = false;
-        MaximizeBox = false;
-        Width = 1000;
-    }
-
 
     protected override async Task OnShowingAsync(System.ComponentModel.CancelEventArgs e)
     {
@@ -148,7 +120,7 @@
         await GetEnvAppName();
     }
 
-    private async Task OnOkAsync()
+    protected override async Task OnOkAsync()
     {
         SvcEditCommand.IamId = IamId;
 
@@ -163,14 +135,12 @@
             res = await http.Create(SvcEditCommand);
         }
 
-        var messageService = ServiceProvider.GetRequiredService<MessageService>();
-        _ = messageService.Success(res ? _msgPrefix + "成功" : _msgPrefix + "失败");
+        _ = res ? (NoticeSuccess(MsgPrefix + "成功")) : (NoticeError(MsgPrefix + "失败"));
 
         if (OnOk != null)
         {
             await OnOk();
         }
-       
         if (res)
         {
             await this.CloseAsync();
