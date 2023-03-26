@@ -115,15 +115,8 @@ a, .btn-link {
     padding: 0;
 }
 
-.ant-breadcrumb .ant-breadcrumb-link > b > span,
-.ant-menu .nav-link > span {
-    display: inline-block;
-    color: inherit;
-    font-style: normal;
-    line-height: 0;
-    text-align: center;
-    text-transform: none;
-    vertical-align: -0.125em;
-    text-rendering: optimizelegibility;
-    -webkit-font-smoothing: antialiased;
+.ant-breadcrumb .ant-breadcrumb-link .i-icon,
+.ant-menu-title-content .i-icon,
+.ant-menu-submenu-title .i-icon {
+    margin-right: 0.5em;
 }

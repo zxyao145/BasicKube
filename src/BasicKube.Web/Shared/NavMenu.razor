@@ -6,28 +6,28 @@
       Mode="MenuMode.Inline">
     <MenuItem Key="pages/deployappgrplist">
         <NavLink class="nav-link" href="@(Routes.DeployGrpPage)" Match="NavLinkMatch.All">
-            <AllApplication /> &nbsp;应用组
+            <AllApplication />应用组
         </NavLink>
     </MenuItem>
     <MenuItem Key="pages/svcgrplist">
         <NavLink class="nav-link" href="@(Routes.SvcGrpPage)">
-            <ConnectionPoint /> &nbsp;服务组
+            <ConnectionPoint />服务组
         </NavLink>
     </MenuItem>
     <MenuItem Key="pages/ingressgrplist">
         <NavLink class="nav-link" href="@(Routes.IngGrpPage)">
-            <LinkIn /> &nbsp;路由组
+            <LinkIn />路由组
         </NavLink>
     </MenuItem>
     <SubMenu Key="advanced" TitleTemplate=@advancedTitle>
         <MenuItem Key="pages/daemonsetappgrplist">
             <NavLink class="nav-link" href="@(Routes.DaemonSetAppGrpPage)">
-                <Shield /> &nbsp;守护应用组
+                <Shield />守护应用组
             </NavLink>
         </MenuItem>
         <MenuItem Key="">
             <NavLink class="nav-link" href="@(Routes.JobGrpPage)">
-                <Timer /> &nbsp;任务组
+                <Timer />任务组
             </NavLink>
         </MenuItem>
     </SubMenu>
@@ -39,7 +39,7 @@
 
     RenderFragment advancedTitle =
     @<span>
-        <MoreTwo /> &nbsp;高级操作
+        <MoreTwo />高级操作
     </span>
     ;
 

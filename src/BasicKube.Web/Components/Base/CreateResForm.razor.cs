@@ -35,7 +35,7 @@ public abstract class CreateResForm: BcdForm
         NotificationService = ServiceProvider.GetRequiredService<INotificationService>();
         ShowMask = true;
         MaskClosable = false;
-        StickyFooter = true;
+        //StickyFooter = true;
     }
 
     private void CreateFooter(RenderTreeBuilder builder)
