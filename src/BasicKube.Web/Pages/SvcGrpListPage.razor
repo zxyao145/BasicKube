@@ -1,7 +1,7 @@
 ﻿@page "/pages/svcGrpList/{IamId:int?}/{SvcName?}"
-
 @inject SvcHttp SvcHttp
 @inject NavigationManager NavigationManager
+
 <div class="page-content">
     <Breadcrumb Style="margin-bottom: 1rem;">
         @if (string.IsNullOrWhiteSpace(SvcName))

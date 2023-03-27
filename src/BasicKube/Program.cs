@@ -1,6 +1,8 @@
 using BasicKube.Api.Common.Components.Logger;
 using BasicKube.Api.Filters;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Serilog;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 var logger = builder.Host.AddSerilog();
@@ -14,6 +16,12 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddAuthentication(
+    CookieAuthenticationDefaults.AuthenticationScheme
+)
+.AddCookie();
+
+
 builder.Services.AddApiResult()
     .ScanService()
     .AddK8sService(builder.Configuration);
@@ -23,9 +31,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "allowAll",
         policy =>
         {
-            policy.AllowAnyHeader()
-                .AllowAnyOrigin()
-                .AllowAnyMethod();
+            policy
+            //.AllowAnyOrigin()
+            .WithOrigins("http://localhost:5103")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
         });
 });
 
@@ -41,7 +52,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseSerilogRequestLogging();
 app.UseCors("allowAll");
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseWebSockets();
 app.MapControllers();
 

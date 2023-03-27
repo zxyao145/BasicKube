@@ -1,7 +1,7 @@
 ﻿@page "/pages/ingressGrpList/{IamId:int?}/{IngressName?}"
-
 @inject KubeHttpClient KubeHttpClient
 @inject NavigationManager NavigationManager
+
 <div class="page-content">
     <Breadcrumb Style="margin-bottom: 1rem;">
         @if (string.IsNullOrWhiteSpace(IngressName))

@@ -1,16 +1,42 @@
-﻿
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+﻿@inject AuthenticationStateProvider _authStateProvider
+@inject NavigationManager _navigationManager
+@inject AccountHttp _accountHttp
+@inject AuthService _authService
 
-<AntContainer /> 
-<BcdFormContainer />
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly" OnNavigateAsync="@OnNavigateAsync">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+    <AntContainer />
+    <BcdFormContainer />
+</CascadingAuthenticationState>
+
+@code {
+    private async Task OnNavigateAsync(NavigationContext args)
+    {
+        var isAuthed = await _authService.GetIsAuthed();
+
+        var user = (await (_authStateProvider as IamAuthStateProvider)!.GetAuthenticationStateAsync()).User;
+        if (isAuthed && !user!.Identity!.IsAuthenticated)
+        {
+            var userProfile = await _accountHttp.GetUserProfile();
+            if (userProfile != null)
+            {
+                (_authStateProvider as IamAuthStateProvider)!.SetAuthInfo(userProfile);
+            }
+            else
+            {
+                await _authService.ClearAuthed();
+            }
+        }
+    }
+}

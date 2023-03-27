@@ -49,9 +49,7 @@ public abstract class BasicKubeHttp<TGrpInfo, TDetails, TCmd>
 
     public static StringContent GetJsonContent<T>(T data)
     {
-        var json = JsonSerializer.Serialize(data);
-        var jsonContent = new StringContent(json, Encoding.UTF8, "application/json");
-        return jsonContent;
+        return HttpHelper.GetJsonContent(data);
     }
 
     public async Task<List<TGrpInfo>> ListGrp(int iamId)

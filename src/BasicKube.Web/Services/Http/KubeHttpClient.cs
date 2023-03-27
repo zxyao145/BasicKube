@@ -1,17 +1,32 @@
-﻿namespace BasicKube.Web.Services;
+﻿using BasicKube.Web.Services.Http;
+
+namespace BasicKube.Web.Services;
 
 public static class KubeHttpClientExt
 {
     public static IServiceCollection AddKubeHttpClient(this IServiceCollection services)
     {
-        services.AddHttpClient<DeployHttp>();
-        services.AddHttpClient<DaemonSetHttp>();
-        services.AddHttpClient<ScalerHttp>();
-        services.AddHttpClient<EventsHttp>();
-        services.AddHttpClient<SvcHttp>();
-        services.AddHttpClient<PodHttp>();
-        services.AddHttpClient<IngHttp>();
-        services.AddHttpClient<JobHttp>();
+        services.AddScoped<CookieHandler>();
+
+        services.AddHttpClient<DeployHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
+        services.AddHttpClient<DaemonSetHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
+        services.AddHttpClient<ScalerHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
+        services.AddHttpClient<EventsHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
+        services.AddHttpClient<SvcHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
+        services.AddHttpClient<PodHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
+        services.AddHttpClient<IngHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
+        services.AddHttpClient<JobHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
+        services.AddHttpClient<AccountHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
+
         services.AddScoped<KubeHttpClient>();
         return services;
     }

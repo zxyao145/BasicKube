@@ -2,6 +2,7 @@
 @page "/pages/deployAppGrpList/{IamId:int?}/{AppName?}"
 @inject KubeHttpClient KubeHttpClient
 @inject NavigationManager NavigationManager
+@attribute [Authorize]
 
 <div class="page-content">
     <Breadcrumb Style="margin-bottom: 1rem;">

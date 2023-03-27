@@ -1,26 +1,48 @@
 ﻿@inherits LayoutComponentBase
+@inject AccountHttp _accountHttp
+@inject AuthenticationStateProvider _authStateProvider
+@inject NavigationManager _navigationManager
+@inject AuthService _authService
 
 <Layout Style="min-height: 100vh; ">
     <Sider Theme="SiderTheme.Light" Collapsible Collapsed=@collapsed OnCollapse=@onCollapse>
-        <div class="logo" />
-        
+        <div class="logo">
+            BasicKube
+        </div>
         <NavMenu />
     </Sider>
     <Layout Class="site-layout">
-        @*<Header Class="site-layout-background" Style=" padding: 0 ;"></Header>*@
-        <Content Style="margin:0 16px;">
-           @* <Breadcrumb Style="margin:16px 0;">
-                <BreadcrumbItem>User</BreadcrumbItem>
-                <BreadcrumbItem>Bill</BreadcrumbItem>
-            </Breadcrumb>*@
-           @Body
-        </Content>
+        <AuthorizeView>
+            <Authorized>
+                <Header Class="site-layout-background">
+                    <div class="iam-info">
+                        @*iam-info*@
+                    </div>
+                    <div class="login-display">
+                        <span> 
+                            Hello, <b>@(context.User.Identity?.Name ?? "NOT LOGIN")</b>
+                        </span>
+                        <Button Type="@ButtonType.Link" OnClick="@Logout" >Log out</Button>
+                    </div>
+                </Header>
+                <Content Style="margin:0 16px;">
+                    @Body
+                </Content>
+            </Authorized>
+            <NotAuthorized>
+                 <BasicKube.Web.Pages.RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeView>
+       
         <Footer Style="text-align:center ">BasiKube ©2023</Footer>
     </Layout>
 </Layout>
 
 
+
+
 @code {
+
     bool collapsed;
 
     void onCollapse(bool collapsed)
@@ -28,21 +50,16 @@
         Console.WriteLine(collapsed);
         this.collapsed = collapsed;
     }
+
+
+    private async Task Logout()
+    {
+        var success = await _accountHttp.LogoutAsync();
+        if (success)
+        {
+            (_authStateProvider as IamAuthStateProvider)!.ClearAuthInfo();
+            await _authService.ClearAuthed();
+            _navigationManager.NavigateTo("/", true);
+        }
+    }
 }
-
-
-<style>
-    #components-layout-demo-side .logo {
-        height: 32px;
-        background: rgba(255, 255, 255, 0.2);
-        margin: 16px;
-    }
-
-    .site-layout .site-layout-background {
-        background: #fff;
-    }
-
-    .ant-layout-sider-light .ant-layout-sider-trigger {
-        background-color: #f0f2f5;
-    }
-</style>

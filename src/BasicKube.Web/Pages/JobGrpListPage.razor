@@ -1,7 +1,7 @@
 ﻿@page "/pages/jobGrpList/{IamId:int?}/{GrpName?}"
-
 @inject KubeHttpClient KubeHttp
 @inject NavigationManager NavigationManager
+
 <div class="page-content">
     <Breadcrumb Style="margin-bottom: 1rem;">
         @if (string.IsNullOrWhiteSpace(GrpName))

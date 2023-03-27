@@ -64,7 +64,6 @@ public static class K8sServiceExt
         //var kubernetesClientConfig = KubernetesClientConfiguration.BuildDefaultConfig();
         //serviceConllection.AddSingleton<IKubernetes>(new Kubernetes(kubernetesClientConfig));
 
-
         var kubernetes = k8sOptions.ClusterConfig
             .ToDictionary(
                 x => x.Key,

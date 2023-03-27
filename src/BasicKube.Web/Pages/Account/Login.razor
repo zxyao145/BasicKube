@@ -1,0 +1,62 @@
+﻿@namespace BasicKube.Web.Pages
+@page "/pages/login"
+@layout EmptyLayout
+@inject AuthenticationStateProvider _authStateProvider
+@inject NavigationManager _navigationManager
+@inject AccountHttp _accountHttp
+@inject AuthService _authService
+
+<div style="height: 100vh; display:flex; justify-content:center; align-items: center;">
+    <div style="width: 500px; padding: 2rem; border-radius:2px; background-color:#efefef;">
+
+        <GridRow>
+            <GridCol Span="24" Class="title"
+                     Style="text-align:center; font-size: 20px; font-weight: 700; margin-bottom: 40px;">
+                User Login
+            </GridCol>
+            <GridCol Span="24" Class="mb-5">
+                <FormControl LabelCls="label-5">
+                    <LabelContent>
+                        Email
+                    </LabelContent>
+                    <ChildContent>
+                        <Input @bind-Value="@loginModel.Name" Placeholder="Email" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+
+            <GridCol Span="24" Class="mb-6">
+                <FormControl LabelCls="label-5">
+                    <LabelContent>
+                        Password
+                    </LabelContent>
+                    <ChildContent>
+                        <Input @bind-Value="@loginModel.Password" Placeholder="Password" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+
+            <GridCol Span="24">
+                <Button Block Type="@ButtonType.Primary" OnClick="@UserLogin">Login</Button>
+                </GridCol>
+                </GridRow>
+            </div>
+        </div>
+        @code {
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string returnUrl { get; set; } = "/";
+
+    private AccountLogin loginModel = new AccountLogin();
+
+    private async Task UserLogin()
+    {
+        var success = await _accountHttp.LoginAsync(loginModel);
+        if (success)
+        {
+            await _authService.SetAuthed();
+            _navigationManager.NavigateTo(returnUrl);
+        }
+    }
+}
