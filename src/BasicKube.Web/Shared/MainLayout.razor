@@ -1,22 +1,23 @@
 ﻿@inherits LayoutComponentBase
 @inject AccountHttp _accountHttp
-@inject AuthenticationStateProvider _authStateProvider
 @inject NavigationManager _navigationManager
 @inject AuthService _authService
+@inject ISessionStorageService _sessionStorage
+@inject INotificationService _notificationService
 
 <Layout Style="min-height: 100vh; ">
-    <Sider Theme="SiderTheme.Light" Collapsible Collapsed=@collapsed OnCollapse=@onCollapse>
-        <div class="logo">
-            BasicKube
-        </div>
-        <NavMenu />
-    </Sider>
+    <CascadingValue Value="@_iamId" Name="@("IamId")">
+        <NavSider />
+    </CascadingValue>
     <Layout Class="site-layout">
         <AuthorizeView>
             <Authorized>
                 <Header Class="site-layout-background">
                     <div class="iam-info">
-                        @*iam-info*@
+                        <Button Type="@ButtonType.Text" OnClick="ShowIamSelector">
+                            @GetIamString()
+                            <Icon Type="caret-down" Theme="outline" />
+                        </Button>
                     </div>
                     <div class="login-display">
                         <span> 
@@ -26,7 +27,12 @@
                     </div>
                 </Header>
                 <Content Style="margin:0 16px;">
-                    @Body
+                    @if(_iamId != null)
+                    {
+                        <CascadingValue Value="@(_iamId.Value)" Name="@("IamId")">
+                            @Body
+                        </CascadingValue>
+                    }
                 </Content>
             </Authorized>
             <NotAuthorized>
@@ -38,28 +44,84 @@
     </Layout>
 </Layout>
 
-
-
-
 @code {
-
-    bool collapsed;
-
-    void onCollapse(bool collapsed)
-    {
-        Console.WriteLine(collapsed);
-        this.collapsed = collapsed;
-    }
-
 
     private async Task Logout()
     {
         var success = await _accountHttp.LogoutAsync();
         if (success)
         {
-            (_authStateProvider as IamAuthStateProvider)!.ClearAuthInfo();
-            await _authService.ClearAuthed();
+            await _authService.Logout();
             _navigationManager.NavigateTo("/", true);
         }
+    }
+
+    private int? _iamId = null;
+    private string? _projectName = null;
+    private bool _isShowIamSelector = false;
+
+    private string GetIamString()
+    {
+        if(_iamId != null && _projectName != null)
+        {
+            return $"{_projectName}({_iamId.Value})";
+        }
+        StateHasChanged();
+        return "请选择节点";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // 没有选择 iam节点，且没展示 ShowIamSelector 对话框
+        if ((await _authService.GetIsAuthed()) && _iamId == null && !_isShowIamSelector)
+        {
+            _isShowIamSelector = true;
+            var iamId = await _sessionStorage.GetItemAsync<int?>("IamId");
+            var projectName = await _sessionStorage.GetItemAsync<string?>("ProjectName");
+            if (iamId == null)
+            {
+                // 没有选择节点
+                await ShowIamSelector();
+            }
+            else
+            {
+                _iamId = iamId;
+                _projectName = projectName;
+            }
+            StateHasChanged();
+        }
+        // 选择过 iam 节点
+        // 禁止直接通过 js 调用 sessionStorage 绕过权限
+        if(_iamId != null)
+        {
+            var hasPermission = await _authService.HasIamPermission(_iamId.Value);
+            if (!hasPermission)
+            {
+                _ = _notificationService.Warn(new NotificationConfig
+                    {
+                        Message = "",
+                        Description = $"没有 {_iamId.Value} 的权限!"
+                    });
+                await _sessionStorage.RemoveItemAsync("IamId");
+                _iamId = null;
+                _projectName = null;
+                _isShowIamSelector = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task ShowIamSelector()
+    {
+        var form = new IamSelectorForm(_iamId);
+        form.OnOk = async (iamId, projectName) =>
+        {
+            _iamId = iamId;
+            _projectName = projectName;
+            await _sessionStorage.SetItemAsync<int>("IamId", iamId);
+            _isShowIamSelector = false;
+            await InvokeAsync(StateHasChanged);
+        };
+        await form.ShowAsync();
     }
 }

@@ -3,6 +3,7 @@ using BasicKube.Web.Services;
 using BasicKube.Web.Services.Http;
 using BasicKube.Web.Services.JsIntertop;
 using Blazored.LocalStorage;
+using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -34,6 +35,7 @@ namespace BasicKube.Web.Client
             builder.Services.AddAuthorizationCore();
             builder.Services.AddScoped<AuthenticationStateProvider, IamAuthStateProvider>();
             builder.Services.AddBlazoredLocalStorage();
+            builder.Services.AddBlazoredSessionStorage();
 
             var host = builder.Build();
             host.Services.UseBcdForm();

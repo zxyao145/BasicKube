@@ -1,47 +1,81 @@
 ﻿@using IconPark
 @inject IconService iconService
+@inject NavigationManager _navigationManager
 
-<Menu DefaultSelectedKeys=@(new[]{ _activeKey })
+<Menu Theme="MenuTheme.Light"
+      DefaultSelectedKeys=@(new[]{ _defaultActiveKey })
+      SelectedKeys="@(new[]{_activeKey})"
       DefaultOpenKeys="@_openKeys"
       Mode="MenuMode.Inline">
     <MenuItem Key="pages/deployappgrplist">
-        <NavLink class="nav-link" href="@(Routes.DeployGrpPage)" Match="NavLinkMatch.All">
-            <AllApplication />应用组
-        </NavLink>
+        <IconTemplate>
+            <AllApplication />
+        </IconTemplate>
+        <ChildContent>
+            <NavLink class="nav-link" href="@(Routes.DeployGrpPage)" Match="NavLinkMatch.All">
+                应用组
+            </NavLink>
+        </ChildContent>
     </MenuItem>
     <MenuItem Key="pages/svcgrplist">
-        <NavLink class="nav-link" href="@(Routes.SvcGrpPage)">
-            <ConnectionPoint />服务组
-        </NavLink>
+        <IconTemplate>
+            <ConnectionPoint />
+        </IconTemplate>
+        <ChildContent>
+            <NavLink class="nav-link" href="@(Routes.SvcGrpPage)">
+                服务组
+            </NavLink>
+        </ChildContent>
     </MenuItem>
     <MenuItem Key="pages/ingressgrplist">
-        <NavLink class="nav-link" href="@(Routes.IngGrpPage)">
-            <LinkIn />路由组
-        </NavLink>
+        <IconTemplate>
+            <LinkIn />
+        </IconTemplate>
+        <ChildContent>
+            <NavLink class="nav-link" href="@(Routes.IngGrpPage)">
+                路由组
+            </NavLink>
+        </ChildContent>
     </MenuItem>
-    <SubMenu Key="advanced" TitleTemplate=@advancedTitle>
-        <MenuItem Key="pages/daemonsetappgrplist">
-            <NavLink class="nav-link" href="@(Routes.DaemonSetAppGrpPage)">
-                <Shield />守护应用组
-            </NavLink>
-        </MenuItem>
-        <MenuItem Key="">
-            <NavLink class="nav-link" href="@(Routes.JobGrpPage)">
-                <Timer />任务组
-            </NavLink>
-        </MenuItem>
+    <SubMenu Key="advanced">
+        <TitleTemplate>
+            <span>
+                <MoreTwo />
+                <span>高级操作</span>
+            </span>
+        </TitleTemplate>
+        <ChildContent>
+            <MenuItem Key="pages/daemonsetappgrplist">
+                <IconTemplate>
+                    <Shield />
+
+                </IconTemplate>
+                <ChildContent>
+                    <NavLink class="nav-link" href="@(Routes.DaemonSetAppGrpPage)">
+                        守护应用组
+                    </NavLink>
+                </ChildContent>
+            </MenuItem>
+            <MenuItem Key="pages/jobgrplist">
+                <IconTemplate>
+                    <Timer />
+
+                </IconTemplate>
+                <ChildContent>
+                    <NavLink class="nav-link" href="@(Routes.JobGrpPage)">
+                        任务组
+                    </NavLink>
+                </ChildContent>
+            </MenuItem>
+        </ChildContent>
     </SubMenu>
 </Menu>
 
 
 @code {
-    const string _defaultActiveKey = "pages/deployappgrplist";
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
 
-    RenderFragment advancedTitle =
-    @<span>
-        <MoreTwo />高级操作
-    </span>
-    ;
 
     private static Dictionary<string, string> _openKeysDict = new Dictionary<string, string>()
         {
@@ -49,7 +83,6 @@
             ["pages/jobgrplist"] = "advanced",
             ["pages/cronjobgrplist"] = "advanced",
         };
-    private string[] _openKeys = new string[0];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -58,17 +91,23 @@
             await iconService.CreateFromIconfontCN("//at.alicdn.com/t/font_2735473_hi62ezq5579.js");
         }
     }
+    protected override void OnInitialized()
+    {
+        _navigationManager!.LocationChanged += (s, e) =>
+        {
+            Console.WriteLine("nav menu LocationChanged");
+            CalcActiveKey();
+        };
+    }
 
-    [Inject]
-    public NavigationManager? NavigationManager { get; set; }
-
-    protected override void OnInitialized() => NavigationManager!.LocationChanged += (s, e) => StateHasChanged();
+    const string _defaultActiveKey = "pages/deployappgrplist";
 
     string _activeKey = _defaultActiveKey;
+    private string[] _openKeys = new string[0];
 
-    public override async Task SetParametersAsync(ParameterView parameters)
+    private void CalcActiveKey()
     {
-        var relativePath = NavigationManager!.ToBaseRelativePath(NavigationManager.Uri).ToLower();
+        var relativePath = _navigationManager!.ToBaseRelativePath(_navigationManager.Uri).ToLower();
         var arr = relativePath.Split("/");
         if (arr.Length < 2)
         {
@@ -82,8 +121,14 @@
         _openKeys = _openKeysDict.ContainsKey(_activeKey)
                     ? new string[] { _openKeysDict[_activeKey] }
                     : new string[0];
+        Console.WriteLine("_activeKey:" + _activeKey);
+        StateHasChanged();
+    }
 
-        await base.SetParametersAsync(parameters);
+
+    public async Task StateHasChangedAsync()
+    {
+        await InvokeAsync(StateHasChanged);
     }
 }
 

@@ -4,12 +4,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Blazored.LocalStorage" Version="4.3.0" />
+    <PackageVersion Include="Blazored.SessionStorage" Version="2.3.0" />
     <PackageVersion Include="IconPark.Blazor" Version="1.3.0.3" />
     <PackageVersion Include="Jil" Version="2.17.0" />
     <PackageVersion Include="JsonPatch.Net" Version="2.0.6" />
-    <PackageVersion Include="KubeClient" Version="2.4.10" />
-    <PackageVersion Include="KubeClient.Extensions.DependencyInjection" Version="2.4.10" />
-    <PackageVersion Include="KubeClient.Extensions.WebSockets" Version="2.4.10" />
     <PackageVersion Include="KubernetesClient" Version="10.1.4" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="6.0.15" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="6.0.15" />
@@ -23,8 +21,8 @@
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageVersion Include="AntDesign" Version="0.13.3" />
-    <PackageVersion Include="BcdLib.BcdForm" Version="0.6.0" />
+    <PackageVersion Include="AntDesign" Version="0.14.4" />
+    <PackageVersion Include="BcdLib.BcdForm" Version="0.7.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.12" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.12" PrivateAssets="all" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="6.0.0" />

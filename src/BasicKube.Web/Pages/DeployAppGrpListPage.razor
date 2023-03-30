@@ -1,5 +1,5 @@
-﻿@page "/{IamId:int?}/{AppName?}"
-@page "/pages/deployAppGrpList/{IamId:int?}/{AppName?}"
+﻿@page "/{AppName?}"
+@page "/pages/deployAppGrpList/{AppName?}"
 @inject KubeHttpClient KubeHttpClient
 @inject NavigationManager NavigationManager
 @attribute [Authorize]
@@ -43,23 +43,16 @@
     }
     else
     {
-        <CascadingValue Value="@(_iamId)" Name="@("IamId")">
-            <CascadingValue Value="@(this)" IsFixed="true">
-                <DeployList AppName="@_activityAppName" />
-            </CascadingValue>
+        <CascadingValue Value="@(this)" IsFixed="true">
+            <DeployList AppName="@_activityAppName" />
         </CascadingValue>
     }
 </div>
 @code
 {
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
 
-    private int _iamId = 0;
-    [Parameter]
-    public int? IamId
-    {
-        set => _iamId = value ?? 0;
-        get => _iamId;
-    }
     private string _activityAppName = "";
 
     [Parameter]
@@ -74,14 +67,14 @@
 
     private List<DeployGrpInfo> _appList = new List<DeployGrpInfo>();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await GetGrpList();
     }
 
     private async Task GetGrpList()
     {
-        var appList = await KubeHttpClient.DeployHttp.ListGrp(_iamId);
+        var appList = await KubeHttpClient.DeployHttp.ListGrp(IamId);
         _appList = appList;
         StateHasChanged();
     }
@@ -90,7 +83,7 @@
     private async Task OnCreateDeployClick()
     {
         var modal = new CreateDeployAppForm();
-        modal.IamId = _iamId;
+        modal.IamId = IamId;
         modal.OnOk = async () =>
         {
             await GetGrpList();
@@ -100,11 +93,11 @@
 
     public void OnAppClick(DeployGrpInfo context)
     {
-        NavigationManager.NavigateTo($"/{Routes.DeployGrpPage}/{_iamId}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.DeployGrpPage}/{context.Name}");
     }
 
     internal void ReturnAppList()
     {
-        NavigationManager.NavigateTo($"/{Routes.DeployGrpPage}/{_iamId}");
+        NavigationManager.NavigateTo($"/{Routes.DeployGrpPage}");
     }
 }

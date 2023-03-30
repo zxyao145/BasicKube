@@ -1,4 +1,4 @@
-﻿@page "/pages/ingressGrpList/{IamId:int?}/{IngressName?}"
+﻿@page "/pages/ingressGrpList/{IngressName?}"
 @inject KubeHttpClient KubeHttpClient
 @inject NavigationManager NavigationManager
 
@@ -43,24 +43,23 @@
     }
     else
     {
-        <CascadingValue Value="@(IamId)" Name="@("IamId")">
-            <CascadingValue Value="@(this)" IsFixed="true">
-                <IngList GrpName="@IngressName" />
-            </CascadingValue>
+        <CascadingValue Value="@(this)" IsFixed="true">
+            <IngList GrpName="@IngressName" />
         </CascadingValue>
     }
 </div>
 
 @code {
 
-    [Parameter]
+    [CascadingParameter(Name = "IamId")]
     public int IamId { get; set; }
+
     [Parameter]
     public string? IngressName { get; set; }
 
     private List<IngGrpInfo> _grpInfos = new List<IngGrpInfo>();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await GetGrpList();
     }
@@ -73,12 +72,12 @@
 
     private void OnGrpClick(IngGrpInfo context)
     {
-        NavigationManager.NavigateTo($"/{Routes.IngGrpPage}/{IamId}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.IngGrpPage}/{context.Name}");
     }
 
     internal void ReturnSvcList()
     {
-        NavigationManager.NavigateTo($"/{Routes.IngGrpPage}/{IamId}");
+        NavigationManager.NavigateTo($"/{Routes.IngGrpPage}");
     }
 
     private async Task OnCreateIngClick()

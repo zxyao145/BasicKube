@@ -14,7 +14,7 @@
            OnExpand="OnRowExpand"
            HidePagination
            Size="@TableSize.Middle">
-            <RowTemplate>
+            <ColumnDefinitions>
                 <PropertyColumn Property="@(c=>c!.Name)" />
                 <PropertyColumn Property="@(c=>c!.Type)" />
                 <PropertyColumn Property="@(c=>c!.ClusterIp)" />
@@ -41,7 +41,7 @@
                         </SpaceItem>
                     </Space>
                 </ActionColumn>
-            </RowTemplate>
+            </ColumnDefinitions>
             <ExpandTemplate Context="rowData">
                 <SvcDetailsItem @key="@rowData.Data.Name" SvcInfo="@rowData.Data" />
             </ExpandTemplate>

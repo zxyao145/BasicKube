@@ -1,0 +1,31 @@
+﻿<Sider Theme="SiderTheme.Light"
+       CollapsedWidth=50
+       Collapsible
+       Collapsed="@collapsed"
+       CollapsedChanged="@OnCollapse"
+       Trigger="@_trigger">
+    <div class="logo">
+        BasicKube
+    </div>
+    @if (IamId != null)
+    {
+        <NavMenu @ref="@_navMenu" />
+    }
+</Sider>
+
+@code{
+    [CascadingParameter(Name = "IamId")]
+    public int? IamId { get; set; }
+
+    private NavMenu? _navMenu;
+
+    private RenderFragment _trigger =@<Icon Type="menu-fold" Theme="outline" />;
+    bool collapsed;
+
+    async Task OnCollapse(bool collapsed)
+    {
+        this.collapsed = collapsed;
+        await _navMenu!.StateHasChangedAsync();
+        StateHasChanged();
+    }
+}

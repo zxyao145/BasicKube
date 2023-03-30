@@ -1,5 +1,4 @@
-﻿@inject AuthenticationStateProvider _authStateProvider
-@inject NavigationManager _navigationManager
+﻿@inject NavigationManager _navigationManager
 @inject AccountHttp _accountHttp
 @inject AuthService _authService
 
@@ -23,15 +22,14 @@
 @code {
     private async Task OnNavigateAsync(NavigationContext args)
     {
+        Console.WriteLine("OnNavigateAsync");
         var isAuthed = await _authService.GetIsAuthed();
-
-        var user = (await (_authStateProvider as IamAuthStateProvider)!.GetAuthenticationStateAsync()).User;
-        if (isAuthed && !user!.Identity!.IsAuthenticated)
+        if (isAuthed && !(await _authService.IsAuthenticated()))
         {
             var userProfile = await _accountHttp.GetUserProfile();
             if (userProfile != null)
             {
-                (_authStateProvider as IamAuthStateProvider)!.SetAuthInfo(userProfile);
+                _authService.SetUserProfile(userProfile);
             }
             else
             {

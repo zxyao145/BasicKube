@@ -1,4 +1,6 @@
-﻿using BasicKube.Web.Services.Http;
+﻿using AntDesign;
+using BasicKube.Web.Services.Http;
+using System.Runtime.CompilerServices;
 
 namespace BasicKube.Web.Services;
 
@@ -29,6 +31,46 @@ public static class KubeHttpClientExt
 
         services.AddScoped<KubeHttpClient>();
         return services;
+    }
+
+    public static async Task NoticeHttpError(
+       this INotificationService notificationService,
+        HttpResponseMessage response,
+        string defaultErrorContent = "something error"
+    )
+    {
+        var content = defaultErrorContent;
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+        if (!string.IsNullOrWhiteSpace(jsonResponse))
+        {
+            content = jsonResponse;
+        }
+        _ = notificationService.Error(new NotificationConfig
+        {
+            Message = $"Http: {response.StatusCode} ({response.StatusCode.ToString("D")})",
+            Description = content
+        });
+    }
+
+    public static Task NoticeException(
+       this INotificationService notificationService,
+        Exception e,
+        [CallerMemberName] string title = ""
+    )
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            title = "Something error";
+        }
+        else
+        {
+            title = "ERROR: " + title;
+        }
+        return notificationService.Error(new NotificationConfig
+        {
+            Message = title,
+            Description = e.Message
+        });
     }
 }
 

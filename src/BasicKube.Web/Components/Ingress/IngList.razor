@@ -14,7 +14,7 @@
            OnExpand="OnRowExpand"
            HidePagination
            Size="@TableSize.Middle">
-            <RowTemplate>
+            <ColumnDefinitions>
                 <PropertyColumn Property="@(c=>c!.Name)" />
                 <PropertyColumn Property="@(c=>c!.GetCreateTimeStr())" Title="CreateTime" />
                 <PropertyColumn Property="@(c=>c!.IngClassName)" />
@@ -40,7 +40,7 @@
                         </SpaceItem>
                     </Space>
                 </ActionColumn>
-            </RowTemplate>
+            </ColumnDefinitions>
             <ExpandTemplate Context="rowData">
                 <IngDetailsItem @key="@rowData.Data.Name" Details="@rowData.Data" />
             </ExpandTemplate>

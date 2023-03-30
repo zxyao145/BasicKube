@@ -1,0 +1,113 @@
+﻿@namespace BasicKube.Web.Components
+@inherits BcdForm
+
+<div class="iam-selector-header">
+    <div class="iam-selector-title">@Title</div>
+</div>
+
+<Table @ref="table" Class="user-iamid-table" TItem="IamNodeInfo"
+       DataSource="@dataSource"
+       @bind-SelectedRows="selectedRows"
+       OnRowClick="OnRowClick"
+       Size="@TableSize.Small">
+    <Selection Class="iamid-selection" Key="@(context.IamId + "")" Type="@("radio")" />
+    <PropertyColumn Class="iamid" Property="c=>c!.IamId" Sortable></PropertyColumn>
+    <PropertyColumn Property="c=>c!.Project" Sortable>
+        @context.Project
+    </PropertyColumn>
+</Table>
+<div class="iam-selector-footer">
+    <Button Type="@ButtonType.Primary" OnClick="CloseAsync">Ok</Button>
+</div>
+
+
+@code {
+    ITable? table;
+
+    Task<List<IamNodeInfo>>? _getIamTask;
+    List<IamNodeInfo> dataSource = new List<IamNodeInfo>();
+    IMessageService _messageService;
+    int? _selectedIamId;
+
+    public IamSelectorForm(int? selectedIamId)
+    {
+        _selectedIamId = selectedIamId;
+        var http = ServiceProvider.GetRequiredService<AccountHttp>();
+        _messageService = ServiceProvider.GetRequiredService<IMessageService>();
+        _getIamTask = http.GetUserIamInfo();
+    }
+
+    protected override void InitComponent()
+    {
+        Title = "选择项目";
+        ShowMask = true;
+        MaskClosable = false;
+        Centered = true;
+        Width = 800;
+        BodyStyle = "height: 620px;";
+        EnableHeader = false;
+    }
+
+
+    protected override async Task OnShowingAsync(System.ComponentModel.CancelEventArgs e)
+    {
+        if (_getIamTask != null)
+        {
+            dataSource = await _getIamTask;
+        }
+    }
+
+    Queue<Func<Task>> _events = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        while (_events.Count > 0)
+        {
+            await _events.Dequeue().Invoke();
+        }
+
+        if (firstRender && _selectedIamId != null)
+        {
+            _events.Enqueue(async () =>
+            {
+                var tempSelectedRows = new string[]
+                {
+                    _selectedIamId.Value + ""
+                };
+                table?.SetSelection(tempSelectedRows);
+                await StateHasChangedAsync();
+            });
+            await StateHasChangedAsync();
+        }
+    }
+
+    IEnumerable<IamNodeInfo>? selectedRows;
+    private void OnRowClick(RowData<IamNodeInfo> row)
+    {
+        var tempSelectedRows = new string[]
+        {
+            row.Data.IamId + ""
+        };
+
+        table?.SetSelection(tempSelectedRows);
+    }
+
+    public Func<int, string, Task>? OnOk;
+
+    protected override async Task OnClosingAsync(System.ComponentModel.CancelEventArgs e)
+    {
+        var rows = selectedRows?.ToList() ?? new List<IamNodeInfo>();
+        if (rows.Count == 0)
+        {
+            e.Cancel = true;
+            _ = _messageService.Warning("请选择项目！");
+        }
+        else
+        {
+            if (OnOk != null)
+            {
+                await OnOk.Invoke(rows[0].IamId, rows[0].Project);
+            }
+        }
+    }
+}

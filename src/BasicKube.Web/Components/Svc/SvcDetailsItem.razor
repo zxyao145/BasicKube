@@ -8,12 +8,11 @@
        TItem="PodDetail"
        HidePagination
        Size=@TableSize.Middle>
-    <RowTemplate>
+    <ColumnDefinitions>
         <ActionColumn Title="PodName">
-            <a href="@($"/{Routes.DeployGrpPage}/{SvcInfo.IamId}/{GetAppNameFromDeployName()}?deploy={deployName}")
-                " target="_blank">
+            <NavLink href="@($"/{Routes.DeployGrpPage}/{GetAppNameFromDeployName()}?deploy={deployName}")">
                 @context.Name
-            </a>
+            </NavLink>
         </ActionColumn>
         <PropertyColumn Property="@(c=>c!.GetStartTimeStr())" Title="StartTime" />
         <PropertyColumn Property="@(c=>c!.PodIp)" />
@@ -27,7 +26,7 @@
                 </SpaceItem>
             </Space>
         </ActionColumn>
-    </RowTemplate>
+    </ColumnDefinitions>
 </Table>
 
 <style>

@@ -8,7 +8,7 @@
        OnExpand="OnRowExpand"
        HidePagination
        Size=@TableSize.Middle>
-    <RowTemplate>
+    <ColumnDefinitions>
         <PropertyColumn Property="@(c=>c!.Name)" />
         <PropertyColumn Property="@(c=>c!.GetStartTimeStr())" Title="StartTime" />
         <PropertyColumn Property="@(c=>c!.HostIp)" />
@@ -46,7 +46,7 @@
                 </SpaceItem>
             </Space>
         </ActionColumn>
-    </RowTemplate>
+    </ColumnDefinitions>
     <ExpandTemplate Context="rowData">
         <Table DataSource="rowData.Data.ContainerDetails.Values.ToList()"
                Loading="@(rowData.Data.ContainerDetails==null)"
@@ -74,20 +74,20 @@
     </ExpandTemplate>
 </Table>
 
-<Drawer Width="800" Closable="true" Visible="visible" Placement="right" Title='("Basic Drawer")' OnClose="_=>close()">
+<Drawer Width="800" Closable="true" Visible="visible" Placement="right" Title='("Events")' OnClose="_=>close()">
     <Table Class="pods-events"
            DataSource="@_events"
            TItem="EventInfo"
            HidePagination
            Size=@TableSize.Middle
            Loading=@(_events.Count == 0)>
-        <RowTemplate>
+        <ColumnDefinitions>
             <PropertyColumn Property="@(c=>c!.GetDateTimeStr())" Title="EventTime"/>
             <PropertyColumn Property="@(c=>c!.Type)" />
             <PropertyColumn Property="@(c=>c!.Reason)" />
             <PropertyColumn Property="@(c=>c!.Source)" />
             <PropertyColumn Property="@(c=>c!.Message)" />
-        </RowTemplate>
+        </ColumnDefinitions>
     </Table>
 </Drawer>
 

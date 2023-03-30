@@ -1,4 +1,4 @@
-﻿@page "/pages/svcGrpList/{IamId:int?}/{SvcName?}"
+﻿@page "/pages/svcGrpList/{SvcName?}"
 @inject SvcHttp SvcHttp
 @inject NavigationManager NavigationManager
 
@@ -43,24 +43,23 @@
     }
     else
     {
-        <CascadingValue Value="@(IamId)" Name="@("IamId")">
-            <CascadingValue Value="@(this)" IsFixed="true">
-                <SvcList SvcGrpName="@SvcName" />
-            </CascadingValue>
+        <CascadingValue Value="@(this)" IsFixed="true">
+            <SvcList SvcGrpName="@SvcName" />
         </CascadingValue>
     }
 </div>
 
 @code {
 
-    [Parameter]
+    [CascadingParameter(Name = "IamId")]
     public int IamId { get; set; }
+
     [Parameter]
     public string? SvcName { get; set; }
 
     private List<SvcGrpInfo> _svcInfos = new List<SvcGrpInfo>();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await GetGrpList();
     }
@@ -73,12 +72,12 @@
 
     private void OnSvcClick(SvcGrpInfo context)
     {
-        NavigationManager.NavigateTo($"/{Routes.SvcGrpPage}/{IamId}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.SvcGrpPage}/{context.Name}");
     }
 
     internal void ReturnSvcList()
     {
-        NavigationManager.NavigateTo($"/{Routes.SvcGrpPage}/{IamId}");
+        NavigationManager.NavigateTo($"/{Routes.SvcGrpPage}");
     }
 
     private async Task OnCreateSvcClick()

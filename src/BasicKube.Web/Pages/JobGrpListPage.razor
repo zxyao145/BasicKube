@@ -1,4 +1,4 @@
-﻿@page "/pages/jobGrpList/{IamId:int?}/{GrpName?}"
+﻿@page "/pages/jobGrpList/{GrpName?}"
 @inject KubeHttpClient KubeHttp
 @inject NavigationManager NavigationManager
 
@@ -43,24 +43,23 @@
     }
     else
     {
-        <CascadingValue Value="@(IamId)" Name="@("IamId")">
-            <CascadingValue Value="@(this)" IsFixed="true">
-                <JobList GrpName="@GrpName" />
-            </CascadingValue>
+        <CascadingValue Value="@(this)" IsFixed="true">
+            <JobList GrpName="@GrpName" />
         </CascadingValue>
     }
 </div>
 
 @code {
 
-    [Parameter]
+    [CascadingParameter(Name = "IamId")]
     public int IamId { get; set; }
+
     [Parameter]
     public string? GrpName { get; set; }
 
     private List<JobGrpInfo> _grpInfos = new List<JobGrpInfo>();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await GetGrpList();
     }
@@ -73,12 +72,12 @@
 
     private void OnGrpClick(JobGrpInfo context)
     {
-        NavigationManager.NavigateTo($"/{Routes.JobGrpPage}/{IamId}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.JobGrpPage}/{context.Name}");
     }
 
     internal void ReturnGrpList()
     {
-        NavigationManager.NavigateTo($"/{Routes.JobGrpPage}/{IamId}");
+        NavigationManager.NavigateTo($"/{Routes.JobGrpPage}");
     }
 
     private async Task OnCreateJobClick()

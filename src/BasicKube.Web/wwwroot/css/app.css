@@ -152,6 +152,7 @@ a, .btn-link {
     line-height: 1;
     padding: 0.5rem 1rem;
 }
+
 .iam-info {
     display: flex;
     flex-grow: 1;
@@ -160,4 +161,104 @@ a, .btn-link {
 
 .login-display > button {
     padding: 4px;
+}
+
+/* iam-selector form style */
+
+.user-iamid-table {
+    height: 436px;
+}
+
+    .user-iamid-table .ant-empty {
+        margin: 170px 0;
+    }
+
+    .user-iamid-table table thead th {
+        text-align: center;
+        font-weight: 700;
+    }
+
+        .user-iamid-table table thead th.iamid {
+            width: 180px;
+        }
+
+    .user-iamid-table table tbody tr {
+        cursor: pointer;
+    }
+
+.iam-selector-header {
+    color: #000000d9;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    border-radius: 2px 2px 0 0;
+    display: flex;
+    user-select: none;
+    margin-bottom: 16px;
+    margin-left: -14px;
+    margin-right: -14px;
+}
+
+    .iam-selector-header > .iam-selector-title {
+        padding: 12px;
+        flex-grow: 1;
+        margin: 0;
+        color: #000000d9;
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 22px;
+        word-wrap: break-word;
+        display: flex;
+        align-items: center;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        font-family: Microsoft YaHei,Helvetica,SimHei,sans-serif;
+    }
+
+.iam-selector-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-left: -14px;
+    margin-right: -14px;
+    margin-bottom: -14px;
+    padding-top: 10px;
+    padding-right: 14px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.user-iamid-table table thead th.iamid-selection::before {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 1px;
+    height: 1.6em;
+    background-color: rgba(0, 0, 0, 0.06);
+    transform: translateY(-50%);
+    transition: background-color 0.3s;
+    content: '';
+}
+
+/* custom side nav style */
+.ant-layout-sider-light .ant-layout-sider-trigger {
+    border-top: 1px solid rgba(0,0,0,.06);
+    background-color: #fff;
+    text-align: left;
+    padding: 0 16px;
+    font-size: 18px;
+}
+
+.ant-layout-sider-collapsed .logo {
+    font-size: 12px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    word-break: break-all;
+}
+.ant-layout-sider-collapsed .i-icon + a,
+.ant-layout-sider-collapsed .i-icon + span {
+    display: inline-block;
+    opacity: 0;
+}
+.ant-tooltip-inner a.nav-link {
+    color: #fff;
 }

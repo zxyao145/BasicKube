@@ -1,4 +1,4 @@
-﻿@page "/pages/daemonSetAppGrpList/{IamId:int?}/{DaempnAppName?}"
+﻿@page "/pages/daemonSetAppGrpList/{DaempnAppName?}"
 @inject DaemonSetHttp DaemonSetHttp
 @inject NavigationManager NavigationManager
 
@@ -49,23 +49,18 @@
     }
     else
     {
-        <CascadingValue Value="@(_iamId)" Name="@("IamId")">
-            <CascadingValue Value="@(this)" IsFixed="true">
-                <DaemonSetList AppName="@_activityAppName" />
-            </CascadingValue>
+        <CascadingValue Value="@(this)" IsFixed="true">
+            <DaemonSetList AppName="@_activityAppName" />
         </CascadingValue>
     }
 </div>
 @code
 {
 
-    private int _iamId = 0;
-    [Parameter]
-    public int? IamId
-    {
-        set => _iamId = value ?? 0;
-        get => _iamId;
-    }
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
+
+
     private string _activityAppName = "";
 
     [Parameter]
@@ -80,14 +75,14 @@
 
     private List<DaemonSetGrpInfo> _appList = new List<DaemonSetGrpInfo>();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await GetGrpList();
     }
 
     private async Task GetGrpList()
     {
-        var appList = await DaemonSetHttp.ListGrp(_iamId);
+        var appList = await DaemonSetHttp.ListGrp(IamId);
         _appList = appList;
         StateHasChanged();
     }
@@ -96,7 +91,7 @@
     private async Task OnCreateDeployClick()
     {
         var modal = new CreateDaemonSetAppForm();
-        modal.IamId = _iamId;
+        modal.IamId = IamId;
         modal.OnOk = async () =>
         {
             await GetGrpList();
@@ -106,11 +101,11 @@
 
     public void OnAppClick(DaemonSetGrpInfo context)
     {
-        NavigationManager.NavigateTo($"/{Routes.DaemonSetAppGrpPage}/{_iamId}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.DaemonSetAppGrpPage}/{context.Name}");
     }
 
     internal void ReturnAppList()
     {
-        NavigationManager.NavigateTo($"/{Routes.DaemonSetAppGrpPage}/{_iamId}");
+        NavigationManager.NavigateTo($"/{Routes.DaemonSetAppGrpPage}");
     }
 }

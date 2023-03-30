@@ -8,18 +8,17 @@
        TItem="IngRuleValue"
        HidePagination
        Size=@TableSize.Middle>
-    <RowTemplate>
+    <ColumnDefinitions>
         <PropertyColumn Property="@(c=>c!.PathType)" Title="StartTime" />
         <PropertyColumn Property="@(c=>c!.Path)" />
         <ActionColumn Title="TargetService">
-            <a href="@($"/{Routes.SvcGrpPage}/{IamId}/{GetGrpNameFromSvcName(@context.TargetService)}?svc={@context.TargetService}")
-                " target="_blank">
+            <a href="@($"/{Routes.SvcGrpPage}/{GetGrpNameFromSvcName(@context.TargetService)}?svc={@context.TargetService}")">
                 @context.TargetService
             </a>
         </ActionColumn>
         <PropertyColumn Property="@(c=>c!.TargetService)" />
         <PropertyColumn Property="@(c=>c!.Port)" />
-    </RowTemplate>
+    </ColumnDefinitions>
 </Table>
 
 @code {
