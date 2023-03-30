@@ -24,8 +24,10 @@
      ![image-20230330001751219](assets/README/image-20230330001751219.png)
 4. - [x] DaemonSet
 5. - [x] Job
+6. - [ ] CronJob
 
-> **注意**：
+> **Note**
+>
 > 在 BasicKube 中，Deployment 组又被称为应用组。应用广义上包含 Deployment、DaemonSet 等，在 BasicKube 中，在没有明确说明下，应用仅代指 Deployment。
 
 ## Pod 终端

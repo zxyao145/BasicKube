@@ -25,8 +25,10 @@ Support basic CRUD (create, read, update, delete) operations for the following K
      ![image-20230330001751219](assets/README/image-20230330001751219.png)
 4. - [x] DaemonSet
 5. - [x] Job
+6. - [ ] CronJob
 
-> **note**：
+> **Note**
+>
 > In BasicKube, the Deployment group is also referred to as the Application group. In a broad sense, an application includes Deployment, DaemonSet, and so on. However, in BasicKube, when not explicitly stated, the term "application" refers only to Deployment.
 
 ## Pod Container Terminal
