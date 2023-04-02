@@ -102,7 +102,7 @@ BasicKube 中不涉及账号系统，需要通过 `AccountController` 和现有�
 
 # 协议
 
-禁止商业使用，对个人学习或其他使用，参考MIT协议。
+Apache 2.0
 
 # OS
 

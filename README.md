@@ -103,7 +103,7 @@ There is no account system function in BasicKube, it needs to be integrated with
 
 # License
 
-Prohibition of commercial use, with reference to the MIT license for personal learning or other uses.
+Apache 2.0
 
 # OS Reference
 
