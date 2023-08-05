@@ -3,7 +3,7 @@
 public class AppException : Exception
 {
     public int Code { get; set; } = -1;
-    public AppException(string? message, 
+    public AppException(string? message,
         int code = -1,
         Exception? innerException = null
         ) : base(message, innerException)

@@ -6,8 +6,6 @@ public interface IResService<TGrpInfo, TResDetails, TEditCmd>
     /// 列出服务组简介列表
     /// </summary>
     /// <param name="iamId"></param>
-    /// <param name="appName"></param>
-    /// <param name="env"></param>
     /// <returns></returns>
     public Task<IEnumerable<TGrpInfo>> ListGrpAsync(int iamId);
 
@@ -16,7 +14,7 @@ public interface IResService<TGrpInfo, TResDetails, TEditCmd>
     /// 列出服务组详情列表
     /// </summary>
     /// <param name="iamId"></param>
-    /// <param name="svcGrpName"></param>
+    /// <param name="grpName"></param>
     /// <param name="env"></param>
     /// <returns></returns>
     public Task<IEnumerable<TResDetails>> ListAsync(int iamId, string grpName, string? env = null);
@@ -41,7 +39,7 @@ public interface IResService<TGrpInfo, TResDetails, TEditCmd>
     /// 删除
     /// </summary>
     /// <param name="iamId"></param>
-    /// <param name="svcName"></param>
+    /// <param name="resName"></param>
     /// <returns></returns>
     public Task DelAsync(int iamId, string resName);
 

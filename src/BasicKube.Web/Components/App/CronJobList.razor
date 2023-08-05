@@ -7,29 +7,29 @@
 @implements IDisposable
 
 <div>
-    <Collapse DefaultActiveKey="@(new[] { _defaultActiveKey })">
-            @foreach (var jobDetail in _jobDetailsList)
+    <Collapse 
+              DefaultActiveKey="@(new[] { _defaultActiveKey })"
+              OnChange="@((keys)=> _activeAppNames = keys)">
+        @{
+            foreach (var jobDetail in _jobDetailsList)
             {
-                <Panel @key="@jobDetail.Name"
-                       Key="@(jobDetail.Name)"
-                       Class="deploy-panel">
-                    <HeaderTemplate>
-                        @jobDetail.Name &nbsp;&nbsp;
-                        @if (jobDetail.Succeeded > 0)
-                        {
-                            <Tag Color="@PresetColor.Blue.ToString()">成功:@jobDetail.Succeeded</Tag>
-                        }
-                        @if (jobDetail.Failed > 0)
-                        {
-                            <Tag Icon="skype" Color="red-inverse">失败:@jobDetail.Failed</Tag>
-                        } 
-                        else if (jobDetail.Ready > 0)
-                        {
-                            <Tag Color="@PresetColor.Green.ToString()">运行中:@jobDetail.Ready</Tag>
-                        }
-                    </HeaderTemplate>
+                var header = $"{jobDetail.Name}";
+
+                <Panel @key="@jobDetail.Name" 
+                       Header="@header" 
+                       Key="@(jobDetail.Name)" 
+                       Class="deploy-panel"
+                       >
                     <ExtraTemplate>
                         <ButtonGroup>
+                            <Button OnClick="@(async () => await OnSuspendClickAsync(jobDetail))"
+                                    OnClickStopPropagation="true" 
+                                    Type="orange"
+                                    Danger="@(!jobDetail.Suspend)"
+                                    Size="small"
+                                >
+                                @(jobDetail.Suspend ? "启用" : "暂停")
+                            </Button>
                             <Button OnClick="@(async () => await OnDelClickAsync(jobDetail))"
                                     OnClickStopPropagation="true"
                                     Type="@ButtonType.Primary"
@@ -54,17 +54,24 @@
                         </ButtonGroup>
                     </ExtraTemplate>
                     <ChildContent>
-                        <Collapse DefaultActiveKey="@(new[] { jobDetail.Name + "0" })">
-
-                            <PodDetailsItem AppName="@(jobDetail.Name)"
-                                            PodDetails="@(jobDetail.PodDetails)"
-                                            ShowDelBtn="@false">
-                            </PodDetailsItem>
-
-                        </Collapse>
+                        <CascadingValue Value="@_activeAppNames" Name="@("ActiveAppNames")">
+                            <Tabs @bind-ActiveKey="@_tabActiveKey">
+                                <TabPane Tab="成功记录" Key="success">
+                                    <CronJobHistory
+                                        HistoryInfos="@jobDetail.SuccessHistory"
+                                        GrpName="@(GrpName)"/>
+                                </TabPane>
+                                <TabPane Tab="失败记录" Key="fail">
+                                    <CronJobHistory
+                                        HistoryInfos="@jobDetail.FailedHistory"
+                                        GrpName="@(GrpName)"/>
+                                </TabPane>
+                            </Tabs>
+                        </CascadingValue>
                     </ChildContent>
                 </Panel>
             }
+        }
     </Collapse>
 </div>
 
@@ -75,7 +82,7 @@
     public int IamId { get; set; }
 
     [CascadingParameter]
-    public JobGrpListPage? Parent { get; set; }
+    public CronJobGrpListPage? Parent { get; set; }
 
 #nullable disable
     [Parameter]
@@ -86,6 +93,8 @@
 #nullable enable
 
     private string _defaultActiveKey = "";
+    private string[] _activeAppNames =  Array.Empty<string>();
+    private string _tabActiveKey { get; set; } = "success";
 
 
     private Timer? _timer = null;
@@ -96,19 +105,14 @@
         _timer ??= new Timer(TimerIntervalTask, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
     }
 
-    protected override void OnAfterRender(bool firstRender)
-    {
-        Console.WriteLine("_defaultActiveKey:" + _defaultActiveKey + firstRender);
-        base.OnAfterRender(firstRender);
-    }
 
-    protected override void OnParametersSet()
+    public override async Task SetParametersAsync(ParameterView parameters)
     {
+        await base.SetParametersAsync(parameters);
         if (!string.IsNullOrWhiteSpace(AppName))
         {
             _defaultActiveKey = AppName;
-            Console.WriteLine("_defaultActiveKey:" + _defaultActiveKey);
-            StateHasChanged();
+            _activeAppNames = new[] { _defaultActiveKey };
         }
     }
 
@@ -117,25 +121,20 @@
         await RefreshAppInfo();
     }
 
-    private List<JobDetails> _jobDetailsList = new List<JobDetails>();
+    private List<CronJobDetails> _jobDetailsList = new ();
 
     private async Task RefreshAppInfo()
     {
-        var data = await KubeHttpClient.JobHttp
+        var data = await KubeHttpClient.CronJobHttp
             .List(IamId, GrpName!);
-        Console.WriteLine("_defaultActiveKey:" + _defaultActiveKey);       
-        Console.WriteLine("dataCount:" + data.Count);       
-
         if (data is { Count: > 0 })
         {
             _jobDetailsList = data;
 
-            if (string.IsNullOrWhiteSpace(_defaultActiveKey))
+            if (string.IsNullOrWhiteSpace(AppName))
             {
-                _defaultActiveKey = string.IsNullOrWhiteSpace(AppName) 
-                    ? _jobDetailsList[0].Name 
-                    : AppName;
-                Console.WriteLine("_defaultActiveKey:" + _defaultActiveKey);
+                _defaultActiveKey = _jobDetailsList[0].Name;
+                _activeAppNames = new[] { _defaultActiveKey };
             }
         }
 
@@ -143,7 +142,7 @@
     }
 
 
-    private async Task OnScaleClickAsync(JobDetails jobDetails)
+    private async Task OnScaleClickAsync(CronJobDetails jobDetails)
     {
         var modal = new ScaleForm();
         modal.Num = jobDetails.PodDetails.Count;
@@ -163,16 +162,16 @@
 
 
 
-    private async Task OnEditClickAsync(JobDetails jobDetails)
+    private async Task OnEditClickAsync(CronJobDetails jobDetails)
     {
         var cmd = await
-            KubeHttpClient.JobHttp.Details(IamId, jobDetails.Name);
+            KubeHttpClient.CronJobHttp.Details(IamId, jobDetails.Name);
         if (cmd != null)
         {
-            var modal = new CreateJobAppForm();
+            var modal = new CreateCronJobAppForm();
             modal.IamId = IamId;
             modal.IsEdit = true;
-            modal.JobEditCommand = cmd;
+            modal.EditCommand = cmd;
 
             async Task OnOk()
             {
@@ -184,12 +183,12 @@
         }
     }
 
-    private async Task OnDelClickAsync(JobDetails jobDetails)
+    private async Task OnDelClickAsync(CronJobDetails jobDetails)
     {
         var confirmResult = await ConfirmService.Show("确定要删除这个 Job 吗？", "删除");
         if (confirmResult == ConfirmResult.OK)
         {
-            var delRes = await KubeHttpClient.JobHttp.Del(IamId, jobDetails.Name);
+            var delRes = await KubeHttpClient.CronJobHttp.Del(IamId, jobDetails.Name);
 
             await MessageService.Success(delRes ? "删除成功" : "删除失败，请稍候重试");
             if (delRes)
@@ -199,7 +198,7 @@
         }
     }
 
-    private async Task OnPublishClickAsync(JobDetails jobDetails)
+    private async Task OnPublishClickAsync(CronJobDetails jobDetails)
     {
         var publishForm = new AppPublishForm(IamId, GrpName, jobDetails.Name);
         await publishForm.ShowAsync();
@@ -210,5 +209,17 @@
     public void Dispose()
     {
         _timer?.Dispose();
+    }
+
+    private async Task OnSuspendClickAsync(CronJobDetails jobDetail)
+    {
+        var suspendCommand = new CronJobSuspendCommand
+        {
+            AppName = jobDetail.AppName,
+            Suspend = !jobDetail.Suspend,
+        };
+
+        var res = await KubeHttpClient.CronJobHttp.Suspend( IamId,suspendCommand);
+        _ = MessageService.Success(res ? "操作成功" : "操作失败");
     }
 }

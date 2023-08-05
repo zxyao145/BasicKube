@@ -10,3 +10,16 @@
         width: 100%;
     }
 }
+
+
+
+.cron-job-edit-form {
+    .cron-job-form-control-label {
+        width: 100px;
+        flex-shrink: 0;
+    }
+
+    .form-content > .ant-input-number {
+        width: 100%;
+    }
+}

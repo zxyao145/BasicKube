@@ -1,0 +1,294 @@
+﻿@namespace BasicKube.Web.Components
+@inherits CreateResForm
+
+<div class="cron-job-edit-form">
+    <div class="mb-6">
+        <GridRow>
+            <GridCol Span="16">
+                <FormControl Required>
+                    <LabelContent>
+                        CronJob组
+                    </LabelContent>
+                    <ChildContent>
+                        <Input Placeholder="CronJob组"
+                               MaxLength="32"
+                               @bind-Value="@EditCommand.GrpName"
+                               Disabled="@IsEdit" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="8">
+                <FormControl Required>
+                    <LabelContent>
+                        环境
+                    </LabelContent>
+                    <ChildContent>
+                        <AppEnvSelect DefaultEnvName="@(EditCommand.Env)"
+                                      Disable="@IsEdit"
+                                      @bind-EnvName="EditCommand.Env" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+        </GridRow>
+    </div>
+
+    <div class="mb-4">
+        <GridRow Class="mb-3">
+            <GridCol Span="8">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        Cron表达式
+                    </LabelContent>
+                    <ChildContent>
+                        <Input Placeholder="Cron表达式"
+                               MaxLength="32"
+                               @bind-Value="@EditCommand.Schedule"/>
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="8">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        并发执行策略
+                    </LabelContent>
+                    <ChildContent>
+                        <SimpleSelect DefaultValue="@(EditCommand.ConcurrencyPolicy)"
+                                      @bind-Value="@EditCommand.ConcurrencyPolicy">
+                            <SelectOptions>
+                                <SimpleSelectOption Value="Allow" Label="允许"></SimpleSelectOption>
+                                <SimpleSelectOption Value="Forbid" Label="禁止"></SimpleSelectOption>
+                                <SimpleSelectOption Value="Replace" Label="替代"></SimpleSelectOption>
+                            </SelectOptions>
+                        </SimpleSelect>
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="8">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        暂停执行
+                    </LabelContent>
+                    <ChildContent>
+                        <Switch @bind-Checked="@EditCommand.Suspend" CheckedChildren="开" UnCheckedChildren="关" />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+        </GridRow>
+
+        <GridRow Class="mb-3">
+            <GridCol Span="8">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        成功历史数量
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber 
+                            @bind-Value="@EditCommand.SuccessfulJobsHistoryLimit"
+                            Min="0" 
+                            Max="20"
+                            PlaceHolder="范围：[0,20]"
+                            />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="8">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        失败历史数量
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber 
+                            @bind-Value="@EditCommand.FailedJobsHistoryLimit"
+                            Min="0" 
+                            Max="60"
+                            PlaceHolder="范围：[0,60]"
+                            />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="8">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        最大启动延时
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber
+                            @bind-Value="@EditCommand.StartingDeadlineSeconds"
+                            Min="0" 
+                            Max="6000"
+                            PlaceHolder="单位：秒"
+                            />
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+        </GridRow>
+
+        <Divider Orientation="left">
+            <b>任务配置</b>
+        </Divider>
+
+        <GridRow Class="mb-3">
+            <GridCol Span="12">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        超时时间（秒）
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber @bind-Value="@EditCommand.JobTemplate.ActiveDeadlineSeconds"
+                                               Min="0" PlaceHolder=""/>
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="12">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        失败重试次数
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber @bind-Value="@EditCommand.JobTemplate.BackoffLimit"
+                                               Min="0" PlaceHolder=""/>
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+        </GridRow>
+
+        <GridRow>
+            <GridCol Span="12">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        Pod 个数
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber @bind-Value="@EditCommand.JobTemplate.Completions"
+                                               Min="0" PlaceHolder=""/>
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+            <GridCol Span="12">
+                <FormControl LabelCls="cron-job-form-control-label">
+                    <LabelContent>
+                        并行个数
+                    </LabelContent>
+                    <ChildContent>
+                        <AntDesign.InputNumber @bind-Value="@EditCommand.JobTemplate.Parallelism"
+                                               Min="0" PlaceHolder=""/>
+                    </ChildContent>
+                </FormControl>
+            </GridCol>
+        </GridRow>
+    </div>
+
+    <div>
+
+        <Tabs @ref="@_tabs" Style="border-bottom: 1px solid #f0f0f0; padding: 1rem;"
+              DefaultActiveKey="main"
+              Type="@TabType.EditableCard"
+              OnAddClick="OnAddClick"
+              OnClose="OnTabClose"
+              @bind-ActiveKey="_activeKey">
+            @foreach (var containerInfo in _panes)
+            {
+                var title = containerInfo.Name;
+
+                <TabPane Key="@(containerInfo.Index + "")"
+                         Tab="@title"
+                         Closable="@(title != "main")">
+
+                    <CreateContainer @key="containerInfo.Index"
+                                     ContainerInfo="@containerInfo"
+                                     OnNameChange="@OnNameChange"
+                                     />
+
+                </TabPane>
+
+             }
+        </Tabs>
+    </div>
+
+</div>
+
+@code {
+    private CronJobEditCommand _createCommand = new();
+    public CronJobEditCommand EditCommand
+    {
+        get => _createCommand;
+        set
+        {
+            _createCommand = value;
+            _panes.Clear();
+            _panes.AddRange(_createCommand.Containers);
+            StateHasChanged();
+        }
+    } 
+    public CreateCronJobAppForm()
+    {
+        Title = "CronJob";
+    }
+
+    private Tabs? _tabs;
+    readonly List<ContainerInfo> _panes = new ()
+    {
+        new ContainerInfo()
+        {
+            Name = "main"
+        }
+    };
+    private string _activeKey = "";
+    private void OnAddClick()
+    {
+        var c = new ContainerInfo()
+            {
+                Index = _panes.Count,
+                Name = "container" + _panes.Count
+            };
+        _activeKey = c.Index + "";
+        _panes.Add(c);
+        StateHasChanged();
+    }
+
+    void OnTabClose(string key)
+    {
+        var c = _panes.Find(x => x.Index == int.Parse(key));
+        if (c != null)
+        {
+            _panes.Remove(c);
+        }
+    }
+
+    protected override async Task OnOkAsync()
+    {
+        EditCommand.Containers = _panes;
+        EditCommand.GrpName = $"{EditCommand.GrpName}";
+        EditCommand.Env = $"{EditCommand.Env}";
+        EditCommand.AppName = $"{EditCommand.GrpName}-{EditCommand.Env}";
+        EditCommand.IamId = IamId;
+
+        var http = ServiceProvider.GetRequiredService<CronJobHttp>();
+        bool res = false;
+        if (IsEdit)
+        {
+            res = await http.Update(EditCommand);
+        }
+        else
+        {
+            res = await http.Create(EditCommand);
+        }
+
+        _ = res ? (NoticeSuccess(MsgPrefix + "成功")) : (NoticeError(MsgPrefix + "失败"));
+
+        if (OnOk != null)
+        {
+            await OnOk();
+        }
+        if (res)
+        {
+            await this.CloseAsync();
+        }
+    }
+
+    private void OnNameChange()
+    {
+        StateHasChanged();
+    }
+
+}

@@ -1,4 +1,4 @@
-﻿@page "/pages/jobGrpList/{GrpName?}"
+﻿@page "/pages/cronJobGrpList/{GrpName?}"
 @inject KubeHttpClient KubeHttp
 @inject NavigationManager NavigationManager
 
@@ -8,7 +8,7 @@
         {
             <BreadcrumbItem>
                 <b>
-                    <IconPark.AlarmClock /> 任务组
+                    <IconPark.Timer /> 定时任务组
                 </b>
             </BreadcrumbItem>
         }
@@ -16,26 +16,22 @@
         {
             <BreadcrumbItem OnClick="ReturnGrpList">
                 <b class="cursor-pointer">
-                    <IconPark.AlarmClock /> 任务组
+                    <IconPark.Timer /> 定时任务组
                 </b>
             </BreadcrumbItem>
             <BreadcrumbItem>
-                <b>任务</b>
+                <b>定时任务</b>
             </BreadcrumbItem>
         }
     </Breadcrumb>
 
-    @if (From != "cron")
-    {
-        <blockquote class="operate-wrapper">
-            <Button Type="@ButtonType.Primary" Size="small" OnClick="@OnCreateJobClick">新建Job</Button>
-        </blockquote>
-    }
-   
+    <blockquote class="operate-wrapper">
+        <Button Type="@ButtonType.Primary" Size="small" OnClick="@OnCreateJobClick">新建 CronJob</Button>
+    </blockquote>
 
     @if (string.IsNullOrWhiteSpace(GrpName))
     {
-        <AntList DataSource="@_grpInfos" TItem="JobGrpInfo">
+        <AntList DataSource="@_grpInfos" TItem="CronJobGrpInfo">
             <ListItem Class="page-resource-list-item" OnClick="() => OnGrpClick(context)">
                 <ListItemMeta Description="">
                     <TitleTemplate>
@@ -48,29 +44,20 @@
     else
     {
         <CascadingValue Value="@(this)" IsFixed="true">
-            <JobList AppName="@ActiveApp" GrpName="@GrpName" />
+            <CronJobList GrpName="@GrpName" />
         </CascadingValue>
     }
 </div>
 
 @code {
 
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "from")]
-    public string From { get; set; } = "";
-
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "app")]
-    public string ActiveApp { get; set; } = "";
-
-    
     [CascadingParameter(Name = "IamId")]
     public int IamId { get; set; }
 
     [Parameter]
     public string? GrpName { get; set; }
 
-    private List<JobGrpInfo> _grpInfos = new List<JobGrpInfo>();
+    private List<CronJobGrpInfo> _grpInfos = new();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -79,23 +66,23 @@
 
     private async Task GetGrpList()
     {
-        _grpInfos = await KubeHttp.JobHttp.ListGrp(IamId);
+        _grpInfos = await KubeHttp.CronJobHttp.ListGrp(IamId);
         StateHasChanged();
     }
 
-    private void OnGrpClick(JobGrpInfo context)
+    private void OnGrpClick(CronJobGrpInfo context)
     {
-        NavigationManager.NavigateTo($"/{Routes.JobGrpPage}/{context.Name}");
+        NavigationManager.NavigateTo($"/{Routes.CronJobGrpPage}/{context.Name}");
     }
 
     internal void ReturnGrpList()
     {
-        NavigationManager.NavigateTo($"/{Routes.JobGrpPage}");
+        NavigationManager.NavigateTo($"/{Routes.CronJobGrpPage}");
     }
 
     private async Task OnCreateJobClick()
     {
-        var form = new CreateJobAppForm();
+        var form = new CreateCronJobAppForm();
         form.IamId = IamId;
         form.OnOk = async () =>
         {

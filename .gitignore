@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /src/BasicKube.Web/wwwroot/assets/dist/index.js
 /src/BasicKube.Web/wwwroot/assets/dist/index.css
 /src/BasicKube.Web/wwwroot/assets/dist/index.js.map
+/.vscode

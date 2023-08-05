@@ -1,0 +1,53 @@
+﻿@namespace BasicKube.Web.Components
+@using BasicKube.Web.Pages
+
+@inject KubeHttpClient KubeHttpClient
+@inject ConfirmService ConfirmService
+@inject MessageService MessageService
+@implements IDisposable
+
+<div>
+    <Table Class="deploy-pods"
+           DataSource="@HistoryInfos"
+           TItem="CronJobHistoryInfo"
+           HidePagination
+           Size=@TableSize.Middle>
+        <ColumnDefinitions>
+            <ActionColumn Title="JobName">
+                <NavLink href="@($"/{Routes.JobGrpPage}/{GrpName}?from=cron&app={context.JobName}")">
+                    @context.JobName
+                </NavLink>
+            </ActionColumn>
+            <ActionColumn Title="Completions">
+                @($"{context.Succeeded}/{context.Completions}")
+            </ActionColumn>
+            <PropertyColumn Property="@(c => c!.GetStartTimeStr())" Title="StartTime"/>
+            <PropertyColumn Property="@(c => c!.GetState())" Title="State"/>
+        </ColumnDefinitions>
+    </Table>
+</div>
+
+
+@code
+{
+    // /pages/jobGrpList/hello?from=cron
+
+    [CascadingParameter(Name = "IamId")]
+    public int IamId { get; set; }
+
+    [CascadingParameter(Name = "ActiveAppNames")]
+    public string[] ActiveAppNames { get; set; } = Array.Empty<string>();
+
+    [CascadingParameter]
+    public CronJobGrpListPage? Parent { get; set; }
+
+    [Parameter]
+    public string GrpName { get; set; } = "";
+
+    [Parameter]
+    public List<CronJobHistoryInfo> HistoryInfos { get; set; } = new();
+
+    public void Dispose()
+    {
+    }
+}

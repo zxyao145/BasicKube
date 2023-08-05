@@ -1,0 +1,101 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: app-test-cron-job-dev
+  annotations:
+    basickube/grp: app-test-cron-job
+    basickube/region: Asia-Pacific
+    basickube/room: CN-1
+  labels:
+    basickube/grp: app-test-cron-job
+    basickube/env: dev
+    basickube/iamId: "0"
+    basickube/type: cron-job
+spec:
+  # 0 0 1 */2 ? ：每两个月1号
+  # 0 0 ? * WED/2 ：每两个周周三
+  # 0 0 */2 * ? ：每两天
+  # 0 */2 * * ? ：每两小时
+  schedule: "*/1 * * * *"
+  
+  successfulJobsHistoryLimit: 11
+  failedJobsHistoryLimit: 12
+  startingDeadlineSeconds: 13
+  suspend: false
+  concurrencyPolicy: Forbid
+
+  jobTemplate:
+    # metadata:
+    #   annotations:
+    #     basickube/region: Asia-Pacific
+    #     basickube/room: CN-1
+    #   labels:
+    #     app: app-test-cron-job-dev
+    #     basickube/env: dev
+    #     basickube/iamId: "0"
+    #     basickube/type: job
+    #   name: app-test-cron-job-dev
+    #   namespace: default
+    spec:
+      activeDeadlineSeconds: 10
+      backoffLimit: 6
+      completions: 1
+      parallelism: 1
+      # pod template
+      template:
+        metadata:
+          annotations:
+            basickube/region: Asia-Pacific
+            basickube/room: CN-1
+          labels:
+            app: app-test-cron-job-dev
+            basickube/env: dev
+            basickube/iamId: "0"
+            basickube/type: cron-job
+          name: app-test-cron-job-dev
+          namespace: default
+        spec:
+          containers:
+          - env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
+            - name: IAM_TREE_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['iamId']
+            - name: REGION
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['region']
+            image: busybox:1.36.0
+            imagePullPolicy: IfNotPresent
+            name: main
+            command:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster;
+            resources: {}
+          restartPolicy: OnFailure
+          terminationGracePeriodSeconds: 30
+
+

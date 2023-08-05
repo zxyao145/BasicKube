@@ -76,6 +76,6 @@ public class AuthService
     public void SetUserProfile(UserProfileDto userProfile)
     {
         (_authStateProvider as IamAuthStateProvider)!.SetAuthInfo(userProfile);
-    } 
+    }
     #endregion
 }

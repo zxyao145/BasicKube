@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using BasicKube.Api.Exceptions;
 
 namespace BasicKube.Api.Common.Components.ActionResultExtensions;
@@ -25,7 +24,7 @@ public class ApiResult
     /// </summary>
     public static ApiResultNullableBool Fail = new ApiResultNullableBool(ApiResultCode.Fail);
 
- 
+
     #region BuildFail
 
     public static ApiResult<bool?> BuildFail([NotNull] string msg)

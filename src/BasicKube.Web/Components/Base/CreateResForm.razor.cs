@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Components.Web;
 
 namespace BasicKube;
 
-public abstract class CreateResForm: BcdForm
+public abstract class CreateResForm : BcdForm
 {
     protected MessageService MessageService = default!;
     protected INotificationService NotificationService = default!;

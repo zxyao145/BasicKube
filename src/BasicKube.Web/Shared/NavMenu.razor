@@ -58,12 +58,24 @@
             </MenuItem>
             <MenuItem Key="pages/jobgrplist">
                 <IconTemplate>
-                    <Timer />
+                    <AlarmClock />
 
                 </IconTemplate>
                 <ChildContent>
                     <NavLink class="nav-link" href="@(Routes.JobGrpPage)">
                         任务组
+                    </NavLink>
+                </ChildContent>
+            </MenuItem>
+
+            <MenuItem Key="pages/cronjobgrplist">
+                <IconTemplate>
+                    <Timer />
+
+                </IconTemplate>
+                <ChildContent>
+                    <NavLink class="nav-link" href="@(Routes.CronJobGrpPage)">
+                        定时任务组
                     </NavLink>
                 </ChildContent>
             </MenuItem>

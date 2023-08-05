@@ -25,7 +25,6 @@ spec:
         room: CN-1
       labels:
         app: app-test-job-dev
-        // controller-uid: 8188c894-1d23-4232-bd9d-89bb20ce4dc9
         env: dev
         iamId: "0"
         type: job

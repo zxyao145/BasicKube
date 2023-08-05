@@ -92,6 +92,22 @@ a, .btn-link {
         box-shadow: 0 2px 2px 0 rgb(104 104 104 / 14%);
     }
 
+.ant-btn-orange {
+    border: none;
+    color: #000;
+    background-color: #ffa500;
+    border-color: #ffa500;
+    box-shadow: 0 2px 2px 0 rgb(104 104 104 / 14%);
+}
+
+    .ant-btn-orange:hover {
+        border: none;
+        color: #000;
+        background-color: #ffc700;
+        box-shadow: 0 2px 2px 0 rgb(104 104 104 / 14%);
+    }
+
+
 .ant-btn-sm {
     /*    height: 24px;
     padding: 0px 7px;
@@ -101,6 +117,11 @@ a, .btn-link {
     padding: 0.25rem 0.625rem;
     font-size: 0.875rem;
     border-radius: 2px;
+}
+
+.ant-collapse-extra > .ant-btn-group > .ant-btn.ant-btn-sm {
+    border: none;
+    margin-left: 0;
 }
 
 .bcd-form-container {

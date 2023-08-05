@@ -183,7 +183,10 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
                 BackoffLimit = app.Spec.BackoffLimit,
                 Completions = app.Spec.Completions,
                 Parallelism = app.Spec.Parallelism,
-                RestartPolicy = app.Spec.Template.Spec.RestartPolicy
+                RestartPolicy = app.Spec.Template.Spec.RestartPolicy,
+                Failed = app.Status.Failed ?? 0,
+                Ready = app.Status.Ready ?? 0,
+                Succeeded = app.Status.Succeeded ?? 0,
             };
             var count = allPods.Count;
 
@@ -221,7 +224,9 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
             var jobs = await item.Value.BatchV1
             .ListNamespacedJobAsync(
             IamService.GetNsName(iamId),
-            labelSelector: label + $",{K8sLabelsConstants.LabelEnv}={item.Key}"
+            labelSelector: label
+                           + $",{K8sLabelsConstants.LabelEnv}={item.Key}"
+                           + $",{K8sLabelsConstants.LabelAppType}={JobEditCommand.Type}"
             );
 
             res.AddRange(jobs.Items);
@@ -229,6 +234,7 @@ public class JobAppService : AppServiceBase<JobGrpInfo, JobDetails, JobEditComma
 
 
         return res
+            .Where(x => x.Metadata.Labels.ContainsKey(K8sLabelsConstants.LabelGrpName))
             .Select(x => x.Metadata.Labels[K8sLabelsConstants.LabelGrpName])
             .ToHashSet()
             .Select(x => new JobGrpInfo()

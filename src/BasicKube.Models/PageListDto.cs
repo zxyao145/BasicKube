@@ -21,7 +21,7 @@ public class PageListDto<T>
     /// <param name="total">总记录数</param>
     /// <param name="data">当前页数据</param>
     public PageListDto(
-        int pageIndex, int pageSize, 
+        int pageIndex, int pageSize,
         int total, ICollection<T> data)
     {
         int pageCount = (int)Math.Ceiling(total / (float)pageSize);

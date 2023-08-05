@@ -36,4 +36,10 @@
 	  <TypeScriptCompile Include="wwwroot\assets\src\Terminal.ts" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Content Update="Components\App\CronJobHistory.razor">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </Content>
+	</ItemGroup>
+
 </Project>

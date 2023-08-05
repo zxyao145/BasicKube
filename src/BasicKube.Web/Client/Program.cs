@@ -7,6 +7,9 @@ using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace BasicKube.Web.Client
@@ -23,6 +26,23 @@ namespace BasicKube.Web.Client
             {
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
             });
+            builder.Logging
+                .AddFilter(
+                    (provider, category, logLevel) =>
+                    {
+#if DEBUG
+                        if (category.Contains("System.Net.Http.HttpClient"))
+                        {
+                            Console.WriteLine("category:" + category);
+                            Console.WriteLine(logLevel);
+                        }
+#endif
+                        return category.Contains("System.Net.Http.HttpClient")
+                               && logLevel > LogLevel.Information;
+                    }
+                );
+            
+            builder.Services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
             builder.Services
                 .AddKubeHttpClient()
                 .AddJsInteroper()
