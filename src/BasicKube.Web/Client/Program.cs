@@ -41,8 +41,7 @@ namespace BasicKube.Web.Client
                                && logLevel > LogLevel.Information;
                     }
                 );
-            
-            builder.Services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
+
             builder.Services
                 .AddKubeHttpClient()
                 .AddJsInteroper()
