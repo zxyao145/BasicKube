@@ -60,7 +60,7 @@ public class CronJobEditCommand : AppEditCommand
     /// <summary>
     /// cron 表达式
     /// </summary>
-    public string Schedule { get; set; }
+    public string Schedule { get; set; } = "* * * * *";
 
     /// <summary>
     /// 成功的 CronJob 执行项数量
