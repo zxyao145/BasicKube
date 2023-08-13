@@ -1,4 +1,6 @@
-﻿namespace BasicKube.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace BasicKube.Models;
 
 public class ApiResultDto<T>
 {
@@ -10,6 +12,7 @@ public class ApiResultDto<T>
     /// <summary>
     /// 
     /// </summary>
+    [JsonPropertyName("msg")]
     public string? Msg { set; get; } = "";
 
 

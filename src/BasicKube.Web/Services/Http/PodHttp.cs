@@ -7,10 +7,15 @@ namespace BasicKube.Web.Services
         public HttpClient Client { get; private set; }
         private readonly ILogger<PodHttp> _logger;
 
-        public PodHttp(HttpClient httpClient, ILogger<PodHttp> logger)
+        public PodHttp(
+            IConfiguration configuration,
+            HttpClient httpClient, 
+            ILogger<PodHttp> logger)
         {
-            httpClient.BaseAddress = new Uri("http://localhost:5125/api/Pod/");
+            var baseHttp = configuration["BasicKube:HttpBase"];
+            ArgumentNullException.ThrowIfNull(baseHttp, "BasicKube:HttpBase");
             Client = httpClient;
+            Client.BaseAddress = new Uri(baseHttp);
             _logger = logger;
         }
 

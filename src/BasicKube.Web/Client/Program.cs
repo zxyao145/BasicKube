@@ -33,8 +33,8 @@ namespace BasicKube.Web.Client
 #if DEBUG
                         if (category.Contains("System.Net.Http.HttpClient"))
                         {
-                            Console.WriteLine("category:" + category);
-                            Console.WriteLine(logLevel);
+                            //Console.WriteLine("category:" + category);
+                            //Console.WriteLine(logLevel);
                         }
 #endif
                         return category.Contains("System.Net.Http.HttpClient")

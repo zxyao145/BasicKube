@@ -32,6 +32,8 @@ public static class KubeHttpClientExt
 
         services.AddHttpClient<AccountHttp>()
             .AddHttpMessageHandler<CookieHandler>();
+        services.AddHttpClient<MetricHttp>()
+            .AddHttpMessageHandler<CookieHandler>();
 
         services.AddScoped<KubeHttpClient>();
         return services;

@@ -11,6 +11,7 @@
 		<PackageReference Include="Jil" />
 		<PackageReference Include="JsonPatch.Net" />
 		<PackageReference Include="KubernetesClient" />
+		<PackageReference Include="prometheus-net" />
 		<PackageReference Include="Serilog" />
 		<PackageReference Include="Serilog.AspNetCore" />
 		<PackageReference Include="Serilog.Enrichers.Thread" />

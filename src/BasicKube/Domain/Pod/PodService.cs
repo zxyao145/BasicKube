@@ -1,4 +1,5 @@
-﻿using BasicKube.Api.Exceptions;
+﻿using BasicKube.Api.Domain.Metrics;
+using BasicKube.Api.Exceptions;
 
 namespace BasicKube.Api.Domain.Pod;
 
@@ -7,11 +8,17 @@ public class PodService : IPodService
 {
     private readonly ILogger<PodService> _logger;
     private readonly KubernetesFactory _k8sFactory;
+    private readonly IMetricsService _metricsService;
 
-    public PodService(ILogger<PodService> logger, KubernetesFactory kubernetes)
+    public PodService(
+        ILogger<PodService> logger, 
+        KubernetesFactory kubernetes, 
+        IMetricsService metricsService
+        )
     {
         _logger = logger;
         _k8sFactory = kubernetes;
+        _metricsService = metricsService;
     }
 
     public async Task DelAsync(string name, string nsName)
@@ -78,9 +85,10 @@ public class PodService : IPodService
                         Terminated = null
                     }
                 };
-                if (containerStatuss.ContainsKey(specContainer.Name))
+
+                if (containerStatuss.TryGetValue(specContainer.Name, out V1ContainerStatus? value))
                 {
-                    containerStatus = containerStatuss[specContainer.Name];
+                    containerStatus = value;
                 }
 
                 containerDetails.RestartCount = containerStatus.RestartCount;

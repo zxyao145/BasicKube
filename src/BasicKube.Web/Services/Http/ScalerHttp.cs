@@ -8,10 +8,15 @@ namespace BasicKube.Web.Services
         public HttpClient Client { get; private set; }
         private readonly ILogger<ScalerHttp> _logger;
 
-        public ScalerHttp(HttpClient httpClient, ILogger<ScalerHttp> logger)
+        public ScalerHttp(
+            IConfiguration configuration,
+            HttpClient httpClient, 
+            ILogger<ScalerHttp> logger)
         {
-            httpClient.BaseAddress = new Uri("http://localhost:5125/api/Scaler/");
+            var baseHttp = configuration["BasicKube:HttpBase"];
+            ArgumentNullException.ThrowIfNull(baseHttp, "BasicKube:HttpBase");
             Client = httpClient;
+            Client.BaseAddress = new Uri(baseHttp);
             _logger = logger;
         }
 

@@ -39,6 +39,11 @@ public class ContainerInfo
     /// 环境变量
     /// </summary>
     public List<EnvVarInfo> EnvVars { get; set; } = new List<EnvVarInfo>();
+
+    /// <summary>
+    /// 监控指标
+    /// </summary>
+    public ContainerMetricsItem ContainerMetrics { get; set; } = new();
 }
 
 public record PortInfo

@@ -18,6 +18,13 @@ public class PodDetail
 
     public string Status { get; set; } = "";
 
+    // cpu usage
+    public string MainCpu { get; set; } = "";
+
+    // mem usage
+    public string MainMemory { get; set; } = "";
+
+
     public Dictionary<string, ContainerDetail> ContainerDetails { get; set; } =
         new Dictionary<string, ContainerDetail>();
 
@@ -68,8 +75,8 @@ public class ContainerDetail
     public int ExitCode { get; set; }
 
     // cpu usage
-    public double Cpu { get; set; }
+    public string Cpu { get; set; } = "";
 
     // mem usage
-    public double Memory { get; set; }
+    public string Memory { get; set; } = "";
 }

@@ -1,6 +1,6 @@
 ﻿@namespace BasicKube.Web.Components
 @using AntDesign.TableModels
-@inject KubeHttpClient KubeHttpClient
+
 
 <Table Class="deploy-pods"
        DataSource="@PodDetails"
@@ -14,6 +14,33 @@
         <PropertyColumn Property="@(c=>c!.HostIp)" />
         <PropertyColumn Property="@(c=>c!.PodIp)" />
         <PropertyColumn Property="@(c=>c!.Status)" />
+        <Column Title="cpu" TData="string">
+            <TitleTemplate>
+                <Tooltip Placement="@Placement.Top" Title="main容器监控">
+                    cpu <Icon Type="exclamation-circle" Theme="outline" />
+                </Tooltip>
+            </TitleTemplate>
+            <ChildContent>
+                @if (_mainContainerMetrics.TryGetValue(context.Name, out var metric))
+                {
+                    <span>@metric[0]</span>
+                }
+            </ChildContent>
+        </Column>
+        <Column Title="mem" TData="string">
+            <TitleTemplate>
+                <Tooltip Placement="@Placement.Top" Title="main容器监控">
+                    mem <Icon Type="exclamation-circle" Theme="outline" />
+                </Tooltip>
+            </TitleTemplate>
+            <ChildContent>
+                @if (_mainContainerMetrics.TryGetValue(context.Name, out var metric))
+                {
+                    <span>@metric[1]</span>
+                }
+            </ChildContent>
+        </Column>
+
         <ActionColumn Title="Action">
             <Space>
                 @if (ShowDelBtn)
@@ -24,10 +51,10 @@
                         </Button>
                     </SpaceItem>
                 }
-                
+
                 <SpaceItem>
                     <Dropdown Placement="@Placement.TopRight"
-                        Trigger="@(new Trigger[] { Trigger.Click })">
+                              Trigger="@(new Trigger[] { Trigger.Click })">
                         <Overlay>
                             <Menu>
                                 <MenuItem>
@@ -74,7 +101,7 @@
     </ExpandTemplate>
 </Table>
 
-<Drawer Width="800" Closable="true" Visible="visible" Placement="right" Title='("Events")' OnClose="_=>close()">
+<Drawer Width="800" Closable="true" Visible="_visible" Placement="right" Title='("Events")' OnClose="_=>Close()">
     <Table Class="pods-events"
            DataSource="@_events"
            TItem="EventInfo"
@@ -82,65 +109,11 @@
            Size=@TableSize.Middle
            Loading=@(_events.Count == 0)>
         <ColumnDefinitions>
-            <PropertyColumn Property="@(c=>c!.GetDateTimeStr())" Title="EventTime"/>
+            <PropertyColumn Property="@(c=>c!.GetDateTimeStr())" Title="EventTime" />
             <PropertyColumn Property="@(c=>c!.Type)" />
             <PropertyColumn Property="@(c=>c!.Reason)" />
             <PropertyColumn Property="@(c=>c!.Source)" />
             <PropertyColumn Property="@(c=>c!.Message)" />
         </ColumnDefinitions>
     </Table>
-</Drawer>
-
-
-    @code {
-    [CascadingParameter(Name = "IamId")]
-    public int IamId { get; set; }
-
-    public string EnvName => AppName.Split("-")[^1];
-
-    [Parameter]
-    public List<PodDetail> PodDetails { get; set; } = new List<PodDetail>();
-
-    [Parameter]
-    public string AppName { get; set; } = "";
-
-    [Parameter]
-    public bool ShowDelBtn { get; set; } = true;
-
-    private async Task OnDelPodAsync(PodDetail podInfo)
-    {
-        await KubeHttpClient.PodHttp.Del(IamId, podInfo.Name);
-    }
-
-
-    private async Task OnRowExpand(RowData<PodDetail> rowData)
-    {
-        if (rowData.Data.ContainerDetails != null)
-        {
-            return;
-        }
-
-        await Task.Delay(1);
-        // rowData.Data.ContainerDetails =
-        StateHasChanged();
-    }
-
-
-    // events
-    private List<EventInfo> _events = new List<EventInfo>();
-
-    bool visible = false;
-
-    async Task ShowEventsAsync(PodDetail podDetail)
-    {
-        this.visible = true;
-        _events = await KubeHttpClient.EventsHttp.GetEvents(IamId, podDetail.Name);
-        await InvokeAsync(StateHasChanged);
-    }
-
-    void close()
-    {
-        this.visible = false;
-    }
-
-}
+    </Drawer>

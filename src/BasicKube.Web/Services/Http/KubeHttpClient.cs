@@ -11,7 +11,8 @@ public class KubeHttpClient
         PodHttp podHttp,
         IngHttp ingHttp,
         JobHttp jobHttp,
-        CronJobHttp cronJobHttp
+        CronJobHttp cronJobHttp,
+        MetricHttp metricHttp
         )
     {
         DeployHttp = deployHttp;
@@ -23,7 +24,9 @@ public class KubeHttpClient
         IngHttp = ingHttp;
         JobHttp = jobHttp;
         CronJobHttp = cronJobHttp;
+        MetricHttp= metricHttp;
     }
+
 
     public DeployHttp DeployHttp { get; }
     public DaemonSetHttp DaemonSetHttp { get; }
@@ -34,4 +37,5 @@ public class KubeHttpClient
     public IngHttp IngHttp { get; }
     public JobHttp JobHttp { get; }
     public CronJobHttp CronJobHttp { get; }
+    public MetricHttp MetricHttp { get; }
 }

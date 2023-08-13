@@ -1,8 +1,9 @@
 using BasicKube.Api.Common.Components.Logger;
+using BasicKube.Api.Domain.Prom;
 using BasicKube.Api.Filters;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Serilog;
-using System.Text.Json;
+
 
 var builder = WebApplication.CreateBuilder(args);
 var logger = builder.Host.AddSerilog();
@@ -24,7 +25,8 @@ builder.Services.AddAuthentication(
 
 builder.Services.AddApiResult()
     .ScanService()
-    .AddK8sService(builder.Configuration);
+    .AddK8sService(builder.Configuration)
+    .AddHttpClient<PromHttpClient>();
 
 builder.Services.AddCors(options =>
 {

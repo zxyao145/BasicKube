@@ -107,7 +107,7 @@
     {
         _navigationManager!.LocationChanged += (s, e) =>
         {
-            Console.WriteLine("nav menu LocationChanged");
+            //Console.WriteLine("nav menu LocationChanged");
             CalcActiveKey();
         };
     }
@@ -133,7 +133,7 @@
         _openKeys = _openKeysDict.ContainsKey(_activeKey)
                     ? new string[] { _openKeysDict[_activeKey] }
                     : new string[0];
-        Console.WriteLine("_activeKey:" + _activeKey);
+        //Console.WriteLine("_activeKey:" + _activeKey);
         StateHasChanged();
     }
 

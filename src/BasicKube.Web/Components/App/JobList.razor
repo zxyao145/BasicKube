@@ -96,18 +96,12 @@
         _timer ??= new Timer(TimerIntervalTask, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
     }
 
-    protected override void OnAfterRender(bool firstRender)
-    {
-        Console.WriteLine("_defaultActiveKey:" + _defaultActiveKey + firstRender);
-        base.OnAfterRender(firstRender);
-    }
 
     protected override void OnParametersSet()
     {
         if (!string.IsNullOrWhiteSpace(AppName))
         {
             _defaultActiveKey = AppName;
-            Console.WriteLine("_defaultActiveKey:" + _defaultActiveKey);
             StateHasChanged();
         }
     }
@@ -122,9 +116,7 @@
     private async Task RefreshAppInfo()
     {
         var data = await KubeHttpClient.JobHttp
-            .List(IamId, GrpName!);
-        Console.WriteLine("_defaultActiveKey:" + _defaultActiveKey);       
-        Console.WriteLine("dataCount:" + data.Count);       
+            .List(IamId, GrpName!);   
 
         if (data is { Count: > 0 })
         {
@@ -135,7 +127,6 @@
                 _defaultActiveKey = string.IsNullOrWhiteSpace(AppName) 
                     ? _jobDetailsList[0].Name 
                     : AppName;
-                Console.WriteLine("_defaultActiveKey:" + _defaultActiveKey);
             }
         }
 

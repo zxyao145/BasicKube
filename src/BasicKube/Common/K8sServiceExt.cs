@@ -69,10 +69,16 @@ public static class K8sServiceExt
                 x => x.Key,
                 x =>
                     {
+                        // 外部配置k8s访问信息
                         var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(x.Value);
                         return (IKubernetes)(new Kubernetes(config));
+
+                        // 集群内配置k8s访问信息
+                        //var config = KubernetesClientConfiguration.InClusterConfig();
+                        //return (IKubernetes)(new Kubernetes(config));
                     }
             );
+
 
         serviceConllection.AddSingleton(new KubernetesFactory(kubernetes));
 

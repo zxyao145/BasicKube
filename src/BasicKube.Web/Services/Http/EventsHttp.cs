@@ -7,10 +7,16 @@ namespace BasicKube.Web.Services
         public HttpClient Client { get; private set; }
         private readonly ILogger<EventsHttp> _logger;
 
-        public EventsHttp(HttpClient httpClient, ILogger<EventsHttp> logger)
+        public EventsHttp(
+            IConfiguration configuration,
+            HttpClient httpClient, 
+            ILogger<EventsHttp> logger)
         {
-            httpClient.BaseAddress = new Uri("http://localhost:5125");
+            var baseHttp = configuration["BasicKube:HttpBase"];
+            ArgumentNullException.ThrowIfNull(baseHttp, "BasicKube:HttpBase");
             Client = httpClient;
+            Client.BaseAddress = new Uri(baseHttp);
+
             _logger = logger;
         }
 

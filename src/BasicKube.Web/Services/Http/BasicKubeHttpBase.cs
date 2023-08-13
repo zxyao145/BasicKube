@@ -43,7 +43,7 @@ public abstract class BasicKubeHttp<TGrpInfo, TDetails, TCmd>
     {
         ArgumentNullException.ThrowIfNull(action);
         var url = $"/api/{_controller}/{action}/{iamId}";
-        Console.WriteLine(url);
+        //Console.WriteLine(url);
         return url;
     }
 

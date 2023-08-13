@@ -1,5 +1,4 @@
-﻿using BasicKube.Api.Common.Components.ActionResultExtensions;
-using BasicKube.Api.Controllers.Core;
+﻿using BasicKube.Api.Controllers.Core;
 using BasicKube.Api.Domain.AppGroup;
 
 namespace BasicKube.Api.Controllers.App.Deploy
