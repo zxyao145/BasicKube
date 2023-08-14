@@ -7,7 +7,7 @@
       SelectedKeys="@(new[]{_activeKey})"
       DefaultOpenKeys="@_openKeys"
       Mode="MenuMode.Inline">
-    <MenuItem Key="pages/deployappgrplist">
+    <MenuItem Key="pages/kube/deployappgrplist">
         <IconTemplate>
             <AllApplication />
         </IconTemplate>
@@ -17,7 +17,7 @@
             </NavLink>
         </ChildContent>
     </MenuItem>
-    <MenuItem Key="pages/svcgrplist">
+    <MenuItem Key="pages/kube/svcgrplist">
         <IconTemplate>
             <ConnectionPoint />
         </IconTemplate>
@@ -27,7 +27,7 @@
             </NavLink>
         </ChildContent>
     </MenuItem>
-    <MenuItem Key="pages/ingressgrplist">
+    <MenuItem Key="pages/kube/ingressgrplist">
         <IconTemplate>
             <LinkIn />
         </IconTemplate>
@@ -45,7 +45,7 @@
             </span>
         </TitleTemplate>
         <ChildContent>
-            <MenuItem Key="pages/daemonsetappgrplist">
+            <MenuItem Key="pages/kube/daemonsetappgrplist">
                 <IconTemplate>
                     <Shield />
 
@@ -56,7 +56,7 @@
                     </NavLink>
                 </ChildContent>
             </MenuItem>
-            <MenuItem Key="pages/jobgrplist">
+            <MenuItem Key="pages/kube/jobgrplist">
                 <IconTemplate>
                     <AlarmClock />
 
@@ -68,7 +68,7 @@
                 </ChildContent>
             </MenuItem>
 
-            <MenuItem Key="pages/cronjobgrplist">
+            <MenuItem Key="pages/kube/cronjobgrplist">
                 <IconTemplate>
                     <Timer />
 
@@ -91,9 +91,9 @@
 
     private static Dictionary<string, string> _openKeysDict = new Dictionary<string, string>()
         {
-            ["pages/deployappgrplist"] = "advanced",
-            ["pages/jobgrplist"] = "advanced",
-            ["pages/cronjobgrplist"] = "advanced",
+            ["pages/kube/deployappgrplist"] = "advanced",
+            ["pages/kube/jobgrplist"] = "advanced",
+            ["pages/kube/cronjobgrplist"] = "advanced",
         };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -112,7 +112,7 @@
         };
     }
 
-    const string _defaultActiveKey = "pages/deployappgrplist";
+    const string _defaultActiveKey = "pages/kube/deployappgrplist";
 
     string _activeKey = _defaultActiveKey;
     private string[] _openKeys = new string[0];
